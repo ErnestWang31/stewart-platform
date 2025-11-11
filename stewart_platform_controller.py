@@ -55,7 +55,12 @@ class StewartPlatformController:
         
         # Servo configuration (for 3 motors using Adafruit PWM Servo Driver on Arduino)
         # Single Arduino controls all 3 servos via I2C PWM driver
-        self.servo_port = self.config.get('servo', {}).get('port', "COM3")
+        # Support both "port" (single) and "ports" (array) - use first port if array
+        servo_config = self.config.get('servo', {})
+        if 'ports' in servo_config and isinstance(servo_config['ports'], list) and len(servo_config['ports']) > 0:
+            self.servo_port = servo_config['ports'][0]  # Use first port from array
+        else:
+            self.servo_port = servo_config.get('port', "COM3")  # Fallback to single port or default
         self.neutral_angles = self.config.get('servo', {}).get('neutral_angles', [15, 15, 15])
         # Motor direction inversion: [False, False, False] means all motors normal direction
         # Set to True for any motor that spins the wrong way
@@ -182,19 +187,22 @@ class StewartPlatformController:
         motor3_angle = int(np.clip(motor3_angle, 0, 30))
         
         # DEBUG: Print motor angles being sent
-        print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
-              f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
+        # print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
+        #       f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
         
         # Send all 3 servo commands to Arduino as 3 bytes
-        # Arduino expects: byte1 (servo1), byte2 (servo2), byte3 (servo3)
         if self.servo_serial:
             try:
+                # CRITICAL FIX: Clear input buffer periodically to prevent Arduino debug messages from filling it up
+                if self.servo_serial.in_waiting > 50:  # If buffer has accumulated data
+                    self.servo_serial.reset_input_buffer()
+                
                 self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
-                self.servo_serial.flush()  # Ensure data is sent immediately
+                # Remove flush() - it can block and isn't necessary
+                # self.servo_serial.flush()  # COMMENT THIS OUT
             except Exception as e:
                 print(f"[ARDUINO] Send failed: {e}")
-        else:
-            print(f"[MOTOR] WARNING: No servo connection, not sending commands")
+        # Remove the else print statement (line 197) - it prints in tight loop
     
     def _simplified_motor_mapping(self, roll_angle, pitch_angle):
         """Simplified trigonometric mapping (fallback method).
@@ -207,9 +215,10 @@ class StewartPlatformController:
             tuple: (motor1_angle, motor2_angle, motor3_angle) in degrees
         """
         # Motor positions in degrees (from +X axis, counter-clockwise)
+        # NOTE: Motors 2 and 3 are swapped to match physical layout (1, 3, 2)
         motor1_angle_deg = 90
-        motor2_angle_deg = 210
-        motor3_angle_deg = 330
+        motor2_angle_deg = 330  # Swapped: was 210°, now matches physical M2 position
+        motor3_angle_deg = 210  # Swapped: was 330°, now matches physical M3 position
         
         # Convert to radians
         motor1_angle_rad = np.radians(motor1_angle_deg)
@@ -237,10 +246,10 @@ class StewartPlatformController:
         motor3_angle = self.neutral_angles[2] + motor3_height * scale_factor * motor3_dir
         
         # DEBUG: Show intermediate calculations
-        if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
-            print(f"[MAPPING] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
-                  f"Heights: M1={motor1_height:.2f}, M2={motor2_height:.2f}, M3={motor3_height:.2f} -> "
-                  f"Angles: M1={motor1_angle:.1f}°, M2={motor2_angle:.1f}°, M3={motor3_angle:.1f}°")
+        # if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
+        #     print(f"[MAPPING] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
+        #           f"Heights: M1={motor1_height:.2f}, M2={motor2_height:.2f}, M3={motor3_height:.2f} -> "
+        #           f"Angles: M1={motor1_angle:.1f}°, M2={motor2_angle:.1f}°, M3={motor3_angle:.1f}°")
         
         return motor1_angle, motor2_angle, motor3_angle
     
@@ -289,6 +298,9 @@ class StewartPlatformController:
         self.start_time = time.time()
         self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
         
+        # Add counter to reduce print frequency
+        print_counter = 0
+        
         while self.running:
             try:
                 # Wait for latest ball position from camera
@@ -310,13 +322,18 @@ class StewartPlatformController:
                 self.control_x_log.append(control_output_x)
                 self.control_y_log.append(control_output_y)
                 
-                print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
-                      f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
+                # Reduce print frequency - only print every 10th update (was every update)
+                print_counter += 1
+                if print_counter % 10 == 0:  # Print every 10th update instead of every update
+                    print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
+                          f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
                 
             except queue.Empty:
                 continue
             except Exception as e:
                 print(f"[CONTROL] Error: {e}")
+                import traceback
+                traceback.print_exc()
                 break
         
         # Return to neutral on exit
