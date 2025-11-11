@@ -53,14 +53,47 @@ class StewartPlatformController:
         # Initialize inverse kinematics solver
         self.ik_solver = StewartPlatformIK(self.config)
         
+        # Debug output control (set to False to reduce terminal spam)
+        # MUST be initialized early since it's used in motor calibration section
+        self.debug_mode = self.config.get('debug', {}).get('verbose_output', False)
+        self.print_counter = 0  # Counter for throttling print statements
+        self.print_interval = 50  # Print every N control cycles (reduces terminal spam) - increased from 10
+        self.max_log_size = 10000  # Limit log size to prevent memory issues
+        
         # Servo configuration (for 3 motors using Adafruit PWM Servo Driver on Arduino)
         # Single Arduino controls all 3 servos via I2C PWM driver
-        self.servo_port = self.config.get('servo', {}).get('port', "COM3")
+        # Handle both "port" (singular) and "ports" (plural) in config
+        servo_config = self.config.get('servo', {})
+        if 'port' in servo_config:
+            self.servo_port = servo_config.get('port', "COM3")
+        elif 'ports' in servo_config and len(servo_config['ports']) > 0:
+            # Use first port from ports array (legacy config format)
+            self.servo_port = servo_config['ports'][0]
+        else:
+            self.servo_port = "COM3"  # Default fallback
+        
         self.neutral_angles = self.config.get('servo', {}).get('neutral_angles', [15, 15, 15])
         # Motor direction inversion: [False, False, False] means all motors normal direction
         # Set to True for any motor that spins the wrong way
         self.motor_direction_invert = self.config.get('servo', {}).get('motor_direction_invert', [False, False, False])
         self.servo_serial = None
+        
+        # Motor position calibration (from calibration tool)
+        # If motor_angles_deg is in config, use calibrated positions; otherwise use defaults
+        motor_angles = self.config.get('servo', {}).get('motor_angles_deg', None)
+        if motor_angles and len(motor_angles) == 3:
+            self.motor_angles_deg = [float(angle) for angle in motor_angles]
+            # Only print in debug mode
+            if self.debug_mode:
+                print(f"[MOTOR] Using calibrated motor angles: M1={self.motor_angles_deg[0]:.1f}°, "
+                      f"M2={self.motor_angles_deg[1]:.1f}°, M3={self.motor_angles_deg[2]:.1f}°")
+        else:
+            # Default motor positions (standard 120° spacing)
+            self.motor_angles_deg = [90.0, 210.0, 330.0]
+            # Only print in debug mode
+            if self.debug_mode:
+                print("[MOTOR] Using default motor angles: M1=90°, M2=210°, M3=330°")
+                print("[MOTOR] Run calibration_2d.py to calibrate motor positions for your setup")
         
         # Use inverse kinematics flag (can be toggled)
         # Default to False to use simplified mapping (more reliable)
@@ -114,14 +147,18 @@ class StewartPlatformController:
     def connect_servos(self):
         """Try to open serial connection to Arduino with PWM Servo Driver, return True if succeeds."""
         try:
-            self.servo_serial = serial.Serial(self.servo_port, 9600, timeout=1)
+            self.servo_serial = serial.Serial(self.servo_port, 9600, timeout=1, write_timeout=0.1)
             time.sleep(2)  # Wait for Arduino to initialize
             # Flush any initial data
             self.servo_serial.reset_input_buffer()
-            print(f"[ARDUINO] Connected to {self.servo_port}")
+            # Only print in debug mode
+            if self.debug_mode:
+                print(f"[ARDUINO] Connected to {self.servo_port}")
             return True
         except Exception as e:
-            print(f"[ARDUINO] Failed to connect to {self.servo_port}: {e}")
+            # Only print in debug mode to avoid spam
+            if self.debug_mode:
+                print(f"[ARDUINO] Failed to connect to {self.servo_port}: {e}")
             self.servo_serial = None
             return False
     
@@ -181,23 +218,29 @@ class StewartPlatformController:
         motor2_angle = int(np.clip(motor2_angle, 0, 30))
         motor3_angle = int(np.clip(motor3_angle, 0, 30))
         
-        # DEBUG: Print motor angles being sent
-        print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
-              f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
+        # DEBUG: Print motor angles being sent (only in debug mode)
+        if self.debug_mode:
+            print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
+                  f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
         
         # Send all 3 servo commands to Arduino as 3 bytes
         # Arduino expects: byte1 (servo1), byte2 (servo2), byte3 (servo3)
         if self.servo_serial:
             try:
                 self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
-                self.servo_serial.flush()  # Ensure data is sent immediately
+                # Removed flush() - it can block if buffer is full, causing freezing
+                # Serial data will be sent automatically by the OS
             except Exception as e:
-                print(f"[ARDUINO] Send failed: {e}")
-        else:
-            print(f"[MOTOR] WARNING: No servo connection, not sending commands")
+                # Only print errors in debug mode to avoid spam
+                if self.debug_mode:
+                    print(f"[ARDUINO] Send failed: {e}")
+        # Removed warning print - it would spam on every cycle if not connected
     
     def _simplified_motor_mapping(self, roll_angle, pitch_angle):
         """Simplified trigonometric mapping (fallback method).
+        
+        Uses calibrated motor angles from config if available, otherwise uses defaults.
+        This allows the system to work with any platform orientation.
         
         Args:
             roll_angle: Roll angle in degrees
@@ -206,10 +249,10 @@ class StewartPlatformController:
         Returns:
             tuple: (motor1_angle, motor2_angle, motor3_angle) in degrees
         """
-        # Motor positions in degrees (from +X axis, counter-clockwise)
-        motor1_angle_deg = 90
-        motor2_angle_deg = 210
-        motor3_angle_deg = 330
+        # Use calibrated motor angles (set during calibration_2d.py)
+        motor1_angle_deg = self.motor_angles_deg[0]
+        motor2_angle_deg = self.motor_angles_deg[1]
+        motor3_angle_deg = self.motor_angles_deg[2]
         
         # Convert to radians
         motor1_angle_rad = np.radians(motor1_angle_deg)
@@ -236,11 +279,8 @@ class StewartPlatformController:
         motor2_angle = self.neutral_angles[1] + motor2_height * scale_factor * motor2_dir
         motor3_angle = self.neutral_angles[2] + motor3_height * scale_factor * motor3_dir
         
-        # DEBUG: Show intermediate calculations
-        if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
-            print(f"[MAPPING] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
-                  f"Heights: M1={motor1_height:.2f}, M2={motor2_height:.2f}, M3={motor3_height:.2f} -> "
-                  f"Angles: M1={motor1_angle:.1f}°, M2={motor2_angle:.1f}°, M3={motor3_angle:.1f}°")
+        # DEBUG: Show intermediate calculations (only in debug mode)
+        # Removed frequent print statement to prevent terminal spam
         
         return motor1_angle, motor2_angle, motor3_angle
     
@@ -274,9 +314,15 @@ class StewartPlatformController:
             # Show processed video with overlays
             vis_frame, _, _, _ = self.detector.draw_detection(frame)
             cv2.imshow("Stewart Platform - Ball Tracking", vis_frame)
-            if cv2.waitKey(1) & 0xFF == 27:  # ESC exits
+            
+            # Use waitKey with timeout to prevent blocking
+            key = cv2.waitKey(1) & 0xFF
+            if key == 27:  # ESC exits
                 self.running = False
                 break
+            
+            # Small delay to prevent camera thread from consuming too much CPU
+            time.sleep(0.01)  # ~100 Hz camera processing rate
         
         cap.release()
         cv2.destroyAllWindows()
@@ -284,7 +330,9 @@ class StewartPlatformController:
     def control_thread(self):
         """Runs PID control loop in parallel with GUI and camera."""
         if not self.connect_servos():
-            print("[WARNING] No servos connected - running in simulation mode")
+            # Only print in debug mode
+            if self.debug_mode:
+                print("[WARNING] No servos connected - running in simulation mode")
         
         self.start_time = time.time()
         self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
@@ -300,7 +348,7 @@ class StewartPlatformController:
                 # Send control command to platform (real or simulated)
                 self.send_platform_tilt(control_output_x, control_output_y)
                 
-                # Log results for plotting
+                # Log results for plotting (limit size to prevent memory issues)
                 current_time = time.time() - self.start_time
                 self.time_log.append(current_time)
                 self.position_x_log.append(position_x)
@@ -310,13 +358,37 @@ class StewartPlatformController:
                 self.control_x_log.append(control_output_x)
                 self.control_y_log.append(control_output_y)
                 
-                print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
-                      f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
+                # Limit log size to prevent memory issues
+                if len(self.time_log) > self.max_log_size:
+                    # Keep only the most recent entries
+                    keep_size = self.max_log_size // 2
+                    self.time_log = self.time_log[-keep_size:]
+                    self.position_x_log = self.position_x_log[-keep_size:]
+                    self.position_y_log = self.position_y_log[-keep_size:]
+                    self.setpoint_x_log = self.setpoint_x_log[-keep_size:]
+                    self.setpoint_y_log = self.setpoint_y_log[-keep_size:]
+                    self.control_x_log = self.control_x_log[-keep_size:]
+                    self.control_y_log = self.control_y_log[-keep_size:]
+                
+                # Throttle print output to prevent terminal spam
+                # Only print every N cycles, and only if debug mode is enabled
+                self.print_counter += 1
+                if self.debug_mode and (self.print_counter % self.print_interval == 0):
+                    print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
+                          f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
+                
+                # Add small delay to prevent control loop from running too fast
+                # This prevents terminal freezing and reduces CPU usage
+                time.sleep(0.01)  # 10ms delay = ~100 Hz control rate
                 
             except queue.Empty:
+                # No data available, small delay to prevent busy waiting
+                time.sleep(0.01)
                 continue
             except Exception as e:
-                print(f"[CONTROL] Error: {e}")
+                # Only print errors in debug mode
+                if self.debug_mode:
+                    print(f"[CONTROL] Error: {e}")
                 break
         
         # Return to neutral on exit
@@ -516,9 +588,11 @@ class StewartPlatformController:
     
     def run(self):
         """Entry point: starts threads, launches GUI mainloop."""
-        print("[INFO] Starting Stewart Platform Controller")
-        print("Use sliders to tune PID gains in real-time")
-        print("Close camera window or click Stop to exit")
+        # Only print startup messages in debug mode
+        if self.debug_mode:
+            print("[INFO] Starting Stewart Platform Controller")
+            print("Use sliders to tune PID gains in real-time")
+            print("Close camera window or click Stop to exit")
         self.running = True
         
         # Start camera and control threads, mark as daemon for exit

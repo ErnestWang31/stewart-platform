@@ -38,9 +38,13 @@ The system uses computer vision to detect a ping pong ball on a **circular Stewa
    - Generate `config_stewart.json` configuration file
    
    **Calibration steps:**
-   1. Click on the ball multiple times to sample its color
+   1. Click on the ball multiple times to sample its color, press 'c' when done
    2. Click on the platform center, then click on the platform edge
-   3. Optionally find limits automatically by tilting the platform
+   3. Click on the 3 motor positions (motor 1, motor 2, motor 3) - this calibrates motor positions relative to the platform
+   4. Optionally find limits automatically by tilting the platform (press 'l')
+   5. Press 's' to save the configuration
+   
+   **Motor Calibration**: The system automatically determines motor angles from the clicked positions. This allows the system to work correctly even if the platform is rotated or the motors are wired differently. Click on the visible motor attachment points or markers on your platform in order (motor 1, then motor 2, then motor 3). You can press 'm' to skip motor calibration and use default positions.
 
 3. **Run Controller**:
    ```bash
@@ -56,7 +60,7 @@ The system uses `config_stewart.json` for configuration. Key parameters:
 - **Platform**: Type (circular), radius, center position, and radius in pixels
 - **Calibration**: Pixel-to-meter conversion ratio (uniform for circular platform)
 - **PID**: Separate gains for X (roll) and Y (pitch) axes
-- **Servo**: Serial port (COM port) for Arduino and neutral angles for 3 motors (arranged at 120° intervals)
+- **Servo**: Serial port (COM port) for Arduino, neutral angles for 3 motors, motor direction inversion flags, and calibrated motor positions/angles
 - **Platform Limits**: Maximum roll and pitch angles
 
 ## How It Works
@@ -72,12 +76,16 @@ The system uses `config_stewart.json` for configuration. Key parameters:
      - Negative pitch = platform tilts BACKWARD (back down)
    - See `ROLL_AND_PITCH_EXPLANATION.md` for detailed visual explanation
 
-3. **Motor Control**: The roll and pitch angles are converted to motor commands for the 3 servos arranged at 120° intervals around the circular platform. The motors are positioned at:
-   - Motor 1: 90° (top, along +Y axis) - primarily controls pitch
-   - Motor 2: 210° (bottom-left) - combination of roll and pitch
-   - Motor 3: 330° (bottom-right) - combination of roll and pitch
+3. **Motor Control**: The roll and pitch angles are converted to motor commands for the 3 servos arranged at 120° intervals around the circular platform. 
    
-   The current implementation uses a simplified trigonometric mapping. For a real Stewart platform, you would use inverse kinematics (like in `SPV4.py`) to convert platform orientation to motor angles.
+   **Motor Position Calibration**: During calibration, you click on the 3 motor positions in the camera view. The system automatically calculates the angle of each motor relative to the platform center. This allows the system to work correctly regardless of:
+   - Platform rotation relative to the camera
+   - Motor wiring differences
+   - Physical motor arrangement
+   
+   The motor positions are saved in the config file as `motor_angles_deg`. If not calibrated, the system uses default positions (90°, 210°, 330°).
+   
+   The current implementation uses a simplified trigonometric mapping based on the calibrated motor positions. For a real Stewart platform, you would use inverse kinematics (like in `SPV4.py`) to convert platform orientation to motor angles.
 
 4. **Feedback Loop**: The control loop continuously:
    - Detects ball position
@@ -116,14 +124,23 @@ The system uses a single Arduino with an **Adafruit PWM Servo Driver** shield to
    - Select your Arduino board and COM port
    - Upload the sketch to Arduino
 
-3. **Configure Serial Port**:
-   - Update `config_stewart.json` with the correct COM port:
+3. **Configure Serial Port** (or run calibration to auto-configure):
+   - The calibration tool (`calibration_2d.py`) will save motor positions automatically
+   - You can manually update `config_stewart.json` with the correct COM port:
      ```json
      "servo": {
        "port": "COM3",  // Change to your Arduino's COM port
-       "neutral_angles": [15, 15, 15]
+       "neutral_angles": [15, 15, 15],
+       "motor_direction_invert": [false, false, false],  // Set to true for motors spinning wrong way
+       "motor_angles_deg": [90.0, 210.0, 330.0]  // Calibrated motor angles (set by calibration tool)
      }
      ```
+   
+   **Motor Configuration Notes**:
+   - `motor_angles_deg`: Motor angles in degrees from platform center (0° = right, 90° = top, counter-clockwise)
+   - These angles are automatically calculated during calibration when you click on motor positions
+   - If not set, the system uses default angles (90°, 210°, 330°)
+   - The motor calibration accounts for platform rotation and wiring differences
 
 ### Arduino Communication Protocol:
 

@@ -25,7 +25,7 @@ class StewartPlatformCalibrator:
         
         # Calibration state tracking
         self.current_frame = None  # Current video frame
-        self.phase = "color"  # Current phase: "color", "geometry", "complete"
+        self.phase = "color"  # Current phase: "color", "geometry", "motors", "complete"
         
         # Color calibration data
         self.hsv_samples = []  # Collected HSV color samples
@@ -37,6 +37,11 @@ class StewartPlatformCalibrator:
         self.platform_edge_point = None  # Platform edge point for radius calculation
         self.platform_radius_pixels = None  # Platform radius in pixels
         self.pixel_to_meter_ratio = None  # Conversion ratio from pixels to meters (uniform for circle)
+        
+        # Motor position calibration data
+        self.motor_positions = [None, None, None]  # Motor positions in pixels [(x1,y1), (x2,y2), (x3,y3)]
+        self.motor_angles_deg = [None, None, None]  # Motor angles in degrees from platform center
+        self.motor_click_count = 0  # Number of motor positions clicked
         
         # Platform hardware configuration
         self.servos = [None, None, None]  # Serial connections to servos
@@ -103,6 +108,18 @@ class StewartPlatformCalibrator:
                     self.platform_edge_point = (x, y)
                     print(f"[GEO] Platform edge selected at ({x}, {y})")
                     self.calculate_geometry()
+            elif self.phase == "motors":
+                # Motor calibration phase - click on each motor position
+                if self.motor_click_count < 3:
+                    self.motor_positions[self.motor_click_count] = (x, y)
+                    self.motor_click_count += 1
+                    print(f"[MOTOR] Motor {self.motor_click_count} position selected at ({x}, {y})")
+                    if self.motor_click_count < 3:
+                        print(f"[MOTOR] Click on motor {self.motor_click_count + 1} position")
+                    else:
+                        self.calculate_motor_angles()
+                        print("[MOTOR] All motor positions calibrated!")
+                        self.phase = "complete"
     
     def sample_color(self, x, y):
         """Sample HSV color values in a 5x5 region around click point.
@@ -171,8 +188,47 @@ class StewartPlatformCalibrator:
         print(f"[GEO] Platform radius: {self.platform_radius_pixels:.2f} pixels = {self.PLATFORM_RADIUS_M:.4f} meters")
         print(f"[GEO] Pixel-to-meter ratio: {self.pixel_to_meter_ratio:.6f} m/pixel")
         
-        # Advance to complete phase
-        self.phase = "complete"
+        # Advance to motor calibration phase
+        self.phase = "motors"
+        print("[MOTOR] Now click on the 3 motor positions (in order: motor 1, motor 2, motor 3)")
+        print("[MOTOR] Click on motor 1 position")
+    
+    def calculate_motor_angles(self):
+        """Calculate motor angles from platform center based on clicked positions."""
+        if self.platform_center is None:
+            print("[MOTOR] Error: Platform center not set")
+            return
+        
+        if None in self.motor_positions:
+            print("[MOTOR] Error: Not all motor positions set")
+            return
+        
+        center_x, center_y = self.platform_center
+        
+        # Calculate angle for each motor position
+        # Angle is measured from +X axis (right), counter-clockwise
+        # In image coordinates: +X is right, +Y is down
+        # atan2(y, x) gives angle from +X axis, but we need to account for image Y being inverted
+        for i, (mx, my) in enumerate(self.motor_positions):
+            # Calculate vector from center to motor
+            dx = mx - center_x
+            dy = center_y - my  # Invert Y because image Y increases downward
+            
+            # Calculate angle in degrees (0° = +X axis, 90° = +Y axis, counter-clockwise)
+            angle_rad = math.atan2(dy, dx)
+            angle_deg = math.degrees(angle_rad)
+            
+            # Normalize to 0-360 range
+            if angle_deg < 0:
+                angle_deg += 360
+            
+            self.motor_angles_deg[i] = angle_deg
+            
+            print(f"[MOTOR] Motor {i+1} at ({mx}, {my}): angle = {angle_deg:.1f}°")
+        
+        # Display motor configuration
+        print(f"[MOTOR] Motor angles: M1={self.motor_angles_deg[0]:.1f}°, "
+              f"M2={self.motor_angles_deg[1]:.1f}°, M3={self.motor_angles_deg[2]:.1f}°")
     
     def detect_ball_position(self, frame):
         """Detect ball in frame and return position in meters from center.
@@ -312,6 +368,23 @@ class StewartPlatformCalibrator:
         config["platform_center_pixels"] = list(self.platform_center) if self.platform_center else None
         config["platform_radius_pixels"] = float(self.platform_radius_pixels) if self.platform_radius_pixels else None
         
+        # Update motor positions and angles
+        if "servo" not in config:
+            config["servo"] = {}
+        if self.motor_positions[0] is not None and self.motor_positions[1] is not None and self.motor_positions[2] is not None:
+            config["servo"]["motor_positions_pixels"] = [
+                list(self.motor_positions[0]),
+                list(self.motor_positions[1]),
+                list(self.motor_positions[2])
+            ]
+            config["servo"]["motor_angles_deg"] = [
+                float(self.motor_angles_deg[0]),
+                float(self.motor_angles_deg[1]),
+                float(self.motor_angles_deg[2])
+            ]
+            print(f"[SAVE] Motor positions saved: {config['servo']['motor_positions_pixels']}")
+            print(f"[SAVE] Motor angles saved: {config['servo']['motor_angles_deg']}")
+        
         # Update camera settings
         if "camera" not in config:
             config["camera"] = {}
@@ -389,6 +462,7 @@ class StewartPlatformCalibrator:
         phase_text = {
             "color": "Click on ball to sample colors. Press 'c' when done.",
             "geometry": "Click on platform center, then click on platform edge (2 points)",
+            "motors": f"Click on motor {self.motor_click_count + 1} position (3 motors total). Press 'm' to skip.",
             "complete": "Calibration complete! Press 's' to save, 'l' to find limits"
         }
         
@@ -419,6 +493,22 @@ class StewartPlatformCalibrator:
             radius = int(np.sqrt((self.platform_edge_point[0] - self.platform_center[0])**2 + 
                                 (self.platform_edge_point[1] - self.platform_center[1])**2))
             cv2.circle(overlay, self.platform_center, radius, (255, 0, 0), 2)
+        
+        # Show motor positions if calibrated
+        motor_colors = [(255, 0, 255), (0, 255, 255), (255, 255, 0)]  # Magenta, Cyan, Yellow
+        for i, (pos, angle) in enumerate(zip(self.motor_positions, self.motor_angles_deg)):
+            if pos is not None:
+                mx, my = pos
+                cv2.circle(overlay, (mx, my), 10, motor_colors[i], -1)
+                cv2.circle(overlay, (mx, my), 12, motor_colors[i], 2)
+                label = f"M{i+1}"
+                if angle is not None:
+                    label += f" ({angle:.1f}°)"
+                cv2.putText(overlay, label, (mx+15, my-10),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, motor_colors[i], 2)
+                # Draw line from center to motor
+                if self.platform_center:
+                    cv2.line(overlay, self.platform_center, (mx, my), motor_colors[i], 1)
         
         # Show real-time ball detection if color calibration is complete
         if self.lower_hsv:
@@ -483,8 +573,15 @@ class StewartPlatformCalibrator:
         print("[INFO] Stewart Platform 2D Calibration (Circular Platform)")
         print("Phase 1: Click on ball to sample colors, press 'c' when done")
         print("Phase 2: Click on platform center, then click on platform edge")
-        print("Phase 3: Press 'l' to find limits automatically")
+        print("Phase 3: Click on motor positions (motor 1, motor 2, motor 3) - press 'm' to skip")
+        print("Phase 4: Press 'l' to find limits automatically (optional)")
         print("Press 's' to save, 'q' to quit")
+        print("")
+        print("[MOTOR CALIBRATION] Click on the 3 motor positions in order:")
+        print("  - Motor 1: First click")
+        print("  - Motor 2: Second click")
+        print("  - Motor 3: Third click")
+        print("  The system will automatically calculate motor angles from platform center.")
         
         # Main calibration loop
         while True:
@@ -508,12 +605,18 @@ class StewartPlatformCalibrator:
                 # Complete color calibration phase
                 if self.hsv_samples:
                     self.phase = "geometry"
-                    print("[INFO] Color calibration complete. Click on platform corners.")
+                    print("[INFO] Color calibration complete. Click on platform center, then edge.")
+            elif key == ord('m') and self.phase == "motors":
+                # Skip motor calibration (optional)
+                print("[MOTOR] Motor calibration skipped. Using default motor positions.")
+                self.phase = "complete"
             elif key == ord('l') and self.phase == "complete":
                 # Start automatic limit finding
                 self.find_limits_automatically()
-            elif key == ord('s') and self.phase == "complete":
-                # Save configuration and exit
+            elif key == ord('s') and (self.phase == "complete" or self.phase == "motors"):
+                # Save configuration and exit (allow saving even if motors not calibrated)
+                if self.phase == "motors":
+                    print("[WARNING] Motor positions not calibrated. Saving without motor calibration.")
                 self.save_config()
                 break
         
