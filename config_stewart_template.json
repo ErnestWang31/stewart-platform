@@ -1,0 +1,56 @@
+{
+  "timestamp": "2024-01-01T00:00:00",
+  "platform_type": "circular",
+  "platform_radius_m": 0.1,
+  "platform_center_pixels": [320, 240],
+  "platform_radius_pixels": 150,
+  "camera": {
+    "index": 0,
+    "frame_width": 640,
+    "frame_height": 480
+  },
+  "ball_detection": {
+    "lower_hsv": [5, 150, 150],
+    "upper_hsv": [20, 255, 255]
+  },
+  "calibration": {
+    "pixel_to_meter_ratio": 0.0006667,
+    "pixel_to_meter_ratio_x": 0.0006667,
+    "pixel_to_meter_ratio_y": 0.0006667,
+    "position_min_x_m": -0.1,
+    "position_max_x_m": 0.1,
+    "position_min_y_m": -0.1,
+    "position_max_y_m": 0.1
+  },
+  "servo": {
+    "port": "COM3",
+    "neutral_angles": [15, 15, 15]
+  },
+  "pid": {
+    "Kp_x": 10.0,
+    "Ki_x": 0.0,
+    "Kd_x": 0.0,
+    "Kp_y": 10.0,
+    "Ki_y": 0.0,
+    "Kd_y": 0.0
+  },
+  "platform": {
+    "max_roll_angle": 15.0,
+    "max_pitch_angle": 15.0,
+    "use_inverse_kinematics": true,
+    "ik_angle_scale": 1.0,
+    "ik_angle_offset": 0.0,
+    "triangle_side_length": 10.0,
+    "platform_center_z": 17.05,
+    "motor1_base_length": 10.0,
+    "motor1_link1_length": 8.0,
+    "motor1_link2_length": 8.0,
+    "motor2_base_length": 10.0,
+    "motor2_link1_length": 8.0,
+    "motor2_link2_length": 8.0,
+    "motor3_base_length": 10.0,
+    "motor3_link1_length": 8.0,
+    "motor3_link2_length": 8.0
+  }
+}
+
