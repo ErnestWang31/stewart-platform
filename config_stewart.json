@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-11-10T22:37:17.097096",
+  "timestamp": "2025-11-11T12:27:01.215343",
   "platform_type": "circular",
   "platform_radius_m": 0.1,
   "platform_center_pixels": [
-    306,
-    226
+    294,
+    247
   ],
-  "platform_radius_pixels": 151.46286673637206,
+  "platform_radius_pixels": 165.92166826548,
   "camera": {
     "index": 1,
     "frame_width": 640,
@@ -14,24 +14,24 @@
   },
   "ball_detection": {
     "lower_hsv": [
-      12.0,
-      143.45,
-      134.25
+      4.0,
+      121.6,
+      75.6
     ],
     "upper_hsv": [
-      27.0,
+      21.0,
       255.0,
       255.0
     ]
   },
   "calibration": {
-    "pixel_to_meter_ratio": 0.0006602278311162201,
-    "pixel_to_meter_ratio_x": 0.0006602278311162201,
-    "pixel_to_meter_ratio_y": 0.0006602278311162201,
-    "position_min_x_m": -0.017663950836249685,
-    "position_max_x_m": 0.020617203866068332,
-    "position_min_y_m": -0.09051174178710941,
-    "position_max_y_m": 0.08073323202414555
+    "pixel_to_meter_ratio": 0.00060269403656186,
+    "pixel_to_meter_ratio_x": 0.00060269403656186,
+    "pixel_to_meter_ratio_y": 0.00060269403656186,
+    "position_min_x_m": -0.001268901960057784,
+    "position_max_x_m": 0.0019000615552648152,
+    "position_min_y_m": 0.07062488291779888,
+    "position_max_y_m": 0.07097026772696544
   },
   "servo": {
     "ports": [
@@ -47,19 +47,20 @@
     "motor_direction_invert": [
       false,
       false,
-      true
+      false
     ]
   },
   "pid": {
-    "Kp_x": 10.0,
-    "Ki_x": 0.0,
-    "Kd_x": 0.0,
-    "Kp_y": 10.0,
-    "Ki_y": 0.0,
-    "Kd_y": 0.0
+    "Kp_x": 0.6,
+    "Ki_x": 0.245,
+    "Kd_x": 0.565,
+    "Kp_y": 0.6,
+    "Ki_y": 0.27,
+    "Kd_y": 0.6
   },
   "platform": {
     "max_roll_angle": 15.0,
-    "max_pitch_angle": 15.0
+    "max_pitch_angle": 15.0,
+    "roll_direction_invert": true
   }
 }

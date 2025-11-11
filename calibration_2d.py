@@ -43,11 +43,49 @@ class StewartPlatformCalibrator:
         self.servo_ports = ["COM3", "COM4", "COM5"]  # Servo communication ports
         self.neutral_angles = [15, 15, 15]  # Servo neutral position angles
         
+        # Load existing config to preserve settings like roll_direction_invert
+        self.load_existing_config()
+        
         # Position limit results
         self.position_min_x = None  # Minimum ball position in X (meters)
         self.position_max_x = None  # Maximum ball position in X (meters)
         self.position_min_y = None  # Minimum ball position in Y (meters)
         self.position_max_y = None  # Maximum ball position in Y (meters)
+    
+    def load_existing_config(self):
+        """Load existing config file to preserve settings like servo ports and neutral angles."""
+        try:
+            with open("config_stewart.json", "r") as f:
+                config = json.load(f)
+            
+            # Load servo settings if they exist
+            if "servo" in config:
+                servo_config = config["servo"]
+                if "ports" in servo_config:
+                    self.servo_ports = servo_config["ports"]
+                if "neutral_angles" in servo_config:
+                    self.neutral_angles = servo_config["neutral_angles"]
+            
+            # Load camera settings if they exist
+            if "camera" in config:
+                cam_config = config["camera"]
+                if "index" in cam_config:
+                    self.CAM_INDEX = cam_config["index"]
+                if "frame_width" in cam_config:
+                    self.FRAME_W = cam_config["frame_width"]
+                if "frame_height" in cam_config:
+                    self.FRAME_H = cam_config["frame_height"]
+            
+            # Load platform radius if it exists
+            if "platform_radius_m" in config:
+                self.PLATFORM_RADIUS_M = config["platform_radius_m"]
+                self.PLATFORM_DIAMETER_M = 2 * self.PLATFORM_RADIUS_M
+                
+        except FileNotFoundError:
+            # Config file doesn't exist yet, use defaults
+            pass
+        except Exception as e:
+            print(f"[WARNING] Error loading existing config: {e}, using defaults")
     
     def connect_servos(self):
         """Establish serial connections to servo motors.
@@ -339,9 +377,12 @@ class StewartPlatformCalibrator:
         # Update servo settings (preserve existing fields like motor_direction_invert)
         if "servo" not in config:
             config["servo"] = {}
+        # Update calibration-related servo fields
         config["servo"]["ports"] = [str(p) for p in self.servo_ports]
         config["servo"]["neutral_angles"] = [int(a) for a in self.neutral_angles]
-        # Note: motor_direction_invert and other servo fields are preserved if they exist
+        # IMPORTANT: motor_direction_invert and all other existing servo fields are 
+        # automatically preserved since we load the existing config first and only 
+        # update specific fields above
         
         # Set default PID values only if they don't exist
         if "pid" not in config:
@@ -360,13 +401,22 @@ class StewartPlatformCalibrator:
             config["pid"]["Kd_y"] = 0.0
         
         # Set default platform limits only if they don't exist
+        # IMPORTANT: Preserve all existing platform fields (roll_direction_invert, use_inverse_kinematics, etc.)
         if "platform" not in config:
             config["platform"] = {}
+        else:
+            # Explicitly preserve all existing platform fields (don't overwrite them)
+            # This ensures roll_direction_invert and other settings are kept
+            pass  # All existing fields in config["platform"] are already preserved
+        
+        # Only set defaults if fields don't exist
         if "max_roll_angle" not in config["platform"]:
             config["platform"]["max_roll_angle"] = 15.0
         if "max_pitch_angle" not in config["platform"]:
             config["platform"]["max_pitch_angle"] = 15.0
-        # Note: Other platform fields (like use_inverse_kinematics, motor_scale_factor, etc.) are preserved
+        # Note: roll_direction_invert, use_inverse_kinematics, motor_scale_factor, 
+        # and all other existing platform fields are automatically preserved since
+        # we load the existing config first and only add defaults for missing fields
         
         # Write configuration to JSON file
         with open("config_stewart.json", "w") as f:

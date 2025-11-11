@@ -38,23 +38,22 @@ class BallDetector2D:
                         self.upper_hsv = np.array(config['ball_detection']['upper_hsv'], dtype=np.uint8)
                 
                 # Extract scale factors for position conversion from pixels to meters
+                # pixel_to_meter_ratio is already in units of meters per pixel, no need to multiply by frame dimensions
                 if 'calibration' in config:
                     if 'pixel_to_meter_ratio_x' in config['calibration']:
-                        frame_width = config.get('camera', {}).get('frame_width', 640)
-                        self.scale_factor_x = config['calibration']['pixel_to_meter_ratio_x'] * (frame_width / 2)
+                        self.scale_factor_x = config['calibration']['pixel_to_meter_ratio_x']
                     if 'pixel_to_meter_ratio_y' in config['calibration']:
-                        frame_height = config.get('camera', {}).get('frame_height', 480)
-                        self.scale_factor_y = config['calibration']['pixel_to_meter_ratio_y'] * (frame_height / 2)
+                        self.scale_factor_y = config['calibration']['pixel_to_meter_ratio_y']
                     # Fallback to single ratio if separate ones not provided
-                    if 'pixel_to_meter_ratio' in config['calibration'] and self.scale_factor_x == 1.0:
-                        frame_width = config.get('camera', {}).get('frame_width', 640)
-                        frame_height = config.get('camera', {}).get('frame_height', 480)
+                    if 'pixel_to_meter_ratio' in config['calibration']:
                         ratio = config['calibration']['pixel_to_meter_ratio']
-                        self.scale_factor_x = ratio * (frame_width / 2)
-                        self.scale_factor_y = ratio * (frame_height / 2)
+                        if self.scale_factor_x == 1.0:  # Only set if not already set
+                            self.scale_factor_x = ratio
+                        if self.scale_factor_y == 1.0:  # Only set if not already set
+                            self.scale_factor_y = ratio
                 
                 print(f"[BALL_DETECT_2D] Loaded HSV bounds: {self.lower_hsv} to {self.upper_hsv}")
-                print(f"[BALL_DETECT_2D] Scale factors: X={self.scale_factor_x:.6f}, Y={self.scale_factor_y:.6f} m/normalized_unit")
+                print(f"[BALL_DETECT_2D] Scale factors: X={self.scale_factor_x:.6f} m/pixel, Y={self.scale_factor_y:.6f} m/pixel")
                 
             except Exception as e:
                 print(f"[BALL_DETECT_2D] Config load error: {e}, using defaults")
@@ -114,18 +113,10 @@ class BallDetector2D:
         pixel_offset_x = x - center_x
         pixel_offset_y = y - center_y
         
-        # For circular platform, use uniform scale factor
-        if self.scale_factor_x == self.scale_factor_y or abs(self.scale_factor_x - self.scale_factor_y) < 1e-6:
-            # Uniform scale (circular platform)
-            scale = self.scale_factor_x
-            position_x_m = pixel_offset_x * scale
-            position_y_m = pixel_offset_y * scale
-        else:
-            # Non-uniform scale (rectangular platform)
-            normalized_x = pixel_offset_x / (frame.shape[1] // 2) if frame.shape[1] // 2 > 0 else 0
-            normalized_y = pixel_offset_y / (frame.shape[0] // 2) if frame.shape[0] // 2 > 0 else 0
-            position_x_m = normalized_x * self.scale_factor_x
-            position_y_m = normalized_y * self.scale_factor_y
+        # For circular platform, use uniform scale factor (pixel_to_meter_ratio is in m/pixel)
+        # Both uniform and non-uniform scales use the same calculation since scale_factor is already in m/pixel
+        position_x_m = pixel_offset_x * self.scale_factor_x
+        position_y_m = pixel_offset_y * self.scale_factor_y
         
         return True, (int(x), int(y)), radius, position_x_m, position_y_m
 

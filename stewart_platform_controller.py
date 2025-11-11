@@ -31,12 +31,12 @@ class StewartPlatformController:
         
         # Initialize 2D PID controller
         # X-axis (roll) PID gains
-        Kp_x = self.config.get('pid', {}).get('Kp_x', 10.0)
+        Kp_x = self.config.get('pid', {}).get('Kp_x', 0.0)
         Ki_x = self.config.get('pid', {}).get('Ki_x', 0.0)
         Kd_x = self.config.get('pid', {}).get('Kd_x', 0.0)
         
         # Y-axis (pitch) PID gains
-        Kp_y = self.config.get('pid', {}).get('Kp_y', 10.0)
+        Kp_y = self.config.get('pid', {}).get('Kp_y', 0.0)
         Ki_y = self.config.get('pid', {}).get('Ki_y', 0.0)
         Kd_y = self.config.get('pid', {}).get('Kd_y', 0.0)
         
@@ -55,8 +55,16 @@ class StewartPlatformController:
         
         # Servo configuration (for 3 motors using Adafruit PWM Servo Driver on Arduino)
         # Single Arduino controls all 3 servos via I2C PWM driver
-        self.servo_port = self.config.get('servo', {}).get('port', "COM3")
-        self.neutral_angles = self.config.get('servo', {}).get('neutral_angles', [15, 15, 15])
+        # Handle both "port" (singular) and "ports" (plural) for backward compatibility
+        servo_config = self.config.get('servo', {})
+        if 'port' in servo_config:
+            self.servo_port = servo_config['port']
+        elif 'ports' in servo_config and len(servo_config['ports']) > 0:
+            # Use first port if "ports" array is provided
+            self.servo_port = servo_config['ports'][0]
+        else:
+            self.servo_port = "COM3"  # Default fallback
+        self.neutral_angles = servo_config.get('neutral_angles', [15, 15, 15])
         # Motor direction inversion: [False, False, False] means all motors normal direction
         # Set to True for any motor that spins the wrong way
         self.motor_direction_invert = self.config.get('servo', {}).get('motor_direction_invert', [False, False, False])
@@ -93,12 +101,12 @@ class StewartPlatformController:
                 'frame_height': 480
             },
             'pid': {
-                'Kp_x': 3.0,
+                'Kp_x': 0.0,
                 'Ki_x': 0.0,
-                'Kd_x': 2.0,
-                'Kp_y': 3.0,
+                'Kd_x': 0.0,
+                'Kp_y': 0.0,
                 'Ki_y': 0.0,
-                'Kd_y': 2.0
+                'Kd_y': 0.0
             },
             'platform': {
                 'max_roll_angle': 15.0,
@@ -139,6 +147,14 @@ class StewartPlatformController:
         roll_angle = np.clip(roll_angle, -15, 15)
         pitch_angle = np.clip(pitch_angle, -15, 15)
         
+        # Store original PID output for debugging
+        original_roll_angle = roll_angle
+        
+        # Apply roll direction inversion if configured (before IK or simplified mapping)
+        roll_direction_invert = self.config.get('platform', {}).get('roll_direction_invert', False)
+        if roll_direction_invert:
+            roll_angle = -roll_angle
+        
         if self.use_inverse_kinematics:
             # Use inverse kinematics to calculate motor angles
             try:
@@ -171,10 +187,10 @@ class StewartPlatformController:
             except Exception as e:
                 print(f"[IK] Error in inverse kinematics: {e}, falling back to simplified method")
                 # Fall back to simplified method on error
-                motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle)
+                motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle, original_roll_angle)
         else:
             # Use simplified trigonometric mapping (fallback)
-            motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle)
+            motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle, original_roll_angle)
         
         # Clip to servo range (0-30 degrees as per Arduino code)
         motor1_angle = int(np.clip(motor1_angle, 0, 30))
@@ -182,30 +198,36 @@ class StewartPlatformController:
         motor3_angle = int(np.clip(motor3_angle, 0, 30))
         
         # DEBUG: Print motor angles being sent
-        print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
-              f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
+        # print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
+        #       f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
         
         # Send all 3 servo commands to Arduino as 3 bytes
-        # Arduino expects: byte1 (servo1), byte2 (servo2), byte3 (servo3)
         if self.servo_serial:
             try:
+                # CRITICAL FIX: Clear input buffer periodically to prevent Arduino debug messages from filling it up
+                if self.servo_serial.in_waiting > 50:  # If buffer has accumulated data
+                    self.servo_serial.reset_input_buffer()
+                
                 self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
-                self.servo_serial.flush()  # Ensure data is sent immediately
+                # Remove flush() - it can block and isn't necessary
+                self.servo_serial.flush()  # COMMENT THIS OUT
             except Exception as e:
                 print(f"[ARDUINO] Send failed: {e}")
-        else:
-            print(f"[MOTOR] WARNING: No servo connection, not sending commands")
+        # Remove the else print statement (line 197) - it prints in tight loop
     
-    def _simplified_motor_mapping(self, roll_angle, pitch_angle):
+    def _simplified_motor_mapping(self, roll_angle, pitch_angle, original_roll_angle=None):
         """Simplified trigonometric mapping (fallback method).
         
         Args:
-            roll_angle: Roll angle in degrees
+            roll_angle: Roll angle in degrees (after inversion if configured)
             pitch_angle: Pitch angle in degrees
+            original_roll_angle: Original roll angle before inversion (for debugging)
             
         Returns:
             tuple: (motor1_angle, motor2_angle, motor3_angle) in degrees
         """
+        if original_roll_angle is None:
+            original_roll_angle = roll_angle
         # Motor positions in degrees (from +X axis, counter-clockwise)
         motor1_angle_deg = 90
         motor2_angle_deg = 210
@@ -218,6 +240,7 @@ class StewartPlatformController:
         
         # Calculate height changes for each motor
         # Negative signs are needed for correct platform tilt direction
+        # Note: roll_angle is already inverted in send_platform_tilt() if roll_direction_invert is True
         motor1_height = -roll_angle * np.cos(motor1_angle_rad) - pitch_angle * np.sin(motor1_angle_rad)
         motor2_height = -roll_angle * np.cos(motor2_angle_rad) - pitch_angle * np.sin(motor2_angle_rad)
         motor3_height = -roll_angle * np.cos(motor3_angle_rad) - pitch_angle * np.sin(motor3_angle_rad)
@@ -236,9 +259,13 @@ class StewartPlatformController:
         motor2_angle = self.neutral_angles[1] + motor2_height * scale_factor * motor2_dir
         motor3_angle = self.neutral_angles[2] + motor3_height * scale_factor * motor3_dir
         
+        # Get roll direction invert flag for debug output
+        roll_direction_invert = self.config.get('platform', {}).get('roll_direction_invert', False)
+        
         # DEBUG: Show intermediate calculations
         if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
-            print(f"[MAPPING] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
+            invert_note = f" (inverted from {original_roll_angle:.1f}°)" if roll_direction_invert and abs(original_roll_angle - roll_angle) > 0.1 else ""
+            print(f"[MAPPING] Roll={roll_angle:.1f}°{invert_note}, Pitch={pitch_angle:.1f}° -> "
                   f"Heights: M1={motor1_height:.2f}, M2={motor2_height:.2f}, M3={motor3_height:.2f} -> "
                   f"Angles: M1={motor1_angle:.1f}°, M2={motor2_angle:.1f}°, M3={motor3_angle:.1f}°")
         
@@ -328,7 +355,7 @@ class StewartPlatformController:
         """Build Tkinter GUI with large sliders and labeled controls."""
         self.root = tk.Tk()
         self.root.title("Stewart Platform PID Controller")
-        self.root.geometry("600x700")
+        self.root.geometry("650x800")
         
         # Title label
         ttk.Label(self.root, text="Stewart Platform Control", font=("Arial", 18, "bold")).pack(pady=10)
@@ -336,62 +363,98 @@ class StewartPlatformController:
         # X-axis (Roll) controls
         ttk.Label(self.root, text="X-Axis (Roll) PID Gains", font=("Arial", 14, "bold")).pack(pady=5)
         
-        # Kp_x slider
-        ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 10)).pack()
+        # Kp_x slider with text box
+        kp_x_frame = ttk.Frame(self.root)
+        kp_x_frame.pack(pady=2)
+        ttk.Label(kp_x_frame, text="Kp (Proportional)", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
         self.kp_x_var = tk.DoubleVar(value=self.pid.Kp_x)
-        kp_x_slider = ttk.Scale(self.root, from_=0, to=100, variable=self.kp_x_var,
-                               orient=tk.HORIZONTAL, length=550)
-        kp_x_slider.pack(pady=2)
-        self.kp_x_label = ttk.Label(self.root, text=f"Kp_x: {self.pid.Kp_x:.1f}", font=("Arial", 9))
-        self.kp_x_label.pack()
+        kp_x_slider = ttk.Scale(kp_x_frame, from_=0, to=100, variable=self.kp_x_var,
+                               orient=tk.HORIZONTAL, length=400)
+        kp_x_slider.pack(side=tk.LEFT, padx=5)
+        self.kp_x_entry = tk.Entry(kp_x_frame, width=8, font=("Arial", 10))
+        self.kp_x_entry.insert(0, f"{self.pid.Kp_x:.3f}")
+        self.kp_x_entry.pack(side=tk.LEFT, padx=5)
+        self.kp_x_entry.bind('<Return>', lambda e: self.update_from_text_entry('kp_x', 0, 100))
+        self.kp_x_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('kp_x', 0, 100))
+        kp_x_slider.config(command=lambda v: self.update_from_slider('kp_x', v))
         
-        # Ki_x slider
-        ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 10)).pack()
+        # Ki_x slider with text box
+        ki_x_frame = ttk.Frame(self.root)
+        ki_x_frame.pack(pady=2)
+        ttk.Label(ki_x_frame, text="Ki (Integral)", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
         self.ki_x_var = tk.DoubleVar(value=self.pid.Ki_x)
-        ki_x_slider = ttk.Scale(self.root, from_=0, to=10, variable=self.ki_x_var,
-                               orient=tk.HORIZONTAL, length=550)
-        ki_x_slider.pack(pady=2)
-        self.ki_x_label = ttk.Label(self.root, text=f"Ki_x: {self.pid.Ki_x:.1f}", font=("Arial", 9))
-        self.ki_x_label.pack()
+        ki_x_slider = ttk.Scale(ki_x_frame, from_=0, to=10, variable=self.ki_x_var,
+                               orient=tk.HORIZONTAL, length=400)
+        ki_x_slider.pack(side=tk.LEFT, padx=5)
+        self.ki_x_entry = tk.Entry(ki_x_frame, width=8, font=("Arial", 10))
+        self.ki_x_entry.insert(0, f"{self.pid.Ki_x:.3f}")
+        self.ki_x_entry.pack(side=tk.LEFT, padx=5)
+        self.ki_x_entry.bind('<Return>', lambda e: self.update_from_text_entry('ki_x', 0, 10))
+        self.ki_x_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('ki_x', 0, 10))
+        ki_x_slider.config(command=lambda v: self.update_from_slider('ki_x', v))
         
-        # Kd_x slider
-        ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 10)).pack()
+        # Kd_x slider with text box
+        kd_x_frame = ttk.Frame(self.root)
+        kd_x_frame.pack(pady=2)
+        ttk.Label(kd_x_frame, text="Kd (Derivative)", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
         self.kd_x_var = tk.DoubleVar(value=self.pid.Kd_x)
-        kd_x_slider = ttk.Scale(self.root, from_=0, to=20, variable=self.kd_x_var,
-                               orient=tk.HORIZONTAL, length=550)
-        kd_x_slider.pack(pady=2)
-        self.kd_x_label = ttk.Label(self.root, text=f"Kd_x: {self.pid.Kd_x:.1f}", font=("Arial", 9))
-        self.kd_x_label.pack()
+        kd_x_slider = ttk.Scale(kd_x_frame, from_=0, to=20, variable=self.kd_x_var,
+                               orient=tk.HORIZONTAL, length=400)
+        kd_x_slider.pack(side=tk.LEFT, padx=5)
+        self.kd_x_entry = tk.Entry(kd_x_frame, width=8, font=("Arial", 10))
+        self.kd_x_entry.insert(0, f"{self.pid.Kd_x:.3f}")
+        self.kd_x_entry.pack(side=tk.LEFT, padx=5)
+        self.kd_x_entry.bind('<Return>', lambda e: self.update_from_text_entry('kd_x', 0, 20))
+        self.kd_x_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('kd_x', 0, 20))
+        kd_x_slider.config(command=lambda v: self.update_from_slider('kd_x', v))
         
         # Y-axis (Pitch) controls
         ttk.Label(self.root, text="Y-Axis (Pitch) PID Gains", font=("Arial", 14, "bold")).pack(pady=5)
         
-        # Kp_y slider
-        ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 10)).pack()
+        # Kp_y slider with text box
+        kp_y_frame = ttk.Frame(self.root)
+        kp_y_frame.pack(pady=2)
+        ttk.Label(kp_y_frame, text="Kp (Proportional)", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
         self.kp_y_var = tk.DoubleVar(value=self.pid.Kp_y)
-        kp_y_slider = ttk.Scale(self.root, from_=0, to=100, variable=self.kp_y_var,
-                               orient=tk.HORIZONTAL, length=550)
-        kp_y_slider.pack(pady=2)
-        self.kp_y_label = ttk.Label(self.root, text=f"Kp_y: {self.pid.Kp_y:.1f}", font=("Arial", 9))
-        self.kp_y_label.pack()
+        kp_y_slider = ttk.Scale(kp_y_frame, from_=0, to=100, variable=self.kp_y_var,
+                               orient=tk.HORIZONTAL, length=400)
+        kp_y_slider.pack(side=tk.LEFT, padx=5)
+        self.kp_y_entry = tk.Entry(kp_y_frame, width=8, font=("Arial", 10))
+        self.kp_y_entry.insert(0, f"{self.pid.Kp_y:.3f}")
+        self.kp_y_entry.pack(side=tk.LEFT, padx=5)
+        self.kp_y_entry.bind('<Return>', lambda e: self.update_from_text_entry('kp_y', 0, 100))
+        self.kp_y_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('kp_y', 0, 100))
+        kp_y_slider.config(command=lambda v: self.update_from_slider('kp_y', v))
         
-        # Ki_y slider
-        ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 10)).pack()
+        # Ki_y slider with text box
+        ki_y_frame = ttk.Frame(self.root)
+        ki_y_frame.pack(pady=2)
+        ttk.Label(ki_y_frame, text="Ki (Integral)", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
         self.ki_y_var = tk.DoubleVar(value=self.pid.Ki_y)
-        ki_y_slider = ttk.Scale(self.root, from_=0, to=10, variable=self.ki_y_var,
-                               orient=tk.HORIZONTAL, length=550)
-        ki_y_slider.pack(pady=2)
-        self.ki_y_label = ttk.Label(self.root, text=f"Ki_y: {self.pid.Ki_y:.1f}", font=("Arial", 9))
-        self.ki_y_label.pack()
+        ki_y_slider = ttk.Scale(ki_y_frame, from_=0, to=10, variable=self.ki_y_var,
+                               orient=tk.HORIZONTAL, length=400)
+        ki_y_slider.pack(side=tk.LEFT, padx=5)
+        self.ki_y_entry = tk.Entry(ki_y_frame, width=8, font=("Arial", 10))
+        self.ki_y_entry.insert(0, f"{self.pid.Ki_y:.3f}")
+        self.ki_y_entry.pack(side=tk.LEFT, padx=5)
+        self.ki_y_entry.bind('<Return>', lambda e: self.update_from_text_entry('ki_y', 0, 10))
+        self.ki_y_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('ki_y', 0, 10))
+        ki_y_slider.config(command=lambda v: self.update_from_slider('ki_y', v))
         
-        # Kd_y slider
-        ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 10)).pack()
+        # Kd_y slider with text box
+        kd_y_frame = ttk.Frame(self.root)
+        kd_y_frame.pack(pady=2)
+        ttk.Label(kd_y_frame, text="Kd (Derivative)", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
         self.kd_y_var = tk.DoubleVar(value=self.pid.Kd_y)
-        kd_y_slider = ttk.Scale(self.root, from_=0, to=20, variable=self.kd_y_var,
-                               orient=tk.HORIZONTAL, length=550)
-        kd_y_slider.pack(pady=2)
-        self.kd_y_label = ttk.Label(self.root, text=f"Kd_y: {self.pid.Kd_y:.1f}", font=("Arial", 9))
-        self.kd_y_label.pack()
+        kd_y_slider = ttk.Scale(kd_y_frame, from_=0, to=20, variable=self.kd_y_var,
+                               orient=tk.HORIZONTAL, length=400)
+        kd_y_slider.pack(side=tk.LEFT, padx=5)
+        self.kd_y_entry = tk.Entry(kd_y_frame, width=8, font=("Arial", 10))
+        self.kd_y_entry.insert(0, f"{self.pid.Kd_y:.3f}")
+        self.kd_y_entry.pack(side=tk.LEFT, padx=5)
+        self.kd_y_entry.bind('<Return>', lambda e: self.update_from_text_entry('kd_y', 0, 20))
+        self.kd_y_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('kd_y', 0, 20))
+        kd_y_slider.config(command=lambda v: self.update_from_slider('kd_y', v))
         
         # Setpoint controls
         ttk.Label(self.root, text="Setpoint", font=("Arial", 12)).pack(pady=5)
@@ -430,6 +493,64 @@ class StewartPlatformController:
         # Schedule periodic GUI update
         self.update_gui()
     
+    def update_from_text_entry(self, param_name, min_val, max_val):
+        """Update slider and PID controller from text entry box.
+        
+        Args:
+            param_name: Name of parameter ('kp_x', 'ki_x', 'kd_x', 'kp_y', 'ki_y', 'kd_y')
+            min_val: Minimum allowed value
+            max_val: Maximum allowed value
+        """
+        try:
+            # Get the entry widget and var for this parameter
+            entry_widget = getattr(self, f"{param_name}_entry")
+            var_widget = getattr(self, f"{param_name}_var")
+            
+            # Get value from text entry
+            text_value = entry_widget.get().strip()
+            if not text_value:
+                # If empty, restore current value
+                current_val = var_widget.get()
+                entry_widget.delete(0, tk.END)
+                entry_widget.insert(0, f"{current_val:.3f}")
+                return
+            
+            value = float(text_value)
+            # Clamp to valid range
+            value = max(min_val, min(max_val, value))
+            
+            # Update the variable (which updates the slider)
+            var_widget.set(value)
+            
+            # Update the text entry to show the clamped value
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, f"{value:.3f}")
+            
+        except ValueError:
+            # Invalid input, restore current value
+            var_widget = getattr(self, f"{param_name}_var")
+            current_val = var_widget.get()
+            entry_widget = getattr(self, f"{param_name}_entry")
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, f"{current_val:.3f}")
+    
+    def update_from_slider(self, param_name, value):
+        """Update text entry box from slider.
+        
+        Args:
+            param_name: Name of parameter ('kp_x', 'ki_x', 'kd_x', 'kp_y', 'ki_y', 'kd_y')
+            value: New value from slider (as string)
+        """
+        try:
+            entry_widget = getattr(self, f"{param_name}_entry")
+            # Only update text entry if it doesn't have focus (user isn't typing)
+            if self.root.focus_get() != entry_widget:
+                # Update text entry with formatted value
+                entry_widget.delete(0, tk.END)
+                entry_widget.insert(0, f"{float(value):.3f}")
+        except (ValueError, AttributeError):
+            pass
+    
     def update_gui(self):
         """Reflect latest values from sliders into program and update display."""
         if self.running:
@@ -443,13 +564,7 @@ class StewartPlatformController:
             self.setpoint_y = self.setpoint_y_var.get()
             self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
             
-            # Update displayed values
-            self.kp_x_label.config(text=f"Kp_x: {self.pid.Kp_x:.1f}")
-            self.ki_x_label.config(text=f"Ki_x: {self.pid.Ki_x:.1f}")
-            self.kd_x_label.config(text=f"Kd_x: {self.pid.Kd_x:.1f}")
-            self.kp_y_label.config(text=f"Kp_y: {self.pid.Kp_y:.1f}")
-            self.ki_y_label.config(text=f"Ki_y: {self.pid.Ki_y:.1f}")
-            self.kd_y_label.config(text=f"Kd_y: {self.pid.Kd_y:.1f}")
+            # Update setpoint labels
             self.setpoint_x_label.config(text=f"Setpoint X: {self.setpoint_x:.4f}m")
             self.setpoint_y_label.config(text=f"Setpoint Y: {self.setpoint_y:.4f}m")
             

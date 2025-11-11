@@ -8,8 +8,8 @@ import time
 class PIDController2D:
     """2D PID controller with separate controllers for X and Y axes."""
     
-    def __init__(self, Kp_x=10.0, Ki_x=0.0, Kd_x=0.0,
-                 Kp_y=10.0, Ki_y=0.0, Kd_y=0.0,
+    def __init__(self, Kp_x=0.0, Ki_x=0.0, Kd_x=0.0,
+                 Kp_y=0.0, Ki_y=0.0, Kd_y=0.0,
                  output_limit_x=15.0, output_limit_y=15.0):
         """Initialize 2D PID controller.
         
@@ -67,19 +67,35 @@ class PIDController2D:
                 dt = max(0.001, min(dt, 0.1))  # Clamp between 1ms and 100ms
         
         # Update X-axis controller (roll)
+        # Control logic: if ball is RIGHT (positive X), tilt LEFT (negative roll) to bring ball back
+        # error = setpoint - position: if ball is right (pos), error is negative → negative roll ✓ CORRECT
         error_x = self.setpoint_x - position_x
-        error_x = error_x * 100  # Scale error for easier tuning
+        
+        # Scale error to convert from meters to a normalized range
+        # Platform radius is ~0.1m, so errors are typically in range [-0.1, 0.1] meters
+        # Scale by factor to make gains more intuitive (e.g., 50-100x)
+        # This allows gains to be in range [1-10] instead of [0.01-0.1]
+        error_scale = 50.0  # Reduced from 100x to be less aggressive
+        error_x_scaled = error_x * error_scale
+        
+        # Separate, smaller scaling for integral term to reduce its effect
+        # Integral accumulates over time, so smaller scale prevents windup and overshoot
+        integral_scale = 0.5  # Very small scale (10x smaller than error_scale) to minimize integral influence
+        error_x_integral = error_x * integral_scale
         
         # Proportional term
-        P_x = self.Kp_x * error_x
+        P_x = self.Kp_x * error_x_scaled
         
-        # Integral term
-        self.integral_x += error_x * dt
+        # Integral term (uses smaller scaling factor)
+        self.integral_x += error_x_integral * dt
+        # Anti-windup: limit integral to prevent excessive buildup
+        max_integral = self.output_limit_x / (self.Ki_x + 1e-6) if self.Ki_x > 0 else 1e6
+        self.integral_x = np.clip(self.integral_x, -max_integral, max_integral)
         I_x = self.Ki_x * self.integral_x
         
         # Derivative term
         if self.prev_time_x is not None:
-            derivative_x = (error_x - self.prev_error_x) / dt
+            derivative_x = (error_x_scaled - self.prev_error_x) / dt
         else:
             derivative_x = 0.0
         D_x = self.Kd_x * derivative_x
@@ -88,24 +104,36 @@ class PIDController2D:
         output_x = P_x + I_x + D_x
         output_x = np.clip(output_x, -self.output_limit_x, self.output_limit_x)
         
-        # Update X-axis state
-        self.prev_error_x = error_x
+        # Update X-axis state (store scaled error)
+        self.prev_error_x = error_x_scaled
         self.prev_time_x = current_time
         
         # Update Y-axis controller (pitch)
+        # Control logic: if ball is FORWARD (positive Y), tilt BACKWARD (negative pitch) to bring ball back
         error_y = self.setpoint_y - position_y
-        error_y = error_y * 100  # Scale error for easier tuning
+        
+        # Scale error (same scale factor as X-axis)
+        error_scale = 50.0  # Reduced from 100x to be less aggressive
+        error_y_scaled = error_y * error_scale
+        
+        # Separate, smaller scaling for integral term to reduce its effect
+        # Integral accumulates over time, so smaller scale prevents windup and overshoot
+        integral_scale = 5.0  # Very small scale (10x smaller than error_scale) to minimize integral influence
+        error_y_integral = error_y * integral_scale
         
         # Proportional term
-        P_y = self.Kp_y * error_y
+        P_y = self.Kp_y * error_y_scaled
         
-        # Integral term
-        self.integral_y += error_y * dt
+        # Integral term (uses smaller scaling factor)
+        self.integral_y += error_y_integral * dt
+        # Anti-windup: limit integral to prevent excessive buildup
+        max_integral = self.output_limit_y / (self.Ki_y + 1e-6) if self.Ki_y > 0 else 1e6
+        self.integral_y = np.clip(self.integral_y, -max_integral, max_integral)
         I_y = self.Ki_y * self.integral_y
         
         # Derivative term
         if self.prev_time_y is not None:
-            derivative_y = (error_y - self.prev_error_y) / dt
+            derivative_y = (error_y_scaled - self.prev_error_y) / dt
         else:
             derivative_y = 0.0
         D_y = self.Kd_y * derivative_y
@@ -114,8 +142,8 @@ class PIDController2D:
         output_y = P_y + I_y + D_y
         output_y = np.clip(output_y, -self.output_limit_y, self.output_limit_y)
         
-        # Update Y-axis state
-        self.prev_error_y = error_y
+        # Update Y-axis state (store scaled error)
+        self.prev_error_y = error_y_scaled
         self.prev_time_y = current_time
         
         return output_x, output_y
@@ -176,8 +204,11 @@ class PIDController2D:
         Returns:
             dict: Current state including errors, integrals, and outputs
         """
-        error_x = self.setpoint_x - (self.prev_error_x / 100 if self.prev_error_x != 0 else 0)
-        error_y = self.setpoint_y - (self.prev_error_y / 100 if self.prev_error_y != 0 else 0)
+        # prev_error_x and prev_error_y now store scaled errors directly (no 100x multiplier)
+        # To get actual position error, we'd need to reverse the calculation
+        # For now, just return the stored values as-is
+        error_x = self.prev_error_x if self.prev_time_x is not None else 0.0
+        error_y = self.prev_error_y if self.prev_time_y is not None else 0.0
         
         return {
             'setpoint_x': self.setpoint_x,
