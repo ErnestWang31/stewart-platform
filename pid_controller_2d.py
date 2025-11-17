@@ -71,23 +71,18 @@ class PIDController2D:
         # error = setpoint - position: if ball is right (pos), error is negative → negative roll ✓ CORRECT
         error_x = self.setpoint_x - position_x
         
-        # Scale error to convert from meters to a normalized range
+        # Scale error to convert from meters to a normalized range (same as 1D beam balancer)
         # Platform radius is ~0.1m, so errors are typically in range [-0.1, 0.1] meters
-        # Scale by factor to make gains more intuitive (e.g., 50-100x)
+        # Scale by 100x to make gains more intuitive (same as 1D controller)
         # This allows gains to be in range [1-10] instead of [0.01-0.1]
-        error_scale = 50.0  # Reduced from 100x to be less aggressive
+        error_scale = 100.0  # Same as 1D beam balancer
         error_x_scaled = error_x * error_scale
-        
-        # Separate, smaller scaling for integral term to reduce its effect
-        # Integral accumulates over time, so smaller scale prevents windup and overshoot
-        integral_scale = 0.5  # Very small scale (10x smaller than error_scale) to minimize integral influence
-        error_x_integral = error_x * integral_scale
         
         # Proportional term
         P_x = self.Kp_x * error_x_scaled
         
-        # Integral term (uses smaller scaling factor)
-        self.integral_x += error_x_integral * dt
+        # Integral term (uses same scaling as P and D)
+        self.integral_x += error_x_scaled * dt
         # Anti-windup: limit integral to prevent excessive buildup
         max_integral = self.output_limit_x / (self.Ki_x + 1e-6) if self.Ki_x > 0 else 1e6
         self.integral_x = np.clip(self.integral_x, -max_integral, max_integral)
@@ -112,20 +107,15 @@ class PIDController2D:
         # Control logic: if ball is FORWARD (positive Y), tilt BACKWARD (negative pitch) to bring ball back
         error_y = self.setpoint_y - position_y
         
-        # Scale error (same scale factor as X-axis)
-        error_scale = 50.0  # Reduced from 100x to be less aggressive
+        # Scale error (same scale factor as X-axis and 1D beam balancer)
+        error_scale = 100.0  # Same as 1D beam balancer
         error_y_scaled = error_y * error_scale
-        
-        # Separate, smaller scaling for integral term to reduce its effect
-        # Integral accumulates over time, so smaller scale prevents windup and overshoot
-        integral_scale = 5.0  # Very small scale (10x smaller than error_scale) to minimize integral influence
-        error_y_integral = error_y * integral_scale
         
         # Proportional term
         P_y = self.Kp_y * error_y_scaled
         
-        # Integral term (uses smaller scaling factor)
-        self.integral_y += error_y_integral * dt
+        # Integral term (uses same scaling as P and D)
+        self.integral_y += error_y_scaled * dt
         # Anti-windup: limit integral to prevent excessive buildup
         max_integral = self.output_limit_y / (self.Ki_y + 1e-6) if self.Ki_y > 0 else 1e6
         self.integral_y = np.clip(self.integral_y, -max_integral, max_integral)
@@ -204,9 +194,9 @@ class PIDController2D:
         Returns:
             dict: Current state including errors, integrals, and outputs
         """
-        # prev_error_x and prev_error_y now store scaled errors directly (no 100x multiplier)
-        # To get actual position error, we'd need to reverse the calculation
-        # For now, just return the stored values as-is
+        # prev_error_x and prev_error_y store scaled errors (error * 100.0)
+        # To get actual position error, divide by 100.0
+        # For now, just return the stored scaled values as-is
         error_x = self.prev_error_x if self.prev_time_x is not None else 0.0
         error_y = self.prev_error_y if self.prev_time_y is not None else 0.0
         
