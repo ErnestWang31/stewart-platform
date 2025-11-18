@@ -118,7 +118,7 @@ class BallDetector2D:
         position_x_m = pixel_offset_x * self.scale_factor_x
         # Invert Y-axis: in image coordinates, Y increases downward (top=0, bottom=480)
         # In physical coordinates, Y should increase upward (standard Cartesian)
-        position_y_m = -pixel_offset_y * self.scale_factor_y
+        position_y_m = pixel_offset_y * self.scale_factor_y
         
         return True, (int(x), int(y)), radius, position_x_m, position_y_m
 
