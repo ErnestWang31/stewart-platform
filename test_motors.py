@@ -24,8 +24,11 @@ class MotorTester:
             self.serial_conn = serial.Serial(self.port, self.baudrate, timeout=1)
             time.sleep(2.5)  # Wait for Arduino to initialize (Arduino may reset on connection)
             
+
+            
             # Read any initial messages from Arduino (like "Stewart Platform Arduino Ready")
             print("Waiting for Arduino initialization...")
+
             time.sleep(0.5)
             messages = []
             start_time = time.time()
@@ -74,10 +77,14 @@ class MotorTester:
         angle3 = max(0, min(30, int(angle3)))
         
         try:
+            # CRITICAL FIX: Clear input buffer periodically to prevent Arduino debug messages from filling it up
+            if self.serial_conn.in_waiting > 50:  # If buffer has accumulated data
+                self.serial_conn.reset_input_buffer()
+            
             # Send 3 bytes atomically
             command = bytes([angle1, angle2, angle3])
             bytes_written = self.serial_conn.write(command)
-            self.serial_conn.flush()  # Ensure data is sent immediately
+            # Remove flush() - it can block and isn't necessary
             
             if bytes_written != 3:
                 print(f"⚠ Warning: Only {bytes_written} of 3 bytes sent")
