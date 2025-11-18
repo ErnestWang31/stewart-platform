@@ -94,7 +94,8 @@ class PIDController2D:
         # Platform radius is ~0.1m, so errors are typically in range [-0.1, 0.1] meters
         # Scale by 100x to make gains more intuitive (same as 1D controller)
         # This allows gains to be in range [1-10] instead of [0.01-0.1]
-        error_scale = 10.0  # Same as 1D beam balancer
+        # Scaling factor of 100: max_error (0.095m) × 100 = 9.5, then Kp=1.5 gives ~14° output
+        error_scale = 100.0  # Proper scaling: allows Kp in range [0.5-3.0]
         error_x_scaled = error_x * error_scale
         
         # Proportional term
@@ -141,7 +142,7 @@ class PIDController2D:
         error_y = self.setpoint_y - position_y
         
         # Scale error (same scale factor as X-axis and 1D beam balancer)
-        error_scale = 10.0  # Same as 1D beam balancer
+        error_scale = 100.0  # Proper scaling: allows Kp in range [0.5-3.0]
         error_y_scaled = error_y * error_scale
         
         # Proportional term
