@@ -21,12 +21,13 @@ class StewartPlatformController:
     
     def __init__(self, config_file="config_stewart.json"):
         """Initialize controller, load config, set defaults and queues."""
+        self.config_file = config_file
         # Load experiment and hardware config from JSON file
         try:
-            with open(config_file, 'r') as f:
+            with open(self.config_file, 'r') as f:
                 self.config = json.load(f)
         except FileNotFoundError:
-            print(f"[WARNING] Config file {config_file} not found, using defaults")
+            print(f"[WARNING] Config file {self.config_file} not found, using defaults")
             self.config = self._get_default_config()
         
         # Initialize 2D PID controller
@@ -52,6 +53,9 @@ class StewartPlatformController:
         
         # Initialize inverse kinematics solver
         self.ik_solver = StewartPlatformIK(self.config)
+
+        # Load calibrated motor geometry (angles/orientation)
+        self._init_motor_geometry()
         
         # Servo configuration (for 3 motors using Adafruit PWM Servo Driver on Arduino)
         # Single Arduino controls all 3 servos via I2C PWM driver
@@ -93,6 +97,9 @@ class StewartPlatformController:
         # Thread-safe queue for most recent ball position measurement
         self.position_queue = queue.Queue(maxsize=1)
         self.running = False    # Main run flag for clean shutdown
+        platform_cfg = self.config.get('platform', {})
+        self.roll_direction_invert = platform_cfg.get('roll_direction_invert', False)
+        self.pitch_direction_invert = platform_cfg.get('pitch_direction_invert', False)
     
     def _get_default_config(self):
         """Return default configuration dictionary."""
@@ -112,7 +119,9 @@ class StewartPlatformController:
             },
             'platform': {
                 'max_roll_angle': 15.0,
-                'max_pitch_angle': 15.0
+                'max_pitch_angle': 15.0,
+                'roll_direction_invert': False,
+                'pitch_direction_invert': False
             },
             'servo': {
                 'port': "COM3",
@@ -153,9 +162,10 @@ class StewartPlatformController:
         original_roll_angle = roll_angle
         
         # Apply roll direction inversion if configured (before IK or simplified mapping)
-        roll_direction_invert = self.config.get('platform', {}).get('roll_direction_invert', False)
-        if roll_direction_invert:
+        if self.roll_direction_invert:
             roll_angle = -roll_angle
+        if self.pitch_direction_invert:
+            pitch_angle = -pitch_angle
         
         if self.use_inverse_kinematics:
             # Use inverse kinematics to calculate motor angles
@@ -216,6 +226,26 @@ class StewartPlatformController:
                 print(f"[ARDUINO] Send failed: {e}")
         # Remove the else print statement (line 197) - it prints in tight loop
     
+    def _init_motor_geometry(self):
+        """Load motor angles from config (3-point calibration) and pre-compute orientation."""
+        axis_rotation = float(self.config.get('axis_rotation_deg', 0.0))
+        calibrated_angles = self.config.get('motor_angles_deg')
+
+        if calibrated_angles and len(calibrated_angles) == 3:
+            # Rotate calibrated angles into platform coordinate frame
+            self.motor_angles_deg = [((float(angle) + axis_rotation) % 360.0) for angle in calibrated_angles]
+        else:
+            # Fallback to ideal 120° spacing
+            self.motor_angles_deg = [90.0, 210.0, 330.0]
+
+        self.motor_angles_rad = [np.radians(angle) for angle in self.motor_angles_deg]
+        # Pre-compute cos/sin for efficient mapping
+        self.motor_orientations = [(np.cos(rad), np.sin(rad)) for rad in self.motor_angles_rad]
+
+        print(f"[CONTROLLER] Axis rotation: {axis_rotation:.2f}°")
+        print(f"[CONTROLLER] Motor angles (camera frame): {calibrated_angles if calibrated_angles else 'N/A'}")
+        print(f"[CONTROLLER] Motor angles (platform frame): {self.motor_angles_deg}")
+
     def _simplified_motor_mapping(self, roll_angle, pitch_angle, original_roll_angle=None):
         """Simplified trigonometric mapping (fallback method).
         
@@ -229,22 +259,13 @@ class StewartPlatformController:
         """
         if original_roll_angle is None:
             original_roll_angle = roll_angle
-        # Motor positions in degrees (from +X axis, counter-clockwise)
-        motor1_angle_deg = 90
-        motor2_angle_deg = 210
-        motor3_angle_deg = 330
-        
-        # Convert to radians
-        motor1_angle_rad = np.radians(motor1_angle_deg)
-        motor2_angle_rad = np.radians(motor2_angle_deg)
-        motor3_angle_rad = np.radians(motor3_angle_deg)
-        
-        # Calculate height changes for each motor
+        # Calculate height changes for each motor using calibrated orientations
         # Negative signs are needed for correct platform tilt direction
         # Note: roll_angle is already inverted in send_platform_tilt() if roll_direction_invert is True
-        motor1_height = -roll_angle * np.cos(motor1_angle_rad) - pitch_angle * np.sin(motor1_angle_rad)
-        motor2_height = -roll_angle * np.cos(motor2_angle_rad) - pitch_angle * np.sin(motor2_angle_rad)
-        motor3_height = -roll_angle * np.cos(motor3_angle_rad) - pitch_angle * np.sin(motor3_angle_rad)
+        motor_heights = []
+        for cos_a, sin_a in self.motor_orientations:
+            motor_heights.append(-roll_angle * cos_a - pitch_angle * sin_a)
+        motor1_height, motor2_height, motor3_height = motor_heights
         
         # Convert height changes to motor angles
         # Scale factor: platform tilt degrees -> servo angle change
@@ -260,17 +281,60 @@ class StewartPlatformController:
         motor2_angle = self.neutral_angles[1] + motor2_height * scale_factor * motor2_dir
         motor3_angle = self.neutral_angles[2] + motor3_height * scale_factor * motor3_dir
         
-        # Get roll direction invert flag for debug output
-        roll_direction_invert = self.config.get('platform', {}).get('roll_direction_invert', False)
-        
         # DEBUG: Show intermediate calculations
         if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
-            invert_note = f" (inverted from {original_roll_angle:.1f}°)" if roll_direction_invert and abs(original_roll_angle - roll_angle) > 0.1 else ""
+            invert_note = ""
+            if self.roll_direction_invert and abs(original_roll_angle - roll_angle) > 0.1:
+                invert_note = f" (inverted from {original_roll_angle:.1f}°)"
             print(f"[MAPPING] Roll={roll_angle:.1f}°{invert_note}, Pitch={pitch_angle:.1f}° -> "
                   f"Heights: M1={motor1_height:.2f}, M2={motor2_height:.2f}, M3={motor3_height:.2f} -> "
                   f"Angles: M1={motor1_angle:.1f}°, M2={motor2_angle:.1f}°, M3={motor3_angle:.1f}°")
         
         return motor1_angle, motor2_angle, motor3_angle
+
+    def _persist_direction_flags(self):
+        """Write current roll/pitch inversion flags back to config file."""
+        persisted_config = {}
+        try:
+            with open(self.config_file, 'r') as f:
+                persisted_config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            persisted_config = {}
+
+        platform_cfg = persisted_config.setdefault('platform', {})
+        platform_cfg['roll_direction_invert'] = self.roll_direction_invert
+        platform_cfg['pitch_direction_invert'] = self.pitch_direction_invert
+
+        self.config = persisted_config
+
+        try:
+            with open(self.config_file, 'w') as f:
+                json.dump(persisted_config, f, indent=2)
+        except Exception as e:
+            print(f"[WARNING] Failed to persist direction flags: {e}")
+
+    def toggle_direction_invert(self, axis):
+        """Handle GUI checkbox toggles for direction inversion."""
+        if axis == 'roll':
+            new_value = bool(self.roll_invert_var.get())
+            self.roll_direction_invert = new_value
+            axis_name = "roll"
+        elif axis == 'pitch':
+            new_value = bool(self.pitch_invert_var.get())
+            self.pitch_direction_invert = new_value
+            axis_name = "pitch"
+        else:
+            return
+
+        # Update in-memory config used by detector (if needed later)
+        if self.detector and self.detector.config is not None:
+            platform_cfg = self.detector.config.setdefault('platform', {})
+            platform_cfg['roll_direction_invert'] = self.roll_direction_invert
+            platform_cfg['pitch_direction_invert'] = self.pitch_direction_invert
+
+        self._persist_direction_flags()
+        state = "ON" if new_value else "OFF"
+        print(f"[GUI] {axis_name.capitalize()} direction inversion {state}")
     
     def camera_thread(self):
         """Dedicated thread for video capture and ball detection."""
@@ -540,6 +604,18 @@ class StewartPlatformController:
                    command=self.plot_results, width=15).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Stop",
                    command=self.stop, width=15).pack(side=tk.LEFT, padx=5)
+
+        # Axis inversion controls
+        direction_frame = ttk.LabelFrame(main_frame, text="Axis Direction Inversion", padding="10")
+        direction_frame.pack(fill=tk.X, pady=10)
+        self.roll_invert_var = tk.BooleanVar(value=self.roll_direction_invert)
+        self.pitch_invert_var = tk.BooleanVar(value=self.pitch_direction_invert)
+        ttk.Checkbutton(direction_frame, text="Invert Roll (X axis)",
+                        variable=self.roll_invert_var,
+                        command=lambda: self.toggle_direction_invert('roll')).pack(side=tk.LEFT, padx=10)
+        ttk.Checkbutton(direction_frame, text="Invert Pitch (Y axis)",
+                        variable=self.pitch_invert_var,
+                        command=lambda: self.toggle_direction_invert('pitch')).pack(side=tk.LEFT, padx=10)
         
         # Schedule periodic GUI update
         self.update_gui()

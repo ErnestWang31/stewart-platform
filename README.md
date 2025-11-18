@@ -57,6 +57,7 @@ The system uses `config_stewart.json` for configuration. Key parameters:
 - **Calibration**: Pixel-to-meter conversion ratio (uniform for circular platform)
 - **PID**: Separate gains for X (roll) and Y (pitch) axes
 - **Servo**: Serial port (COM port) for Arduino and neutral angles for 3 motors (arranged at 120° intervals)
+- **Direction Flags**: `platform.roll_direction_invert` and `platform.pitch_direction_invert` flip control/detection axes when your hardware is wired opposite the default convention (e.g., if Motor 1 sits on the negative pitch axis, set `pitch_direction_invert` to `true`).
 - **Platform Limits**: Maximum roll and pitch angles
 
 ## How It Works

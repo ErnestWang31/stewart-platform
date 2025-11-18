@@ -37,6 +37,8 @@
   "platform": {
     "max_roll_angle": 15.0,
     "max_pitch_angle": 15.0,
+    "roll_direction_invert": false,
+    "pitch_direction_invert": false,
     "use_inverse_kinematics": true,
     "ik_angle_scale": 1.0,
     "ik_angle_offset": 0.0,

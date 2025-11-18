@@ -21,7 +21,15 @@ class BallDetector2D:
         self.upper_hsv = np.array([20, 255, 255], dtype=np.uint8)  # Orange upper bound
         self.scale_factor_x = 1.0  # Conversion factor from normalized x-coords to meters
         self.scale_factor_y = 1.0  # Conversion factor from normalized y-coords to meters
+        self.axis_rotation_deg = 0.0  # Rotation from camera frame to platform frame
+        self.axis_rotation_rad = 0.0
         self.config = None  # Store config for platform center access
+        self.axis_rotation_cos = 1.0
+        self.axis_rotation_sin = 0.0
+        self.axis_vectors = {
+            "roll": (1.0, 0.0),   # +X (roll) axis in camera frame
+            "pitch": (0.0, 1.0)   # +Y (pitch) axis in camera frame
+        }
         
         # Load configuration from file if it exists
         if os.path.exists(config_file):
@@ -51,14 +59,46 @@ class BallDetector2D:
                             self.scale_factor_x = ratio
                         if self.scale_factor_y == 1.0:  # Only set if not already set
                             self.scale_factor_y = ratio
+
+                # Load axis rotation (from 3-point motor calibration) if available
+                axis_rotation = config.get('axis_rotation_deg')
+                if axis_rotation is not None:
+                    self.axis_rotation_deg = float(axis_rotation)
+                    self.axis_rotation_rad = np.radians(self.axis_rotation_deg)
+                    self.axis_rotation_cos = np.cos(self.axis_rotation_rad)
+                    self.axis_rotation_sin = np.sin(self.axis_rotation_rad)
+                else:
+                    self.axis_rotation_deg = 0.0
+                    self.axis_rotation_rad = 0.0
+                    self.axis_rotation_cos = 1.0
+                    self.axis_rotation_sin = 0.0
+
+                self._update_axis_vectors()
                 
                 print(f"[BALL_DETECT_2D] Loaded HSV bounds: {self.lower_hsv} to {self.upper_hsv}")
                 print(f"[BALL_DETECT_2D] Scale factors: X={self.scale_factor_x:.6f} m/pixel, Y={self.scale_factor_y:.6f} m/pixel")
+                if self.axis_rotation_deg != 0.0:
+                    print(f"[BALL_DETECT_2D] Axis rotation: {self.axis_rotation_deg:.2f}° (camera -> platform)")
                 
             except Exception as e:
                 print(f"[BALL_DETECT_2D] Config load error: {e}, using defaults")
         else:
             print("[BALL_DETECT_2D] No config file found, using default HSV bounds")
+            self._update_axis_vectors()
+            return
+
+        # Ensure axis vectors reflect current settings even if config missing some fields
+        self._update_axis_vectors()
+
+    def _update_axis_vectors(self):
+        """Compute roll and pitch axis vectors in pixel space based on calibration."""
+        cos_a = self.axis_rotation_cos
+        sin_a = self.axis_rotation_sin
+        # Transform platform unit axes back into camera frame (inverse rotation)
+        roll_vec = (cos_a, -sin_a)   # Platform +X (roll) axis in pixel coordinates
+        pitch_vec = (sin_a, cos_a)   # Platform +Y (pitch) axis in pixel coordinates
+        self.axis_vectors["roll"] = roll_vec
+        self.axis_vectors["pitch"] = pitch_vec
 
     def detect_ball(self, frame):
         """Detect ball in frame and return detection results.
@@ -112,13 +152,27 @@ class BallDetector2D:
         
         pixel_offset_x = x - center_x
         pixel_offset_y = y - center_y
+
+        # Rotate offsets into platform coordinate frame using calibration
+        # axis_rotation_deg rotates camera frame TO platform frame
+        # To convert a point from camera to platform, we rotate by -axis_rotation
+        if self.axis_rotation_rad:
+            # Use negative rotation (inverse) to convert camera coords to platform coords
+            # Rotation by -θ: x' = x*cos(θ) + y*sin(θ), y' = -x*sin(θ) + y*cos(θ)
+            cos_a = self.axis_rotation_cos  # cos(-θ) = cos(θ)
+            sin_a = self.axis_rotation_sin   # We'll negate in the formula
+            rotated_x = pixel_offset_x * cos_a + pixel_offset_y * sin_a
+            rotated_y = -pixel_offset_x * sin_a + pixel_offset_y * cos_a
+        else:
+            rotated_x = pixel_offset_x
+            rotated_y = pixel_offset_y
         
         # For circular platform, use uniform scale factor (pixel_to_meter_ratio is in m/pixel)
         # Both uniform and non-uniform scales use the same calculation since scale_factor is already in m/pixel
-        position_x_m = pixel_offset_x * self.scale_factor_x
+        position_x_m = rotated_x * self.scale_factor_x
         # Invert Y-axis: in image coordinates, Y increases downward (top=0, bottom=480)
         # In physical coordinates, Y should increase upward (standard Cartesian)
-        position_y_m = pixel_offset_y * self.scale_factor_y
+        position_y_m = rotated_y * self.scale_factor_y
         
         return True, (int(x), int(y)), radius, position_x_m, position_y_m
 
@@ -160,6 +214,24 @@ class BallDetector2D:
         cv2.line(overlay, (center_x, center_y - 20), (center_x, center_y + 20), (255, 255, 255), 1)
         cv2.putText(overlay, "Center", (center_x + 5, center_y - 5),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+        # Draw calibrated roll and pitch axes if geometry data exists
+        axis_length = 100
+        if self.config and self.config.get('platform_radius_pixels'):
+            axis_length = int(self.config['platform_radius_pixels'] * 0.8)
+        roll_vec = self.axis_vectors["roll"]
+        pitch_vec = self.axis_vectors["pitch"]
+        for axis_name, vec, color in [
+            ("Roll +", roll_vec, (255, 0, 0)),
+            ("Roll -", (-roll_vec[0], -roll_vec[1]), (150, 0, 0)),
+            ("Pitch +", pitch_vec, (0, 255, 0)),
+            ("Pitch -", (-pitch_vec[0], -pitch_vec[1]), (0, 150, 0))
+        ]:
+            end_x = int(center_x + vec[0] * axis_length)
+            end_y = int(center_y + vec[1] * axis_length)
+            cv2.arrowedLine(overlay, (center_x, center_y), (end_x, end_y), color, 2, tipLength=0.1)
+            label_pos = (int(center_x + vec[0] * (axis_length + 15)), int(center_y + vec[1] * (axis_length + 15)))
+            cv2.putText(overlay, axis_name, label_pos, cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
         
         if found:
             # Draw circle around detected ball

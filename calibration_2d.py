@@ -583,6 +583,10 @@ class StewartPlatformCalibrator:
             config["platform"]["max_roll_angle"] = 15.0
         if "max_pitch_angle" not in config["platform"]:
             config["platform"]["max_pitch_angle"] = 15.0
+        if "roll_direction_invert" not in config["platform"]:
+            config["platform"]["roll_direction_invert"] = False
+        if "pitch_direction_invert" not in config["platform"]:
+            config["platform"]["pitch_direction_invert"] = False
         # Note: roll_direction_invert, use_inverse_kinematics, motor_scale_factor, 
         # and all other existing platform fields are automatically preserved since
         # we load the existing config first and only add defaults for missing fields
