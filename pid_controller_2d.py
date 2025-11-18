@@ -43,6 +43,11 @@ class PIDController2D:
         self.integral_y = 0.0
         self.prev_error_y = 0.0
         self.prev_time_y = None
+        
+        # Position filtering to reduce camera noise (simple exponential moving average)
+        self.position_x_filtered = None
+        self.position_y_filtered = None
+        self.filter_alpha = 0.7  # 0 = heavy filtering, 1 = no filtering (lower = smoother but more lag)
     
     def update(self, position_x, position_y, dt=None):
         """Update PID controllers and return control outputs.
@@ -58,13 +63,27 @@ class PIDController2D:
         """
         current_time = time.time()
         
-        # Calculate time step
+        # Calculate time step for X-axis
         if dt is None:
             if self.prev_time_x is None:
-                dt = 0.033  # Default 30 Hz
+                dt_x = 0.033  # Default 30 Hz
             else:
-                dt = current_time - self.prev_time_x
-                dt = max(0.001, min(dt, 0.1))  # Clamp between 1ms and 100ms
+                dt_x = current_time - self.prev_time_x
+                dt_x = max(0.001, min(dt_x, 0.1))  # Clamp between 1ms and 100ms
+        else:
+            dt_x = dt
+        
+        # Apply position filtering to reduce camera noise (exponential moving average)
+        if self.position_x_filtered is None:
+            self.position_x_filtered = position_x
+            self.position_y_filtered = position_y
+        else:
+            self.position_x_filtered = self.filter_alpha * position_x + (1 - self.filter_alpha) * self.position_x_filtered
+            self.position_y_filtered = self.filter_alpha * position_y + (1 - self.filter_alpha) * self.position_y_filtered
+        
+        # Use filtered positions for control
+        position_x = self.position_x_filtered
+        position_y = self.position_y_filtered
         
         # Update X-axis controller (roll)
         # Control logic: if ball is RIGHT (positive X), tilt LEFT (negative roll) to bring ball back
@@ -82,15 +101,19 @@ class PIDController2D:
         P_x = self.Kp_x * error_x_scaled
         
         # Integral term (uses same scaling as P and D)
-        self.integral_x += error_x_scaled * dt
-        # Anti-windup: limit integral to prevent excessive buildup
-        max_integral = self.output_limit_x / (self.Ki_x + 1e-6) if self.Ki_x > 0 else 1e6
-        self.integral_x = np.clip(self.integral_x, -max_integral, max_integral)
-        I_x = self.Ki_x * self.integral_x
+        # Only accumulate integral when Ki > 0 to prevent unbounded growth
+        if self.Ki_x > 0:
+            self.integral_x += error_x_scaled * dt_x
+            # Anti-windup: limit integral to prevent excessive buildup
+            max_integral = self.output_limit_x / self.Ki_x
+            self.integral_x = np.clip(self.integral_x, -max_integral, max_integral)
+            I_x = self.Ki_x * self.integral_x
+        else:
+            I_x = 0.0
         
         # Derivative term
         if self.prev_time_x is not None:
-            derivative_x = (error_x_scaled - self.prev_error_x) / dt
+            derivative_x = (error_x_scaled - self.prev_error_x) / dt_x
         else:
             derivative_x = 0.0
         D_x = self.Kd_x * derivative_x
@@ -104,6 +127,16 @@ class PIDController2D:
         self.prev_time_x = current_time
         
         # Update Y-axis controller (pitch)
+        # Calculate time step for Y-axis (use its own timestamp)
+        if dt is None:
+            if self.prev_time_y is None:
+                dt_y = 0.033  # Default 30 Hz
+            else:
+                dt_y = current_time - self.prev_time_y
+                dt_y = max(0.001, min(dt_y, 0.1))  # Clamp between 1ms and 100ms
+        else:
+            dt_y = dt
+        
         # Control logic: if ball is FORWARD (positive Y), tilt BACKWARD (negative pitch) to bring ball back
         error_y = self.setpoint_y - position_y
         
@@ -115,15 +148,19 @@ class PIDController2D:
         P_y = self.Kp_y * error_y_scaled
         
         # Integral term (uses same scaling as P and D)
-        self.integral_y += error_y_scaled * dt
-        # Anti-windup: limit integral to prevent excessive buildup
-        max_integral = self.output_limit_y / (self.Ki_y + 1e-6) if self.Ki_y > 0 else 1e6
-        self.integral_y = np.clip(self.integral_y, -max_integral, max_integral)
-        I_y = self.Ki_y * self.integral_y
+        # Only accumulate integral when Ki > 0 to prevent unbounded growth
+        if self.Ki_y > 0:
+            self.integral_y += error_y_scaled * dt_y
+            # Anti-windup: limit integral to prevent excessive buildup
+            max_integral = self.output_limit_y / self.Ki_y
+            self.integral_y = np.clip(self.integral_y, -max_integral, max_integral)
+            I_y = self.Ki_y * self.integral_y
+        else:
+            I_y = 0.0
         
         # Derivative term
         if self.prev_time_y is not None:
-            derivative_y = (error_y_scaled - self.prev_error_y) / dt
+            derivative_y = (error_y_scaled - self.prev_error_y) / dt_y
         else:
             derivative_y = 0.0
         D_y = self.Kd_y * derivative_y
@@ -187,6 +224,15 @@ class PIDController2D:
         """Reset integral term for Y axis only."""
         self.integral_y = 0.0
         print("[PID_2D] Y-axis integral term reset")
+    
+    def set_filter_alpha(self, alpha):
+        """Set position filter strength.
+        
+        Args:
+            alpha: Filter alpha value (0 = heavy filtering/smooth but laggy, 1 = no filtering/responsive but noisy)
+        """
+        self.filter_alpha = np.clip(alpha, 0.0, 1.0)
+        print(f"[PID_2D] Position filter alpha set to {self.filter_alpha:.2f}")
     
     def get_state(self):
         """Get current controller state.
