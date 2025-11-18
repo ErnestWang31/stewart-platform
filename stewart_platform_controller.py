@@ -227,27 +227,27 @@ class StewartPlatformController:
         # Remove the else print statement (line 197) - it prints in tight loop
     
     def _init_motor_geometry(self):
-        """Load motor angles from config (3-point calibration) and pre-compute orientation."""
+        """Load axis rotation from config and use ideal motor angles (120° spacing)."""
         axis_rotation = float(self.config.get('axis_rotation_deg', 0.0))
-        calibrated_angles = self.config.get('motor_angles_deg')
-
-        if calibrated_angles and len(calibrated_angles) == 3:
-            # Rotate calibrated angles into platform coordinate frame
-            self.motor_angles_deg = [((float(angle) + axis_rotation) % 360.0) for angle in calibrated_angles]
-        else:
-            # Fallback to ideal 120° spacing
-            self.motor_angles_deg = [90.0, 210.0, 330.0]
+        
+        # Always use ideal motor angles (90°, 210°, 330°) in platform frame
+        # These are rotated by axis_rotation to align with camera frame
+        ideal_angles_platform = [90.0, 210.0, 330.0]
+        
+        # Apply axis rotation to get motor angles in camera frame
+        # (needed for motor mapping calculations)
+        self.motor_angles_deg = [((angle + axis_rotation) % 360.0) for angle in ideal_angles_platform]
 
         self.motor_angles_rad = [np.radians(angle) for angle in self.motor_angles_deg]
         # Pre-compute cos/sin for efficient mapping
         self.motor_orientations = [(np.cos(rad), np.sin(rad)) for rad in self.motor_angles_rad]
 
         print(f"[CONTROLLER] Axis rotation: {axis_rotation:.2f}°")
-        print(f"[CONTROLLER] Motor angles (camera frame): {calibrated_angles if calibrated_angles else 'N/A'}")
-        print(f"[CONTROLLER] Motor angles (platform frame): {self.motor_angles_deg}")
+        print(f"[CONTROLLER] Motor angles (platform frame): {ideal_angles_platform}")
+        print(f"[CONTROLLER] Motor angles (camera frame): {self.motor_angles_deg}")
 
     def _simplified_motor_mapping(self, roll_angle, pitch_angle, original_roll_angle=None):
-        """Simplified trigonometric mapping (fallback method).
+        """Simplified trigonometric mapping.
         
         Args:
             roll_angle: Roll angle in degrees (after inversion if configured)

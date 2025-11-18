@@ -219,12 +219,11 @@ class StewartPlatformCalibrator:
     def calculate_geometry_from_motors(self):
         """Calculate platform geometry from 3 motor attachment points.
         
-        Motors are arranged at 120° intervals on a circle. Given 3 motor points
-        clicked in order (Motor 1, Motor 2, Motor 3), we can determine:
+        Motors are assumed to be at ideal 120° spacing (90°, 210°, 330°).
+        The 3 points are used to determine:
         - Platform center (circumcenter of the triangle)
         - Platform radius (average distance from center to motors)
-        - Motor positions and angles
-        - Axis orientation
+        - Axis rotation (alignment between camera frame and platform frame)
         """
         if len(self.motor_attachment_points) < 3:
             return
@@ -273,47 +272,26 @@ class StewartPlatformCalibrator:
         dist3 = np.linalg.norm(p3 - center_array)
         self.platform_radius_pixels = (dist1 + dist2 + dist3) / 3.0
         
-        # Calculate angles for each motor from center
+        # Calculate angle of Motor 1 from center (used only for axis rotation)
         def angle_from_center(center, point):
             vec = point - center
             return np.degrees(np.arctan2(vec[1], vec[0]))
         
         angle1 = angle_from_center(center_array, p1)
-        angle2 = angle_from_center(center_array, p2)
-        angle3 = angle_from_center(center_array, p3)
+        angle1 = angle1 % 360  # Normalize to [0, 360)
         
-        # Normalize angles to [0, 360)
-        angle1 = angle1 % 360
-        angle2 = angle2 % 360
-        angle3 = angle3 % 360
-        
-        # Store motor positions and angles
+        # Store motor positions (for visualization only)
         self.motor_positions_pixels[0] = tuple(p1.astype(int))
         self.motor_positions_pixels[1] = tuple(p2.astype(int))
         self.motor_positions_pixels[2] = tuple(p3.astype(int))
-        self.motor_angles_deg[0] = angle1
-        self.motor_angles_deg[1] = angle2
-        self.motor_angles_deg[2] = angle3
         
-        # Verify 120° spacing (with some tolerance)
-        angles_sorted = sorted([angle1, angle2, angle3])
-        # Calculate differences (wrapping around 360)
-        diff1 = (angles_sorted[1] - angles_sorted[0]) % 360
-        diff2 = (angles_sorted[2] - angles_sorted[1]) % 360
-        diff3 = (angles_sorted[0] - angles_sorted[2] + 360) % 360
+        # Use ideal motor angles (120° spacing)
+        # Standard configuration: Motor 1 at 90°, Motor 2 at 210°, Motor 3 at 330°
+        self.motor_angles_deg = [90.0, 210.0, 330.0]
         
-        # Check if differences are close to 120° (within 30° tolerance)
-        spacing_errors = [abs(d - 120) for d in [diff1, diff2, diff3]]
-        max_error = max(spacing_errors)
-        if max_error > 30:
-            print(f"[WARNING] Motor spacing may not be exactly 120° (max error: {max_error:.1f}°)")
-        else:
-            print(f"[GEO] Motor spacing verified: {diff1:.1f}°, {diff2:.1f}°, {diff3:.1f}°")
-        
-        # Determine axis orientation
-        # Motor 1 is at 90° in the standard configuration (top, +Y axis)
-        # Standard: Motor 1 at 90°, Motor 2 at 210°, Motor 3 at 330°
-        # We want to rotate so that Motor 1 aligns with 90°
+        # Determine axis rotation
+        # Motor 1 should be at 90° in platform frame, but is at angle1 in camera frame
+        # Rotation needed to align camera frame with platform frame
         standard_motor1_angle = 90.0
         rotation_needed = standard_motor1_angle - angle1
         self.axis_rotation_deg = rotation_needed
@@ -332,10 +310,9 @@ class StewartPlatformCalibrator:
         print(f"[GEO] Platform center: {self.platform_center}")
         print(f"[GEO] Platform radius: {self.platform_radius_pixels:.2f} pixels = {self.PLATFORM_RADIUS_M:.4f} meters")
         print(f"[GEO] Pixel-to-meter ratio: {self.pixel_to_meter_ratio:.6f} m/pixel")
-        print(f"[GEO] Motor 1: {self.motor_positions_pixels[0]} at {self.motor_angles_deg[0]:.1f}°")
-        print(f"[GEO] Motor 2: {self.motor_positions_pixels[1]} at {self.motor_angles_deg[1]:.1f}°")
-        print(f"[GEO] Motor 3: {self.motor_positions_pixels[2]} at {self.motor_angles_deg[2]:.1f}°")
-        print(f"[GEO] Axis rotation: {self.axis_rotation_deg:.1f}°")
+        print(f"[GEO] Motor 1 position: {self.motor_positions_pixels[0]} at {angle1:.1f}° (camera frame)")
+        print(f"[GEO] Using ideal motor angles: {self.motor_angles_deg} (platform frame)")
+        print(f"[GEO] Axis rotation: {self.axis_rotation_deg:.1f}° (camera -> platform)")
         
         # Advance to complete phase
         self.phase = "complete"
@@ -510,11 +487,12 @@ class StewartPlatformCalibrator:
             config["platform_center_pixels"] = None
         config["platform_radius_pixels"] = float(self.platform_radius_pixels) if self.platform_radius_pixels else None
         
-        # Store motor positions and angles if available
+        # Store motor positions if available (for visualization)
         if all(self.motor_positions_pixels):
             config["motor_positions_pixels"] = [[int(x) for x in pos] for pos in self.motor_positions_pixels]
-            config["motor_angles_deg"] = [float(angle) for angle in self.motor_angles_deg]
-            config["axis_rotation_deg"] = float(self.axis_rotation_deg)
+        # Store ideal motor angles (always 90°, 210°, 330°)
+        config["motor_angles_deg"] = [90.0, 210.0, 330.0]
+        config["axis_rotation_deg"] = float(self.axis_rotation_deg)
         
         # Update camera settings
         if "camera" not in config:
@@ -611,7 +589,7 @@ class StewartPlatformCalibrator:
         # Phase-specific instruction text
         phase_text = {
             "color": "Click on ball to sample colors. Press 'c' when done.",
-            "geometry": "Click on 3 motor attachment points in order (Motor 1, Motor 2, Motor 3)",
+            "geometry": "Click on 3 motor attachment points in order (Motor 1, Motor 2, Motor 3). Motors assumed at ideal 120° spacing.",
             "complete": "Calibration complete! Press 's' to save, 'l' to find limits"
         }
         
@@ -722,7 +700,8 @@ class StewartPlatformCalibrator:
         print("[INFO] Stewart Platform 2D Calibration (Circular Platform)")
         print("Phase 1: Click on ball to sample colors, press 'c' when done")
         print("Phase 2: Click on 3 motor attachment points in order (Motor 1, Motor 2, Motor 3)")
-        print("         This will determine: center, radius, axis orientation, and motor positions")
+        print("         Motors are assumed at ideal 120° spacing (90°, 210°, 330°)")
+        print("         This will determine: center, radius, and axis rotation")
         print("Phase 3: Press 'l' to find limits automatically")
         print("Press 's' to save, 'q' to quit")
         
