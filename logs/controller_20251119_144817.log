@@ -1,0 +1,1610 @@
+2025-11-19 14:48:17.736 [INFO] Logging initialized - Log file: logs\controller_20251119_144817.log
+2025-11-19 14:48:17.737 [INFO] Controller configuration loaded from: config_stewart.json
+2025-11-19 14:48:17.737 [INFO] ============================================================
+2025-11-19 14:48:17.737 [INFO] Stewart Platform Controller Starting
+2025-11-19 14:48:17.737 [INFO] ============================================================
+2025-11-19 14:48:17.738 [INFO] Control thread started
+2025-11-19 14:48:17.829 [INFO] Attempting to connect to Arduino on COM3
+2025-11-19 14:48:18.159 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.262 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.284 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.348 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.413 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.477 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.557 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.604 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.652 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.684 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.716 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.748 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.780 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.812 [DEBUG] BALL_DETECT: Not found
+2025-11-19 14:48:18.844 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0169m, radius=28.7px
+2025-11-19 14:48:18.892 [DEBUG] BALL_DETECT: Found at X=-0.0226m, Y=-0.0171m, radius=28.8px
+2025-11-19 14:48:18.924 [DEBUG] BALL_DETECT: Found at X=-0.0225m, Y=-0.0169m, radius=28.9px
+2025-11-19 14:48:18.956 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0169m, radius=28.6px
+2025-11-19 14:48:18.988 [DEBUG] BALL_DETECT: Found at X=-0.0225m, Y=-0.0164m, radius=28.5px
+2025-11-19 14:48:19.020 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0161m, radius=28.5px
+2025-11-19 14:48:19.052 [DEBUG] BALL_DETECT: Found at X=-0.0225m, Y=-0.0160m, radius=28.6px
+2025-11-19 14:48:19.084 [DEBUG] BALL_DETECT: Found at X=-0.0228m, Y=-0.0161m, radius=28.7px
+2025-11-19 14:48:19.116 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.149 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0163m, radius=28.5px
+2025-11-19 14:48:19.180 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0164m, radius=28.3px
+2025-11-19 14:48:19.228 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0164m, radius=28.3px
+2025-11-19 14:48:19.260 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0164m, radius=28.3px
+2025-11-19 14:48:19.292 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.324 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.356 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.388 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.420 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.452 [DEBUG] BALL_DETECT: Found at X=-0.0228m, Y=-0.0160m, radius=28.3px
+2025-11-19 14:48:19.484 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.516 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.564 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.596 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.628 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0163m, radius=28.5px
+2025-11-19 14:48:19.661 [DEBUG] BALL_DETECT: Found at X=-0.0228m, Y=-0.0163m, radius=28.4px
+2025-11-19 14:48:19.692 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.724 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0163m, radius=28.5px
+2025-11-19 14:48:19.756 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0162m, radius=28.6px
+2025-11-19 14:48:19.788 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.820 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:19.834 [INFO] Successfully connected to Arduino on COM3
+2025-11-19 14:48:19.834 [INFO] Control loop started at 2025-11-19T14:48:19.834734
+2025-11-19 14:48:19.834 [INFO] Initial setpoints: X=0.0000m, Y=0.0000m
+2025-11-19 14:48:19.834 [INFO] Motor 1 PID: Kp=1.600, Ki=0.080, Kd=2.825
+2025-11-19 14:48:19.834 [INFO] Motor 2 PID: Kp=0.000, Ki=0.000, Kd=0.000
+2025-11-19 14:48:19.834 [INFO] Motor 2: All gains are zero - motor will be locked at neutral position
+2025-11-19 14:48:19.834 [INFO] Motor 3 PID: Kp=0.000, Ki=0.000, Kd=0.000
+2025-11-19 14:48:19.834 [INFO] Motor 3: All gains are zero - motor will be locked at neutral position
+2025-11-19 14:48:19.835 [INFO] Sending initial neutral position to motors
+2025-11-19 14:48:19.840 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:19.851 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0164m, radius=28.3px
+2025-11-19 14:48:19.900 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0161m, radius=28.5px
+2025-11-19 14:48:19.932 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0164m, radius=28.3px
+2025-11-19 14:48:19.965 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0162m, radius=28.6px
+2025-11-19 14:48:19.996 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:20.028 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0163m, radius=28.5px
+2025-11-19 14:48:20.058 [DEBUG] PID_CALC: Errors M1=0.0163, M2=-0.0278, M3=0.0116 | Outputs M1=2.606°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:20.060 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:20.063 [DEBUG] MOTOR_CMD: PID Outputs: M1=2.61°, M2=0.00°, M3=0.00° | Angles: M1=17°, M2=15°, M3=15° | Bytes: [17, 15, 15] (hex: 0x110f0f) | Checksum: 17
+2025-11-19 14:48:20.092 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:20.124 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0163m, radius=28.5px
+2025-11-19 14:48:20.156 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0162m, radius=28.4px
+2025-11-19 14:48:20.179 [INFO] CONTROL: t=0.345s | Pos X=-0.0227m, Y=-0.0163m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=2.61°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:20.179 [DEBUG] PID_CALC: Errors M1=0.0162, M2=-0.0278, M3=0.0116 | Outputs M1=2.476°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:20.184 [DEBUG] MOTOR_CMD: PID Outputs: M1=2.48°, M2=0.00°, M3=0.00° | Angles: M1=17°, M2=15°, M3=15° | Bytes: [17, 15, 15] (hex: 0x110f0f) | Checksum: 17
+2025-11-19 14:48:20.189 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0164m, radius=28.3px
+2025-11-19 14:48:20.220 [DEBUG] BALL_DETECT: Found at X=-0.0229m, Y=-0.0164m, radius=28.3px
+2025-11-19 14:48:20.268 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0167m, radius=28.4px
+2025-11-19 14:48:20.300 [DEBUG] BALL_DETECT: Found at X=-0.0228m, Y=-0.0169m, radius=28.4px
+2025-11-19 14:48:20.302 [INFO] CONTROL: t=0.468s | Pos X=-0.0227m, Y=-0.0162m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=2.48°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:20.302 [DEBUG] PID_CALC: Errors M1=0.0169, M2=-0.0282, M3=0.0113 | Outputs M1=4.687°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:20.306 [DEBUG] MOTOR_CMD: PID Outputs: M1=4.69°, M2=0.00°, M3=0.00° | Angles: M1=19°, M2=15°, M3=15° | Bytes: [19, 15, 15] (hex: 0x130f0f) | Checksum: 19
+2025-11-19 14:48:20.332 [DEBUG] BALL_DETECT: Found at X=-0.0231m, Y=-0.0172m, radius=28.1px
+2025-11-19 14:48:20.364 [DEBUG] BALL_DETECT: Found at X=-0.0233m, Y=-0.0172m, radius=28.3px
+2025-11-19 14:48:20.396 [DEBUG] BALL_DETECT: Found at X=-0.0233m, Y=-0.0172m, radius=28.3px
+2025-11-19 14:48:20.421 [INFO] CONTROL: t=0.586s | Pos X=-0.0228m, Y=-0.0169m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=4.69°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:20.421 [DEBUG] PID_CALC: Errors M1=0.0172, M2=-0.0288, M3=0.0116 | Outputs M1=3.577°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:20.425 [DEBUG] MOTOR_CMD: PID Outputs: M1=3.58°, M2=0.00°, M3=0.00° | Angles: M1=18°, M2=15°, M3=15° | Bytes: [18, 15, 15] (hex: 0x120f0f) | Checksum: 18
+2025-11-19 14:48:20.428 [DEBUG] BALL_DETECT: Found at X=-0.0236m, Y=-0.0174m, radius=28.1px
+2025-11-19 14:48:20.461 [DEBUG] BALL_DETECT: Found at X=-0.0235m, Y=-0.0177m, radius=27.9px
+2025-11-19 14:48:20.493 [DEBUG] BALL_DETECT: Found at X=-0.0237m, Y=-0.0179m, radius=27.8px
+2025-11-19 14:48:20.524 [DEBUG] BALL_DETECT: Found at X=-0.0237m, Y=-0.0182m, radius=28.0px
+2025-11-19 14:48:20.556 [DEBUG] BALL_DETECT: Found at X=-0.0244m, Y=-0.0181m, radius=28.3px
+2025-11-19 14:48:20.602 [INFO] CONTROL: t=0.768s | Pos X=-0.0233m, Y=-0.0172m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=3.58°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:20.602 [DEBUG] PID_CALC: Errors M1=0.0181, M2=-0.0302, M3=0.0121 | Outputs M1=5.626°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:20.604 [DEBUG] BALL_DETECT: Found at X=-0.0241m, Y=-0.0185m, radius=27.7px
+2025-11-19 14:48:20.607 [DEBUG] MOTOR_CMD: PID Outputs: M1=5.63°, M2=0.00°, M3=0.00° | Angles: M1=20°, M2=15°, M3=15° | Bytes: [20, 15, 15] (hex: 0x140f0f) | Checksum: 20
+2025-11-19 14:48:20.636 [DEBUG] BALL_DETECT: Found at X=-0.0245m, Y=-0.0182m, radius=28.2px
+2025-11-19 14:48:20.668 [DEBUG] BALL_DETECT: Found at X=-0.0245m, Y=-0.0182m, radius=28.2px
+2025-11-19 14:48:20.699 [DEBUG] BALL_DETECT: Found at X=-0.0247m, Y=-0.0183m, radius=27.9px
+2025-11-19 14:48:20.721 [INFO] CONTROL: t=0.887s | Pos X=-0.0244m, Y=-0.0181m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=5.63°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:20.721 [DEBUG] PID_CALC: Errors M1=0.0183, M2=-0.0305, M3=0.0122 | Outputs M1=3.393°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:20.726 [DEBUG] MOTOR_CMD: PID Outputs: M1=3.39°, M2=0.00°, M3=0.00° | Angles: M1=18°, M2=15°, M3=15° | Bytes: [18, 15, 15] (hex: 0x120f0f) | Checksum: 18
+2025-11-19 14:48:20.732 [DEBUG] BALL_DETECT: Found at X=-0.0247m, Y=-0.0186m, radius=28.1px
+2025-11-19 14:48:20.764 [DEBUG] BALL_DETECT: Found at X=-0.0255m, Y=-0.0190m, radius=28.6px
+2025-11-19 14:48:20.785 [INFO] PID_GAIN: Motor 1 Kp changed from 1.600 to 0.941
+2025-11-19 14:48:20.791 [INFO] PID_GAIN: Motor 1 Kp changed from 0.941 to 0.297
+2025-11-19 14:48:20.796 [DEBUG] BALL_DETECT: Found at X=-0.0255m, Y=-0.0193m, radius=28.3px
+2025-11-19 14:48:20.799 [INFO] PID_GAIN: Motor 1 Kp changed from 0.297 to 0.000
+2025-11-19 14:48:20.829 [DEBUG] BALL_DETECT: Found at X=-0.0260m, Y=-0.0193m, radius=28.2px
+2025-11-19 14:48:20.838 [INFO] CONTROL: t=1.003s | Pos X=-0.0247m, Y=-0.0183m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=3.39°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:20.838 [DEBUG] PID_CALC: Errors M1=0.0193, M2=-0.0321, M3=0.0128 | Outputs M1=3.125°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:20.842 [DEBUG] MOTOR_CMD: PID Outputs: M1=3.13°, M2=0.00°, M3=0.00° | Angles: M1=18°, M2=15°, M3=15° | Bytes: [18, 15, 15] (hex: 0x120f0f) | Checksum: 18
+2025-11-19 14:48:20.860 [DEBUG] BALL_DETECT: Found at X=-0.0260m, Y=-0.0194m, radius=28.1px
+2025-11-19 14:48:20.892 [DEBUG] BALL_DETECT: Found at X=-0.0266m, Y=-0.0197m, radius=28.3px
+2025-11-19 14:48:20.941 [DEBUG] BALL_DETECT: Found at X=-0.0271m, Y=-0.0201m, radius=27.8px
+2025-11-19 14:48:20.955 [INFO] CONTROL: t=1.120s | Pos X=-0.0260m, Y=-0.0193m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=3.13°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:20.955 [DEBUG] PID_CALC: Errors M1=0.0201, M2=-0.0336, M3=0.0135 | Outputs M1=2.233°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:20.959 [DEBUG] MOTOR_CMD: PID Outputs: M1=2.23°, M2=0.00°, M3=0.00° | Angles: M1=17°, M2=15°, M3=15° | Bytes: [17, 15, 15] (hex: 0x110f0f) | Checksum: 17
+2025-11-19 14:48:20.972 [DEBUG] BALL_DETECT: Found at X=-0.0276m, Y=-0.0199m, radius=28.3px
+2025-11-19 14:48:21.004 [DEBUG] BALL_DETECT: Found at X=-0.0282m, Y=-0.0203m, radius=28.1px
+2025-11-19 14:48:21.037 [DEBUG] BALL_DETECT: Found at X=-0.0291m, Y=-0.0204m, radius=28.1px
+2025-11-19 14:48:21.069 [DEBUG] BALL_DETECT: Found at X=-0.0294m, Y=-0.0206m, radius=27.8px
+2025-11-19 14:48:21.074 [INFO] CONTROL: t=1.240s | Pos X=-0.0271m, Y=-0.0201m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=2.23°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:21.074 [DEBUG] PID_CALC: Errors M1=0.0206, M2=-0.0358, M3=0.0152 | Outputs M1=1.638°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:21.079 [DEBUG] MOTOR_CMD: PID Outputs: M1=1.64°, M2=0.00°, M3=0.00° | Angles: M1=16°, M2=15°, M3=15° | Bytes: [16, 15, 15] (hex: 0x100f0f) | Checksum: 16
+2025-11-19 14:48:21.099 [DEBUG] BALL_DETECT: Found at X=-0.0301m, Y=-0.0207m, radius=28.1px
+2025-11-19 14:48:21.132 [DEBUG] BALL_DETECT: Found at X=-0.0305m, Y=-0.0210m, radius=28.2px
+2025-11-19 14:48:21.164 [DEBUG] BALL_DETECT: Found at X=-0.0311m, Y=-0.0211m, radius=28.3px
+2025-11-19 14:48:21.191 [INFO] CONTROL: t=1.357s | Pos X=-0.0294m, Y=-0.0206m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=1.64°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:21.191 [DEBUG] PID_CALC: Errors M1=0.0211, M2=-0.0374, M3=0.0164 | Outputs M1=1.445°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:21.196 [DEBUG] MOTOR_CMD: PID Outputs: M1=1.45°, M2=0.00°, M3=0.00° | Angles: M1=16°, M2=15°, M3=15° | Bytes: [16, 15, 15] (hex: 0x100f0f) | Checksum: 16
+2025-11-19 14:48:21.196 [DEBUG] BALL_DETECT: Found at X=-0.0313m, Y=-0.0215m, radius=28.3px
+2025-11-19 14:48:21.228 [DEBUG] BALL_DETECT: Found at X=-0.0319m, Y=-0.0218m, radius=28.4px
+2025-11-19 14:48:21.260 [DEBUG] BALL_DETECT: Found at X=-0.0322m, Y=-0.0220m, radius=28.5px
+2025-11-19 14:48:21.308 [DEBUG] BALL_DETECT: Found at X=-0.0323m, Y=-0.0221m, radius=28.4px
+2025-11-19 14:48:21.310 [INFO] CONTROL: t=1.476s | Pos X=-0.0311m, Y=-0.0211m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=1.45°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:21.310 [DEBUG] PID_CALC: Errors M1=0.0221, M2=-0.0390, M3=0.0170 | Outputs M1=2.865°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:21.315 [DEBUG] MOTOR_CMD: PID Outputs: M1=2.87°, M2=0.00°, M3=0.00° | Angles: M1=17°, M2=15°, M3=15° | Bytes: [17, 15, 15] (hex: 0x110f0f) | Checksum: 17
+2025-11-19 14:48:21.340 [DEBUG] BALL_DETECT: Found at X=-0.0326m, Y=-0.0221m, radius=28.1px
+2025-11-19 14:48:21.373 [DEBUG] BALL_DETECT: Found at X=-0.0327m, Y=-0.0218m, radius=28.6px
+2025-11-19 14:48:21.404 [DEBUG] BALL_DETECT: Found at X=-0.0331m, Y=-0.0219m, radius=28.5px
+2025-11-19 14:48:21.429 [INFO] CONTROL: t=1.595s | Pos X=-0.0323m, Y=-0.0221m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=2.87°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:21.429 [DEBUG] PID_CALC: Errors M1=0.0219, M2=-0.0396, M3=0.0177 | Outputs M1=-0.240°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:21.434 [DEBUG] MOTOR_CMD: PID Outputs: M1=-0.24°, M2=0.00°, M3=0.00° | Angles: M1=14°, M2=15°, M3=15° | Bytes: [14, 15, 15] (hex: 0x0e0f0f) | Checksum: 14
+2025-11-19 14:48:21.436 [DEBUG] BALL_DETECT: Found at X=-0.0328m, Y=-0.0221m, radius=28.2px
+2025-11-19 14:48:21.468 [DEBUG] BALL_DETECT: Found at X=-0.0327m, Y=-0.0223m, radius=28.1px
+2025-11-19 14:48:21.500 [DEBUG] BALL_DETECT: Found at X=-0.0324m, Y=-0.0222m, radius=28.4px
+2025-11-19 14:48:21.532 [DEBUG] BALL_DETECT: Found at X=-0.0327m, Y=-0.0214m, radius=28.8px
+2025-11-19 14:48:21.551 [INFO] CONTROL: t=1.717s | Pos X=-0.0331m, Y=-0.0219m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-0.24°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:21.551 [DEBUG] PID_CALC: Errors M1=0.0214, M2=-0.0390, M3=0.0176 | Outputs M1=-1.105°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:21.555 [DEBUG] MOTOR_CMD: PID Outputs: M1=-1.11°, M2=0.00°, M3=0.00° | Angles: M1=13°, M2=15°, M3=15° | Bytes: [13, 15, 15] (hex: 0x0d0f0f) | Checksum: 13
+2025-11-19 14:48:21.564 [DEBUG] BALL_DETECT: Found at X=-0.0321m, Y=-0.0215m, radius=28.4px
+2025-11-19 14:48:21.596 [DEBUG] BALL_DETECT: Found at X=-0.0318m, Y=-0.0211m, radius=28.5px
+2025-11-19 14:48:21.645 [DEBUG] BALL_DETECT: Found at X=-0.0312m, Y=-0.0209m, radius=28.3px
+2025-11-19 14:48:21.670 [INFO] CONTROL: t=1.835s | Pos X=-0.0327m, Y=-0.0214m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-1.11°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:21.670 [DEBUG] PID_CALC: Errors M1=0.0209, M2=-0.0375, M3=0.0166 | Outputs M1=-1.429°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:21.674 [DEBUG] MOTOR_CMD: PID Outputs: M1=-1.43°, M2=0.00°, M3=0.00° | Angles: M1=13°, M2=15°, M3=15° | Bytes: [13, 15, 15] (hex: 0x0d0f0f) | Checksum: 13
+2025-11-19 14:48:21.676 [DEBUG] BALL_DETECT: Found at X=-0.0308m, Y=-0.0203m, radius=28.6px
+2025-11-19 14:48:21.708 [DEBUG] BALL_DETECT: Found at X=-0.0303m, Y=-0.0202m, radius=28.4px
+2025-11-19 14:48:21.740 [DEBUG] BALL_DETECT: Found at X=-0.0297m, Y=-0.0197m, radius=28.4px
+2025-11-19 14:48:21.742 [INFO] PID_GAIN: Motor 1 Ki changed from 0.080 to 0.012
+2025-11-19 14:48:21.748 [INFO] PID_GAIN: Motor 1 Ki changed from 0.012 to 0.000
+2025-11-19 14:48:21.772 [DEBUG] BALL_DETECT: Found at X=-0.0287m, Y=-0.0193m, radius=28.2px
+2025-11-19 14:48:21.788 [INFO] CONTROL: t=1.954s | Pos X=-0.0312m, Y=-0.0209m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-1.43°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:21.789 [DEBUG] PID_CALC: Errors M1=0.0193, M2=-0.0345, M3=0.0152 | Outputs M1=-4.504°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:21.793 [DEBUG] MOTOR_CMD: PID Outputs: M1=-4.50°, M2=0.00°, M3=0.00° | Angles: M1=10°, M2=15°, M3=15° | Bytes: [10, 15, 15] (hex: 0x0a0f0f) | Checksum: 10
+2025-11-19 14:48:21.804 [DEBUG] BALL_DETECT: Found at X=-0.0280m, Y=-0.0189m, radius=28.3px
+2025-11-19 14:48:21.837 [DEBUG] BALL_DETECT: Found at X=-0.0274m, Y=-0.0184m, radius=28.3px
+2025-11-19 14:48:21.868 [DEBUG] BALL_DETECT: Found at X=-0.0262m, Y=-0.0179m, radius=28.4px
+2025-11-19 14:48:21.901 [DEBUG] BALL_DETECT: Found at X=-0.0253m, Y=-0.0174m, radius=28.6px
+2025-11-19 14:48:21.907 [INFO] CONTROL: t=2.072s | Pos X=-0.0287m, Y=-0.0193m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-4.50°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:21.907 [DEBUG] PID_CALC: Errors M1=0.0174, M2=-0.0306, M3=0.0132 | Outputs M1=-5.175°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:21.912 [DEBUG] MOTOR_CMD: PID Outputs: M1=-5.18°, M2=0.00°, M3=0.00° | Angles: M1=9°, M2=15°, M3=15° | Bytes: [9, 15, 15] (hex: 0x090f0f) | Checksum: 9
+2025-11-19 14:48:21.932 [DEBUG] BALL_DETECT: Found at X=-0.0241m, Y=-0.0168m, radius=28.1px
+2025-11-19 14:48:21.980 [DEBUG] BALL_DETECT: Found at X=-0.0228m, Y=-0.0160m, radius=28.6px
+2025-11-19 14:48:22.012 [DEBUG] BALL_DETECT: Found at X=-0.0216m, Y=-0.0153m, radius=28.6px
+2025-11-19 14:48:22.032 [INFO] CONTROL: t=2.198s | Pos X=-0.0253m, Y=-0.0174m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-5.18°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.032 [DEBUG] PID_CALC: Errors M1=0.0153, M2=-0.0264, M3=0.0111 | Outputs M1=-6.080°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.037 [DEBUG] MOTOR_CMD: PID Outputs: M1=-6.08°, M2=0.00°, M3=0.00° | Angles: M1=8°, M2=15°, M3=15° | Bytes: [8, 15, 15] (hex: 0x080f0f) | Checksum: 8
+2025-11-19 14:48:22.044 [DEBUG] BALL_DETECT: Found at X=-0.0204m, Y=-0.0146m, radius=28.4px
+2025-11-19 14:48:22.076 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0139m, radius=28.9px
+2025-11-19 14:48:22.108 [DEBUG] BALL_DETECT: Found at X=-0.0183m, Y=-0.0135m, radius=28.3px
+2025-11-19 14:48:22.140 [DEBUG] BALL_DETECT: Found at X=-0.0175m, Y=-0.0121m, radius=28.6px
+2025-11-19 14:48:22.151 [INFO] CONTROL: t=2.316s | Pos X=-0.0216m, Y=-0.0153m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-6.08°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.152 [DEBUG] PID_CALC: Errors M1=0.0121, M2=-0.0211, M3=0.0091 | Outputs M1=-9.139°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.156 [DEBUG] MOTOR_CMD: PID Outputs: M1=-9.14°, M2=0.00°, M3=0.00° | Angles: M1=5°, M2=15°, M3=15° | Bytes: [5, 15, 15] (hex: 0x050f0f) | Checksum: 5
+2025-11-19 14:48:22.172 [DEBUG] BALL_DETECT: Found at X=-0.0163m, Y=-0.0115m, radius=28.6px
+2025-11-19 14:48:22.204 [DEBUG] BALL_DETECT: Found at X=-0.0153m, Y=-0.0107m, radius=28.6px
+2025-11-19 14:48:22.236 [DEBUG] BALL_DETECT: Found at X=-0.0142m, Y=-0.0098m, radius=28.3px
+2025-11-19 14:48:22.267 [INFO] CONTROL: t=2.433s | Pos X=-0.0175m, Y=-0.0121m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-9.14°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.268 [DEBUG] PID_CALC: Errors M1=0.0098, M2=-0.0172, M3=0.0074 | Outputs M1=-6.252°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.268 [DEBUG] BALL_DETECT: Found at X=-0.0129m, Y=-0.0089m, radius=28.7px
+2025-11-19 14:48:22.271 [DEBUG] MOTOR_CMD: PID Outputs: M1=-6.25°, M2=0.00°, M3=0.00° | Angles: M1=8°, M2=15°, M3=15° | Bytes: [8, 15, 15] (hex: 0x080f0f) | Checksum: 8
+2025-11-19 14:48:22.300 [DEBUG] BALL_DETECT: Found at X=-0.0117m, Y=-0.0083m, radius=28.8px
+2025-11-19 14:48:22.348 [DEBUG] BALL_DETECT: Found at X=-0.0104m, Y=-0.0077m, radius=28.9px
+2025-11-19 14:48:22.381 [DEBUG] BALL_DETECT: Found at X=-0.0092m, Y=-0.0072m, radius=28.8px
+2025-11-19 14:48:22.386 [INFO] CONTROL: t=2.551s | Pos X=-0.0142m, Y=-0.0098m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-6.25°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.386 [DEBUG] PID_CALC: Errors M1=0.0072, M2=-0.0116, M3=0.0043 | Outputs M1=-7.375°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.390 [DEBUG] MOTOR_CMD: PID Outputs: M1=-7.38°, M2=0.00°, M3=0.00° | Angles: M1=7°, M2=15°, M3=15° | Bytes: [7, 15, 15] (hex: 0x070f0f) | Checksum: 7
+2025-11-19 14:48:22.411 [DEBUG] BALL_DETECT: Found at X=-0.0081m, Y=-0.0063m, radius=28.8px
+2025-11-19 14:48:22.444 [DEBUG] BALL_DETECT: Found at X=-0.0064m, Y=-0.0054m, radius=29.5px
+2025-11-19 14:48:22.476 [DEBUG] BALL_DETECT: Found at X=-0.0050m, Y=-0.0044m, radius=29.7px
+2025-11-19 14:48:22.500 [INFO] PID_GAIN: Motor 1 Kd changed from 2.825 to 1.825
+2025-11-19 14:48:22.504 [INFO] CONTROL: t=2.670s | Pos X=-0.0092m, Y=-0.0072m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-7.38°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.504 [DEBUG] PID_CALC: Errors M1=0.0044, M2=-0.0065, M3=0.0021 | Outputs M1=-5.078°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.508 [DEBUG] BALL_DETECT: Found at X=-0.0038m, Y=-0.0038m, radius=29.7px
+2025-11-19 14:48:22.509 [DEBUG] MOTOR_CMD: PID Outputs: M1=-5.08°, M2=0.00°, M3=0.00° | Angles: M1=9°, M2=15°, M3=15° | Bytes: [9, 15, 15] (hex: 0x090f0f) | Checksum: 9
+2025-11-19 14:48:22.540 [DEBUG] BALL_DETECT: Found at X=-0.0026m, Y=-0.0032m, radius=29.7px
+2025-11-19 14:48:22.572 [DEBUG] BALL_DETECT: Found at X=-0.0014m, Y=-0.0026m, radius=29.7px
+2025-11-19 14:48:22.605 [DEBUG] BALL_DETECT: Found at X=0.0003m, Y=-0.0014m, radius=29.1px
+2025-11-19 14:48:22.630 [INFO] CONTROL: t=2.796s | Pos X=-0.0050m, Y=-0.0044m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-5.08°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.630 [DEBUG] PID_CALC: Errors M1=0.0014, M2=-0.0005, M3=-0.0010 | Outputs M1=-5.474°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.634 [DEBUG] MOTOR_CMD: PID Outputs: M1=-5.47°, M2=0.00°, M3=0.00° | Angles: M1=9°, M2=15°, M3=15° | Bytes: [9, 15, 15] (hex: 0x090f0f) | Checksum: 9
+2025-11-19 14:48:22.636 [DEBUG] BALL_DETECT: Found at X=0.0020m, Y=-0.0006m, radius=29.9px
+2025-11-19 14:48:22.684 [DEBUG] BALL_DETECT: Found at X=0.0032m, Y=0.0003m, radius=29.7px
+2025-11-19 14:48:22.716 [DEBUG] BALL_DETECT: Found at X=0.0049m, Y=0.0009m, radius=29.1px
+2025-11-19 14:48:22.748 [INFO] CONTROL: t=2.914s | Pos X=0.0003m, Y=-0.0014m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-5.47°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.748 [DEBUG] BALL_DETECT: Found at X=0.0067m, Y=0.0020m, radius=29.7px
+2025-11-19 14:48:22.748 [DEBUG] PID_CALC: Errors M1=-0.0009, M2=0.0047, M3=-0.0038 | Outputs M1=-4.233°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.752 [DEBUG] MOTOR_CMD: PID Outputs: M1=-4.23°, M2=0.00°, M3=0.00° | Angles: M1=10°, M2=15°, M3=15° | Bytes: [10, 15, 15] (hex: 0x0a0f0f) | Checksum: 10
+2025-11-19 14:48:22.780 [DEBUG] BALL_DETECT: Found at X=0.0084m, Y=0.0026m, radius=29.3px
+2025-11-19 14:48:22.800 [INFO] PID_GAIN: Motor 1 Kd changed from 1.825 to 0.825
+2025-11-19 14:48:22.812 [DEBUG] BALL_DETECT: Found at X=0.0099m, Y=0.0034m, radius=29.3px
+2025-11-19 14:48:22.844 [DEBUG] BALL_DETECT: Found at X=0.0122m, Y=0.0043m, radius=29.7px
+2025-11-19 14:48:22.865 [INFO] CONTROL: t=3.031s | Pos X=0.0049m, Y=0.0009m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-4.23°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.865 [DEBUG] PID_CALC: Errors M1=-0.0043, M2=0.0127, M3=-0.0084 | Outputs M1=-2.802°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.870 [DEBUG] MOTOR_CMD: PID Outputs: M1=-2.80°, M2=0.00°, M3=0.00° | Angles: M1=12°, M2=15°, M3=15° | Bytes: [12, 15, 15] (hex: 0x0c0f0f) | Checksum: 12
+2025-11-19 14:48:22.876 [DEBUG] BALL_DETECT: Found at X=0.0139m, Y=0.0050m, radius=28.8px
+2025-11-19 14:48:22.901 [INFO] PID_GAIN: Motor 1 Kd changed from 0.825 to 0.000
+2025-11-19 14:48:22.908 [DEBUG] BALL_DETECT: Found at X=0.0162m, Y=0.0064m, radius=29.1px
+2025-11-19 14:48:22.941 [DEBUG] BALL_DETECT: Found at X=0.0183m, Y=0.0081m, radius=29.9px
+2025-11-19 14:48:22.972 [DEBUG] BALL_DETECT: Found at X=0.0208m, Y=0.0088m, radius=29.3px
+2025-11-19 14:48:22.985 [INFO] CONTROL: t=3.150s | Pos X=0.0122m, Y=0.0043m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=-2.80°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:22.985 [DEBUG] PID_CALC: Errors M1=-0.0088, M2=0.0224, M3=-0.0136 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:22.989 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.021 [DEBUG] BALL_DETECT: Found at X=0.0233m, Y=0.0101m, radius=29.1px
+2025-11-19 14:48:23.053 [DEBUG] BALL_DETECT: Found at X=0.0263m, Y=0.0120m, radius=29.8px
+2025-11-19 14:48:23.084 [DEBUG] BALL_DETECT: Found at X=0.0294m, Y=0.0123m, radius=28.7px
+2025-11-19 14:48:23.104 [INFO] CONTROL: t=3.269s | Pos X=0.0208m, Y=0.0088m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:23.104 [DEBUG] PID_CALC: Errors M1=-0.0123, M2=0.0316, M3=-0.0193 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:23.108 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.116 [DEBUG] BALL_DETECT: Found at X=0.0324m, Y=0.0142m, radius=29.2px
+2025-11-19 14:48:23.148 [DEBUG] BALL_DETECT: Found at X=0.0354m, Y=0.0163m, radius=29.8px
+2025-11-19 14:48:23.180 [DEBUG] BALL_DETECT: Found at X=0.0383m, Y=0.0176m, radius=30.6px
+2025-11-19 14:48:23.212 [DEBUG] BALL_DETECT: Found at X=0.0416m, Y=0.0187m, radius=29.2px
+2025-11-19 14:48:23.221 [INFO] CONTROL: t=3.387s | Pos X=0.0294m, Y=0.0123m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:23.221 [DEBUG] PID_CALC: Errors M1=-0.0187, M2=0.0454, M3=-0.0267 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:23.225 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.244 [DEBUG] BALL_DETECT: Found at X=0.0443m, Y=0.0212m, radius=30.6px
+2025-11-19 14:48:23.277 [DEBUG] BALL_DETECT: Found at X=0.0472m, Y=0.0224m, radius=30.3px
+2025-11-19 14:48:23.308 [DEBUG] BALL_DETECT: Found at X=0.0502m, Y=0.0244m, radius=30.6px
+2025-11-19 14:48:23.340 [INFO] CONTROL: t=3.506s | Pos X=0.0416m, Y=0.0187m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:23.340 [DEBUG] PID_CALC: Errors M1=-0.0244, M2=0.0556, M3=-0.0313 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:23.344 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.356 [DEBUG] BALL_DETECT: Found at X=0.0530m, Y=0.0258m, radius=29.9px
+2025-11-19 14:48:23.388 [DEBUG] BALL_DETECT: Found at X=0.0554m, Y=0.0267m, radius=29.9px
+2025-11-19 14:48:23.420 [DEBUG] BALL_DETECT: Found at X=0.0577m, Y=0.0284m, radius=31.5px
+2025-11-19 14:48:23.452 [DEBUG] BALL_DETECT: Found at X=0.0605m, Y=0.0300m, radius=30.2px
+2025-11-19 14:48:23.458 [INFO] CONTROL: t=3.624s | Pos X=0.0502m, Y=0.0244m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:23.458 [DEBUG] PID_CALC: Errors M1=-0.0300, M2=0.0674, M3=-0.0374 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:23.462 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.484 [DEBUG] BALL_DETECT: Found at X=0.0633m, Y=0.0313m, radius=29.9px
+2025-11-19 14:48:23.516 [DEBUG] BALL_DETECT: Found at X=0.0664m, Y=0.0336m, radius=30.8px
+2025-11-19 14:48:23.548 [DEBUG] BALL_DETECT: Found at X=0.0687m, Y=0.0345m, radius=30.7px
+2025-11-19 14:48:23.574 [INFO] CONTROL: t=3.739s | Pos X=0.0605m, Y=0.0300m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:23.574 [DEBUG] PID_CALC: Errors M1=-0.0345, M2=0.0768, M3=-0.0423 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:23.578 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.580 [DEBUG] BALL_DETECT: Found at X=0.0710m, Y=0.0357m, radius=30.7px
+2025-11-19 14:48:23.612 [DEBUG] BALL_DETECT: Found at X=0.0736m, Y=0.0368m, radius=30.2px
+2025-11-19 14:48:23.644 [DEBUG] BALL_DETECT: Found at X=0.0768m, Y=0.0389m, radius=29.6px
+2025-11-19 14:48:23.676 [DEBUG] BALL_DETECT: Found at X=0.0798m, Y=0.0402m, radius=29.5px
+2025-11-19 14:48:23.692 [INFO] CONTROL: t=3.858s | Pos X=0.0687m, Y=0.0345m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:23.692 [DEBUG] PID_CALC: Errors M1=-0.0402, M2=0.0892, M3=-0.0490 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:23.696 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.724 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0423m, radius=30.8px
+2025-11-19 14:48:23.757 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:23.788 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:23.807 [INFO] CONTROL: t=3.973s | Pos X=0.0798m, Y=0.0402m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:23.807 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:23.811 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.820 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:23.852 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:23.884 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:23.916 [DEBUG] BALL_DETECT: Found at X=0.0823m, Y=0.0420m, radius=29.9px
+2025-11-19 14:48:23.925 [INFO] CONTROL: t=4.090s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:23.925 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0923, M3=-0.0503 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:23.929 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:23.948 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:23.980 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0417m, radius=28.9px
+2025-11-19 14:48:24.012 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.046 [INFO] CONTROL: t=4.212s | Pos X=0.0823m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:24.046 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:24.050 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:24.060 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:24.092 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.124 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0417m, radius=28.9px
+2025-11-19 14:48:24.156 [DEBUG] BALL_DETECT: Found at X=0.0828m, Y=0.0418m, radius=29.3px
+2025-11-19 14:48:24.169 [INFO] CONTROL: t=4.334s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:24.169 [DEBUG] PID_CALC: Errors M1=-0.0418, M2=0.0926, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:24.173 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:24.188 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0422m, radius=29.8px
+2025-11-19 14:48:24.220 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.252 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.284 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.288 [INFO] CONTROL: t=4.454s | Pos X=0.0828m, Y=0.0418m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:24.288 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:24.292 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:24.316 [DEBUG] BALL_DETECT: Found at X=0.0827m, Y=0.0420m, radius=29.6px
+2025-11-19 14:48:24.348 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.396 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.406 [INFO] CONTROL: t=4.572s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:24.406 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:24.411 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:24.428 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.460 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.492 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:24.524 [INFO] CONTROL: t=4.690s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:24.524 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:24.525 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:24.530 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:24.556 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:24.588 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0420m, radius=29.4px
+2025-11-19 14:48:24.620 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:24.648 [INFO] CONTROL: t=4.814s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:24.648 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0924, M3=-0.0505 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:24.652 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:24.652 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:24.684 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:24.732 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:24.764 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.772 [INFO] CONTROL: t=4.938s | Pos X=0.0825m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:24.772 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:24.777 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:24.796 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.828 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:24.861 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:24.891 [INFO] CONTROL: t=5.057s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:24.891 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:24.892 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:24.896 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:24.924 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:24.956 [DEBUG] BALL_DETECT: Found at X=0.0823m, Y=0.0419m, radius=30.0px
+2025-11-19 14:48:24.988 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:25.007 [INFO] CONTROL: t=5.173s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.007 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.012 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.020 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.053 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.101 [DEBUG] BALL_DETECT: Found at X=0.0821m, Y=0.0420m, radius=30.4px
+2025-11-19 14:48:25.126 [INFO] CONTROL: t=5.292s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.126 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0921, M3=-0.0500 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.131 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.132 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:25.164 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.196 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:25.228 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:25.245 [INFO] CONTROL: t=5.411s | Pos X=0.0821m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.245 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0932, M3=-0.0513 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.249 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.260 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:25.292 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.324 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.356 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:25.364 [INFO] CONTROL: t=5.530s | Pos X=0.0834m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.364 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.368 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.388 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:25.436 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.469 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.483 [INFO] CONTROL: t=5.648s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.483 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.486 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.500 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:25.533 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.564 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:25.596 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:25.597 [INFO] CONTROL: t=5.763s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.597 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.602 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.627 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.660 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:25.692 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:25.717 [INFO] CONTROL: t=5.882s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.717 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.721 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.724 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.772 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.804 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.835 [INFO] CONTROL: t=6.001s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.835 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.837 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:25.841 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.868 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.900 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:25.932 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:25.953 [INFO] CONTROL: t=6.119s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:25.953 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:25.958 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:25.964 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:25.996 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:26.028 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:26.060 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.072 [INFO] CONTROL: t=6.238s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:26.072 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:26.076 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:26.092 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:26.141 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.171 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:26.190 [INFO] CONTROL: t=6.356s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:26.190 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:26.194 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:26.203 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.236 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:26.268 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:26.301 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:26.306 [INFO] CONTROL: t=6.472s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:26.306 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:26.311 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:26.333 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.364 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:26.396 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:26.424 [INFO] CONTROL: t=6.590s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:26.425 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:26.428 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0418m, radius=29.4px
+2025-11-19 14:48:26.430 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:26.476 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.508 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:26.540 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:26.545 [INFO] CONTROL: t=6.710s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:26.545 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:26.549 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:26.572 [DEBUG] BALL_DETECT: Found at X=0.0828m, Y=0.0422m, radius=29.9px
+2025-11-19 14:48:26.605 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:26.637 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.667 [INFO] CONTROL: t=6.833s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:26.667 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:26.669 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0426m, radius=31.0px
+2025-11-19 14:48:26.673 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:26.700 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.732 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:26.764 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:26.785 [INFO] CONTROL: t=6.950s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:26.785 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:26.789 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:26.812 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.844 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.876 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.904 [INFO] CONTROL: t=7.070s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:26.904 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:26.908 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:26.909 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:26.940 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:26.972 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.004 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:27.023 [INFO] CONTROL: t=7.189s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:27.023 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:27.027 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:27.036 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.068 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.100 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:27.133 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:27.141 [INFO] CONTROL: t=7.307s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:27.141 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:27.146 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:27.181 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:27.212 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.245 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.261 [INFO] CONTROL: t=7.426s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:27.261 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=0.000°
+2025-11-19 14:48:27.265 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.00° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:27.276 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:27.297 [INFO] PID_GAIN: Motor 3 Kp changed from 0.000 to 0.800
+2025-11-19 14:48:27.308 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:27.341 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.6px
+2025-11-19 14:48:27.372 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.379 [INFO] CONTROL: t=7.545s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.00°
+2025-11-19 14:48:27.379 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:27.383 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:27.403 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.436 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:27.469 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.496 [INFO] CONTROL: t=7.661s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:27.496 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:27.500 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:27.516 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:27.548 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:27.580 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.612 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.620 [INFO] CONTROL: t=7.786s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:27.620 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:27.624 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:27.644 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0418m, radius=29.6px
+2025-11-19 14:48:27.676 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:27.708 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0418m, radius=29.0px
+2025-11-19 14:48:27.740 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.744 [INFO] CONTROL: t=7.909s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:27.744 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:27.748 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:27.772 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:27.804 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:27.852 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:27.867 [INFO] CONTROL: t=8.033s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:27.867 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:27.872 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:27.884 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0420m, radius=29.4px
+2025-11-19 14:48:27.916 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:27.948 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:27.981 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0426m, radius=31.0px
+2025-11-19 14:48:27.983 [INFO] CONTROL: t=8.149s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:27.983 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0929, M3=-0.0503 | Outputs M1=0.000°, M2=0.000°, M3=-4.020°
+2025-11-19 14:48:27.987 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.02° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.012 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:28.044 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:28.077 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:28.098 [INFO] CONTROL: t=8.264s | Pos X=0.0826m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.02°
+2025-11-19 14:48:28.098 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:28.103 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.108 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:28.140 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.188 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.220 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:28.222 [INFO] CONTROL: t=8.388s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:28.222 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:28.227 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.252 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:28.284 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:28.316 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:28.346 [INFO] CONTROL: t=8.511s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:28.346 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:28.348 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.350 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.380 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:28.412 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:28.445 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.469 [INFO] CONTROL: t=8.635s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:28.470 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:28.474 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.476 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.508 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:28.556 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:28.586 [INFO] CONTROL: t=8.751s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:28.586 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:28.588 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.590 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.620 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.653 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.685 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0417m, radius=28.9px
+2025-11-19 14:48:28.710 [INFO] CONTROL: t=8.876s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:28.710 [DEBUG] PID_CALC: Errors M1=-0.0417, M2=0.0928, M3=-0.0511 | Outputs M1=0.000°, M2=0.000°, M3=-4.087°
+2025-11-19 14:48:28.714 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.716 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:28.748 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:28.780 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:28.812 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:28.833 [INFO] CONTROL: t=8.999s | Pos X=0.0831m, Y=0.0417m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:28.833 [DEBUG] PID_CALC: Errors M1=-0.0418, M2=0.0927, M3=-0.0509 | Outputs M1=0.000°, M2=0.000°, M3=-4.076°
+2025-11-19 14:48:28.837 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.08° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.844 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:28.892 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:28.923 [DEBUG] BALL_DETECT: Found at X=0.0835m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:28.956 [INFO] CONTROL: t=9.122s | Pos X=0.0830m, Y=0.0418m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.08°
+2025-11-19 14:48:28.956 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:28.956 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0932, M3=-0.0513 | Outputs M1=0.000°, M2=0.000°, M3=-4.104°
+2025-11-19 14:48:28.961 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.10° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:28.988 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.020 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:29.052 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.072 [INFO] CONTROL: t=9.238s | Pos X=0.0834m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.10°
+2025-11-19 14:48:29.072 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:29.076 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:29.084 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:29.116 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.148 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.180 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:29.197 [INFO] CONTROL: t=9.363s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:29.197 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=-4.050°
+2025-11-19 14:48:29.202 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:29.229 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:29.260 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:29.292 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:29.321 [INFO] CONTROL: t=9.486s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:29.321 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0931, M3=-0.0505 | Outputs M1=0.000°, M2=0.000°, M3=-4.040°
+2025-11-19 14:48:29.324 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:29.325 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.04° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:29.356 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:29.388 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.420 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0420m, radius=29.4px
+2025-11-19 14:48:29.444 [INFO] CONTROL: t=9.610s | Pos X=0.0829m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.04°
+2025-11-19 14:48:29.444 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0926, M3=-0.0505 | Outputs M1=0.000°, M2=0.000°, M3=-4.043°
+2025-11-19 14:48:29.448 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.04° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:29.452 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.484 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:29.516 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.548 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.560 [INFO] CONTROL: t=9.726s | Pos X=0.0826m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.04°
+2025-11-19 14:48:29.560 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:29.564 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:29.596 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:29.628 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:29.660 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:29.685 [INFO] CONTROL: t=9.851s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:29.685 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:29.689 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:29.692 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:29.724 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:29.756 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.788 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0417m, radius=29.6px
+2025-11-19 14:48:29.808 [INFO] CONTROL: t=9.974s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:29.808 [DEBUG] PID_CALC: Errors M1=-0.0417, M2=0.0924, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.057°
+2025-11-19 14:48:29.812 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:29.820 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:29.852 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0418m, radius=29.2px
+2025-11-19 14:48:29.884 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.931 [INFO] CONTROL: t=10.096s | Pos X=0.0826m, Y=0.0417m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:29.931 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:29.932 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:29.935 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:29.964 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:29.996 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:30.028 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.055 [INFO] CONTROL: t=10.221s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:30.055 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:30.059 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:30.060 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.092 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:30.124 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.156 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:30.176 [INFO] CONTROL: t=10.342s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:30.176 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0932, M3=-0.0513 | Outputs M1=0.000°, M2=0.000°, M3=-4.104°
+2025-11-19 14:48:30.181 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.10° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:30.188 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.220 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:30.268 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:30.294 [INFO] CONTROL: t=10.459s | Pos X=0.0834m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.10°
+2025-11-19 14:48:30.294 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:30.297 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:30.299 [DEBUG] BALL_DETECT: Found at X=0.0820m, Y=0.0420m, radius=30.4px
+2025-11-19 14:48:30.332 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:30.364 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:30.396 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.414 [INFO] CONTROL: t=10.579s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:30.414 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:30.419 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:30.428 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.461 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:30.492 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.524 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:30.531 [INFO] CONTROL: t=10.696s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:30.531 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0932, M3=-0.0513 | Outputs M1=0.000°, M2=0.000°, M3=-4.104°
+2025-11-19 14:48:30.535 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.10° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:30.556 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:30.604 [DEBUG] BALL_DETECT: Found at X=0.0835m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:30.636 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:30.656 [INFO] CONTROL: t=10.821s | Pos X=0.0834m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.10°
+2025-11-19 14:48:30.656 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:30.660 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:30.668 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:30.700 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.731 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.764 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:30.778 [INFO] CONTROL: t=10.944s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:30.778 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:30.782 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:30.796 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0423m, radius=30.0px
+2025-11-19 14:48:30.828 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:30.860 [DEBUG] BALL_DETECT: Found at X=0.0828m, Y=0.0417m, radius=29.0px
+2025-11-19 14:48:30.892 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:30.895 [INFO] CONTROL: t=11.061s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:30.895 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:30.899 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:30.924 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:30.972 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:31.005 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.016 [INFO] CONTROL: t=11.182s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:31.016 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:31.021 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:31.036 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:31.068 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:31.100 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.132 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.133 [INFO] CONTROL: t=11.299s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:31.133 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:31.138 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:31.164 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:31.196 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0418m, radius=29.6px
+2025-11-19 14:48:31.229 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.258 [INFO] CONTROL: t=11.424s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:31.258 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:31.260 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.262 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:31.308 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.340 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.372 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.380 [INFO] CONTROL: t=11.546s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:31.381 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:31.385 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:31.404 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:31.437 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:31.469 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:31.500 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.503 [INFO] CONTROL: t=11.669s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:31.503 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:31.508 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:31.532 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.564 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.596 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.628 [INFO] CONTROL: t=11.794s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:31.628 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:31.633 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:31.644 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0421m, radius=29.6px
+2025-11-19 14:48:31.653 [INFO] PID_GAIN: Motor 3 Kp changed from 0.800 to 0.800
+2025-11-19 14:48:31.676 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.708 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:31.740 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:31.749 [INFO] CONTROL: t=11.915s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:31.749 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:31.754 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:31.772 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:31.804 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:31.836 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:31.866 [INFO] CONTROL: t=12.032s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:31.866 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:31.868 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:31.871 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:31.900 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:31.932 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:31.964 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:31.987 [INFO] CONTROL: t=12.153s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:31.987 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:31.991 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.012 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:32.044 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.076 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.101 [INFO] CONTROL: t=12.267s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:32.102 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:32.106 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.108 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:32.140 [DEBUG] BALL_DETECT: Found at X=0.0828m, Y=0.0417m, radius=29.0px
+2025-11-19 14:48:32.172 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:32.204 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:32.224 [INFO] CONTROL: t=12.390s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:32.224 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:32.229 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.236 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:32.268 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0417m, radius=29.5px
+2025-11-19 14:48:32.300 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:32.347 [INFO] CONTROL: t=12.513s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:32.347 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=-4.049°
+2025-11-19 14:48:32.348 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.351 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.380 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.412 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0418m, radius=29.6px
+2025-11-19 14:48:32.444 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:32.470 [INFO] CONTROL: t=12.636s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:32.470 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:32.474 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.475 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:32.508 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.540 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:32.572 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.594 [INFO] CONTROL: t=12.760s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:32.595 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:32.599 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.604 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:32.636 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.684 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.716 [INFO] CONTROL: t=12.881s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:32.716 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:32.717 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0422m, radius=29.8px
+2025-11-19 14:48:32.720 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.748 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:32.780 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:32.812 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0424m, radius=30.2px
+2025-11-19 14:48:32.838 [INFO] CONTROL: t=13.004s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:32.838 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0931, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.057°
+2025-11-19 14:48:32.843 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.844 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:32.876 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0423m, radius=30.0px
+2025-11-19 14:48:32.908 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:32.940 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:32.963 [INFO] CONTROL: t=13.129s | Pos X=0.0830m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:32.963 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:32.967 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:32.972 [DEBUG] BALL_DETECT: Found at X=0.0835m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:33.020 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:33.052 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:33.084 [INFO] CONTROL: t=13.250s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:33.084 [DEBUG] PID_CALC: Errors M1=-0.0418, M2=0.0927, M3=-0.0509 | Outputs M1=0.000°, M2=0.000°, M3=-4.076°
+2025-11-19 14:48:33.084 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.089 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.08° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:33.115 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:33.148 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.180 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0426m, radius=31.0px
+2025-11-19 14:48:33.206 [INFO] CONTROL: t=13.372s | Pos X=0.0830m, Y=0.0418m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.08°
+2025-11-19 14:48:33.207 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0929, M3=-0.0503 | Outputs M1=0.000°, M2=0.000°, M3=-4.020°
+2025-11-19 14:48:33.211 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.02° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:33.212 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.245 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:33.276 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.308 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:33.322 [INFO] CONTROL: t=13.487s | Pos X=0.0826m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.02°
+2025-11-19 14:48:33.322 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0924, M3=-0.0505 | Outputs M1=0.000°, M2=0.000°, M3=-4.039°
+2025-11-19 14:48:33.327 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.04° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:33.340 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:33.388 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.420 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:33.444 [INFO] CONTROL: t=13.610s | Pos X=0.0825m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.04°
+2025-11-19 14:48:33.444 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0932, M3=-0.0513 | Outputs M1=0.000°, M2=0.000°, M3=-4.104°
+2025-11-19 14:48:33.449 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.10° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:33.452 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0421m, radius=29.6px
+2025-11-19 14:48:33.484 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.516 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:33.548 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.568 [INFO] CONTROL: t=13.734s | Pos X=0.0834m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.10°
+2025-11-19 14:48:33.568 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:33.573 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:33.580 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:33.612 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:33.644 [DEBUG] BALL_DETECT: Found at X=0.0828m, Y=0.0421m, radius=29.7px
+2025-11-19 14:48:33.676 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.691 [INFO] CONTROL: t=13.856s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:33.691 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:33.695 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:33.723 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:33.756 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:33.788 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0423m, radius=30.0px
+2025-11-19 14:48:33.815 [INFO] CONTROL: t=13.980s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:33.815 [DEBUG] PID_CALC: Errors M1=-0.0423, M2=0.0931, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.065°
+2025-11-19 14:48:33.819 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.07° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:33.820 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0426m, radius=31.0px
+2025-11-19 14:48:33.851 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.884 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:33.916 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:33.936 [INFO] CONTROL: t=14.102s | Pos X=0.0831m, Y=0.0423m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.07°
+2025-11-19 14:48:33.936 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:33.941 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:33.948 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:33.980 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:34.012 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:34.059 [INFO] CONTROL: t=14.224s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:34.059 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:34.060 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:34.063 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:34.092 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:34.124 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:34.155 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:34.174 [INFO] CONTROL: t=14.340s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:34.174 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:34.179 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:34.188 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:34.220 [DEBUG] BALL_DETECT: Found at X=0.0823m, Y=0.0423m, radius=30.7px
+2025-11-19 14:48:34.252 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:34.285 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:34.296 [INFO] CONTROL: t=14.462s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:34.297 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:34.301 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:34.316 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:34.348 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:34.380 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:34.420 [INFO] CONTROL: t=14.585s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:34.420 [DEBUG] PID_CALC: Errors M1=-0.0426, M2=0.0932, M3=-0.0507 | Outputs M1=0.000°, M2=0.000°, M3=-4.054°
+2025-11-19 14:48:34.424 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:34.428 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:34.460 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:34.492 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:34.524 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:34.542 [INFO] CONTROL: t=14.708s | Pos X=0.0831m, Y=0.0426m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:34.542 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:34.546 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:34.556 [DEBUG] BALL_DETECT: Found at X=0.0822m, Y=0.0420m, radius=30.2px
+2025-11-19 14:48:34.588 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0422m, radius=29.8px
+2025-11-19 14:48:34.620 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:34.652 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:34.667 [INFO] CONTROL: t=14.833s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:34.668 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:34.672 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:34.684 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:34.716 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:34.764 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0422m, radius=29.6px
+2025-11-19 14:48:34.788 [INFO] CONTROL: t=14.954s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:34.788 [DEBUG] PID_CALC: Errors M1=-0.0422, M2=0.0926, M3=-0.0504 | Outputs M1=0.000°, M2=0.000°, M3=-4.033°
+2025-11-19 14:48:34.793 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.03° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:34.796 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:34.828 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:34.860 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:34.892 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:34.905 [INFO] CONTROL: t=15.071s | Pos X=0.0826m, Y=0.0422m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.03°
+2025-11-19 14:48:34.905 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0924, M3=-0.0505 | Outputs M1=0.000°, M2=0.000°, M3=-4.039°
+2025-11-19 14:48:34.910 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.04° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:34.924 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:34.956 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:34.988 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:35.020 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.025 [INFO] CONTROL: t=15.191s | Pos X=0.0825m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.04°
+2025-11-19 14:48:35.025 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:35.030 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:35.052 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.100 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:35.132 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0427m, radius=30.7px
+2025-11-19 14:48:35.150 [INFO] CONTROL: t=15.316s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:35.150 [DEBUG] PID_CALC: Errors M1=-0.0427, M2=0.0931, M3=-0.0504 | Outputs M1=0.000°, M2=0.000°, M3=-4.032°
+2025-11-19 14:48:35.155 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.03° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:35.164 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0418m, radius=29.1px
+2025-11-19 14:48:35.196 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:35.225 [DEBUG] ARDUINO_RESPONSE: Received bytes: 15, 15, 10 | Checksum: 10 | (every 100th)
+2025-11-19 14:48:35.228 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:35.260 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0426m, radius=31.0px
+2025-11-19 14:48:35.292 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.302 [INFO] CONTROL: t=15.467s | Pos X=0.0829m, Y=0.0427m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.03°
+2025-11-19 14:48:35.302 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:35.306 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:35.324 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:35.356 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.388 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:35.425 [INFO] CONTROL: t=15.590s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:35.425 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0924, M3=-0.0505 | Outputs M1=0.000°, M2=0.000°, M3=-4.039°
+2025-11-19 14:48:35.429 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.04° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:35.436 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0422m, radius=29.8px
+2025-11-19 14:48:35.468 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.500 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:35.532 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:35.564 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:35.580 [INFO] CONTROL: t=15.746s | Pos X=0.0825m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.04°
+2025-11-19 14:48:35.580 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0932, M3=-0.0513 | Outputs M1=0.000°, M2=0.000°, M3=-4.104°
+2025-11-19 14:48:35.584 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.10° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:35.596 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.628 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.660 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0417m, radius=29.5px
+2025-11-19 14:48:35.692 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:35.697 [INFO] CONTROL: t=15.863s | Pos X=0.0834m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.10°
+2025-11-19 14:48:35.697 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0932, M3=-0.0513 | Outputs M1=0.000°, M2=0.000°, M3=-4.104°
+2025-11-19 14:48:35.701 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.10° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:35.724 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:35.757 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:35.804 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.816 [INFO] CONTROL: t=15.982s | Pos X=0.0834m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.10°
+2025-11-19 14:48:35.816 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:35.821 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:35.836 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:35.868 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:35.900 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:35.932 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:35.939 [INFO] CONTROL: t=16.105s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:35.939 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0932, M3=-0.0513 | Outputs M1=0.000°, M2=0.000°, M3=-4.104°
+2025-11-19 14:48:35.944 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.10° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:35.965 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0418m, radius=29.4px
+2025-11-19 14:48:35.996 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:36.028 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:36.056 [INFO] CONTROL: t=16.221s | Pos X=0.0834m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.10°
+2025-11-19 14:48:36.056 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0924, M3=-0.0505 | Outputs M1=0.000°, M2=0.000°, M3=-4.039°
+2025-11-19 14:48:36.060 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.04° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:36.061 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:36.092 [DEBUG] BALL_DETECT: Found at X=0.0828m, Y=0.0421m, radius=29.7px
+2025-11-19 14:48:36.140 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:36.173 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:36.181 [INFO] CONTROL: t=16.347s | Pos X=0.0825m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.04°
+2025-11-19 14:48:36.181 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:36.185 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:36.204 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:36.236 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0422m, radius=29.7px
+2025-11-19 14:48:36.268 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:36.300 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:36.303 [INFO] CONTROL: t=16.469s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:36.303 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0929, M3=-0.0510 | Outputs M1=0.000°, M2=0.000°, M3=-4.078°
+2025-11-19 14:48:36.308 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.08° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:36.332 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:36.364 [DEBUG] BALL_DETECT: Found at X=0.0835m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:36.396 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:36.426 [INFO] CONTROL: t=16.592s | Pos X=0.0831m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.08°
+2025-11-19 14:48:36.426 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:36.428 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:36.430 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:36.476 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:36.508 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0418m, radius=29.6px
+2025-11-19 14:48:36.540 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:36.551 [INFO] CONTROL: t=16.717s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:36.551 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:36.556 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:36.572 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:36.604 [DEBUG] BALL_DETECT: Found at X=0.0825m, Y=0.0419m, radius=29.7px
+2025-11-19 14:48:36.636 [DEBUG] BALL_DETECT: Found at X=0.0827m, Y=0.0419m, radius=29.6px
+2025-11-19 14:48:36.668 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:36.673 [INFO] CONTROL: t=16.838s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:36.673 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=-4.049°
+2025-11-19 14:48:36.677 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:36.700 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:36.732 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:36.764 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:36.796 [INFO] CONTROL: t=16.961s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:36.796 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:36.797 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0419m, radius=29.3px
+2025-11-19 14:48:36.802 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:36.844 [DEBUG] BALL_DETECT: Found at X=0.0823m, Y=0.0423m, radius=30.7px
+2025-11-19 14:48:36.876 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:36.908 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:36.922 [INFO] CONTROL: t=17.088s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:36.922 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=-4.049°
+2025-11-19 14:48:36.927 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:36.940 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:36.972 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:37.004 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:37.037 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:37.045 [INFO] CONTROL: t=17.211s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:37.045 [DEBUG] PID_CALC: Errors M1=-0.0420, M2=0.0932, M3=-0.0512 | Outputs M1=0.000°, M2=0.000°, M3=-4.093°
+2025-11-19 14:48:37.050 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:37.068 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0417m, radius=28.9px
+2025-11-19 14:48:37.100 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:37.133 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:37.161 [INFO] CONTROL: t=17.327s | Pos X=0.0834m, Y=0.0420m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:37.161 [DEBUG] PID_CALC: Errors M1=-0.0424, M2=0.0932, M3=-0.0508 | Outputs M1=0.000°, M2=0.000°, M3=-4.063°
+2025-11-19 14:48:37.166 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.06° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:37.180 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:37.212 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:37.244 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0420m, radius=29.5px
+2025-11-19 14:48:37.276 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:37.282 [INFO] CONTROL: t=17.448s | Pos X=0.0832m, Y=0.0424m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.06°
+2025-11-19 14:48:37.282 [DEBUG] PID_CALC: Errors M1=-0.0419, M2=0.0925, M3=-0.0506 | Outputs M1=0.000°, M2=0.000°, M3=-4.049°
+2025-11-19 14:48:37.287 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.05° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:37.308 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0419m, radius=29.5px
+2025-11-19 14:48:37.340 [DEBUG] BALL_DETECT: Found at X=0.0829m, Y=0.0426m, radius=30.5px
+2025-11-19 14:48:37.373 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:37.404 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:37.407 [INFO] CONTROL: t=17.573s | Pos X=0.0826m, Y=0.0419m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.05°
+2025-11-19 14:48:37.407 [DEBUG] PID_CALC: Errors M1=-0.0417, M2=0.0927, M3=-0.0510 | Outputs M1=0.000°, M2=0.000°, M3=-4.077°
+2025-11-19 14:48:37.412 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.08° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:37.436 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:37.467 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0418m, radius=29.6px
+2025-11-19 14:48:37.516 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0421m, radius=29.6px
+2025-11-19 14:48:37.528 [INFO] CONTROL: t=17.694s | Pos X=0.0830m, Y=0.0417m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.08°
+2025-11-19 14:48:37.528 [DEBUG] PID_CALC: Errors M1=-0.0421, M2=0.0932, M3=-0.0511 | Outputs M1=0.000°, M2=0.000°, M3=-4.089°
+2025-11-19 14:48:37.533 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:37.548 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:37.580 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0426m, radius=30.2px
+2025-11-19 14:48:37.612 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0417m, radius=29.1px
+2025-11-19 14:48:37.644 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0422m, radius=29.6px
+2025-11-19 14:48:37.645 [INFO] CONTROL: t=17.811s | Pos X=0.0833m, Y=0.0421m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:37.645 [DEBUG] PID_CALC: Errors M1=-0.0422, M2=0.0927, M3=-0.0504 | Outputs M1=0.000°, M2=0.000°, M3=-4.033°
+2025-11-19 14:48:37.649 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.03° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:37.676 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0416m, radius=29.0px
+2025-11-19 14:48:37.708 [DEBUG] BALL_DETECT: Found at X=0.0832m, Y=0.0424m, radius=30.0px
+2025-11-19 14:48:37.740 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0417m, radius=28.9px
+2025-11-19 14:48:37.766 [INFO] CONTROL: t=17.932s | Pos X=0.0826m, Y=0.0422m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.03°
+2025-11-19 14:48:37.766 [DEBUG] PID_CALC: Errors M1=-0.0417, M2=0.0928, M3=-0.0511 | Outputs M1=0.000°, M2=0.000°, M3=-4.089°
+2025-11-19 14:48:37.771 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.09° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:37.772 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0418m, radius=28.9px
+2025-11-19 14:48:37.804 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0416m, radius=28.6px
+2025-11-19 14:48:37.852 [DEBUG] BALL_DETECT: Found at X=0.0834m, Y=0.0409m, radius=28.7px
+2025-11-19 14:48:37.883 [INFO] CONTROL: t=18.048s | Pos X=0.0831m, Y=0.0417m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.09°
+2025-11-19 14:48:37.883 [DEBUG] PID_CALC: Errors M1=-0.0409, M2=0.0927, M3=-0.0518 | Outputs M1=0.000°, M2=0.000°, M3=-4.142°
+2025-11-19 14:48:37.887 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.14° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:37.900 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0413m, radius=29.2px
+2025-11-19 14:48:37.948 [DEBUG] BALL_DETECT: Found at X=0.0830m, Y=0.0413m, radius=29.0px
+2025-11-19 14:48:37.996 [DEBUG] BALL_DETECT: Found at X=0.0833m, Y=0.0413m, radius=29.2px
+2025-11-19 14:48:38.007 [INFO] CONTROL: t=18.173s | Pos X=0.0834m, Y=0.0409m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.14°
+2025-11-19 14:48:38.008 [DEBUG] PID_CALC: Errors M1=-0.0413, M2=0.0928, M3=-0.0515 | Outputs M1=0.000°, M2=0.000°, M3=-4.123°
+2025-11-19 14:48:38.012 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.12° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:38.044 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0411m, radius=29.4px
+2025-11-19 14:48:38.092 [DEBUG] BALL_DETECT: Found at X=0.0831m, Y=0.0412m, radius=28.9px
+2025-11-19 14:48:38.130 [INFO] CONTROL: t=18.296s | Pos X=0.0833m, Y=0.0413m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.12°
+2025-11-19 14:48:38.130 [DEBUG] PID_CALC: Errors M1=-0.0412, M2=0.0926, M3=-0.0514 | Outputs M1=0.000°, M2=0.000°, M3=-4.110°
+2025-11-19 14:48:38.134 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-4.11° | Angles: M1=15°, M2=15°, M3=10° | Bytes: [15, 15, 10] (hex: 0x0f0f0a) | Checksum: 10
+2025-11-19 14:48:38.140 [DEBUG] BALL_DETECT: Found at X=0.0826m, Y=0.0414m, radius=28.9px
+2025-11-19 14:48:38.188 [DEBUG] BALL_DETECT: Found at X=0.0803m, Y=0.0400m, radius=29.4px
+2025-11-19 14:48:38.248 [INFO] CONTROL: t=18.413s | Pos X=0.0831m, Y=0.0412m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-4.11°
+2025-11-19 14:48:38.248 [DEBUG] PID_CALC: Errors M1=-0.0400, M2=0.0896, M3=-0.0495 | Outputs M1=0.000°, M2=0.000°, M3=-3.964°
+2025-11-19 14:48:38.252 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-3.96° | Angles: M1=15°, M2=15°, M3=11° | Bytes: [15, 15, 11] (hex: 0x0f0f0b) | Checksum: 11
+2025-11-19 14:48:38.253 [DEBUG] BALL_DETECT: Found at X=0.0749m, Y=0.0380m, radius=29.7px
+2025-11-19 14:48:38.300 [DEBUG] BALL_DETECT: Found at X=0.0709m, Y=0.0355m, radius=30.6px
+2025-11-19 14:48:38.348 [DEBUG] BALL_DETECT: Found at X=0.0663m, Y=0.0333m, radius=30.3px
+2025-11-19 14:48:38.368 [INFO] CONTROL: t=18.533s | Pos X=0.0803m, Y=0.0400m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-3.96°
+2025-11-19 14:48:38.368 [DEBUG] PID_CALC: Errors M1=-0.0333, M2=0.0741, M3=-0.0408 | Outputs M1=0.000°, M2=0.000°, M3=-3.262°
+2025-11-19 14:48:38.372 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-3.26° | Angles: M1=15°, M2=15°, M3=11° | Bytes: [15, 15, 11] (hex: 0x0f0f0b) | Checksum: 11
+2025-11-19 14:48:38.396 [DEBUG] BALL_DETECT: Found at X=0.0618m, Y=0.0307m, radius=30.6px
+2025-11-19 14:48:38.444 [DEBUG] BALL_DETECT: Found at X=0.0577m, Y=0.0284m, radius=29.9px
+2025-11-19 14:48:38.492 [INFO] CONTROL: t=18.658s | Pos X=0.0663m, Y=0.0333m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-3.26°
+2025-11-19 14:48:38.492 [DEBUG] BALL_DETECT: Found at X=0.0536m, Y=0.0261m, radius=30.6px
+2025-11-19 14:48:38.492 [DEBUG] PID_CALC: Errors M1=-0.0261, M2=0.0595, M3=-0.0334 | Outputs M1=0.000°, M2=0.000°, M3=-2.673°
+2025-11-19 14:48:38.497 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-2.67° | Angles: M1=15°, M2=15°, M3=12° | Bytes: [15, 15, 12] (hex: 0x0f0f0c) | Checksum: 12
+2025-11-19 14:48:38.540 [DEBUG] BALL_DETECT: Found at X=0.0501m, Y=0.0245m, radius=30.4px
+2025-11-19 14:48:38.605 [DEBUG] BALL_DETECT: Found at X=0.0459m, Y=0.0216m, radius=29.8px
+2025-11-19 14:48:38.614 [INFO] CONTROL: t=18.779s | Pos X=0.0536m, Y=0.0261m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-2.67°
+2025-11-19 14:48:38.614 [DEBUG] PID_CALC: Errors M1=-0.0216, M2=0.0505, M3=-0.0289 | Outputs M1=0.000°, M2=0.000°, M3=-2.315°
+2025-11-19 14:48:38.618 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-2.32° | Angles: M1=15°, M2=15°, M3=12° | Bytes: [15, 15, 12] (hex: 0x0f0f0c) | Checksum: 12
+2025-11-19 14:48:38.652 [DEBUG] BALL_DETECT: Found at X=0.0422m, Y=0.0185m, radius=28.9px
+2025-11-19 14:48:38.700 [DEBUG] BALL_DETECT: Found at X=0.0377m, Y=0.0169m, radius=29.8px
+2025-11-19 14:48:38.737 [INFO] CONTROL: t=18.902s | Pos X=0.0459m, Y=0.0216m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-2.32°
+2025-11-19 14:48:38.737 [DEBUG] PID_CALC: Errors M1=-0.0169, M2=0.0411, M3=-0.0243 | Outputs M1=0.000°, M2=0.000°, M3=-1.940°
+2025-11-19 14:48:38.741 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-1.94° | Angles: M1=15°, M2=15°, M3=13° | Bytes: [15, 15, 13] (hex: 0x0f0f0d) | Checksum: 13
+2025-11-19 14:48:38.748 [DEBUG] BALL_DETECT: Found at X=0.0343m, Y=0.0145m, radius=29.2px
+2025-11-19 14:48:38.796 [DEBUG] BALL_DETECT: Found at X=0.0297m, Y=0.0130m, radius=29.8px
+2025-11-19 14:48:38.844 [DEBUG] BALL_DETECT: Found at X=0.0256m, Y=0.0101m, radius=29.2px
+2025-11-19 14:48:38.861 [INFO] CONTROL: t=19.027s | Pos X=0.0377m, Y=0.0169m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-1.94°
+2025-11-19 14:48:38.861 [DEBUG] PID_CALC: Errors M1=-0.0101, M2=0.0272, M3=-0.0171 | Outputs M1=0.000°, M2=0.000°, M3=-1.371°
+2025-11-19 14:48:38.866 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-1.37° | Angles: M1=15°, M2=15°, M3=13° | Bytes: [15, 15, 13] (hex: 0x0f0f0d) | Checksum: 13
+2025-11-19 14:48:38.892 [DEBUG] BALL_DETECT: Found at X=0.0226m, Y=0.0087m, radius=29.7px
+2025-11-19 14:48:38.956 [DEBUG] BALL_DETECT: Found at X=0.0191m, Y=0.0070m, radius=29.7px
+2025-11-19 14:48:38.982 [INFO] CONTROL: t=19.148s | Pos X=0.0256m, Y=0.0101m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-1.37°
+2025-11-19 14:48:38.982 [DEBUG] PID_CALC: Errors M1=-0.0070, M2=0.0201, M3=-0.0130 | Outputs M1=0.000°, M2=0.000°, M3=-1.043°
+2025-11-19 14:48:38.987 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-1.04° | Angles: M1=15°, M2=15°, M3=13° | Bytes: [15, 15, 13] (hex: 0x0f0f0d) | Checksum: 13
+2025-11-19 14:48:38.988 [DEBUG] BALL_DETECT: Found at X=0.0162m, Y=0.0052m, radius=29.1px
+2025-11-19 14:48:39.020 [DEBUG] BALL_DETECT: Found at X=0.0141m, Y=0.0044m, radius=28.9px
+2025-11-19 14:48:39.052 [DEBUG] BALL_DETECT: Found at X=0.0125m, Y=0.0031m, radius=29.1px
+2025-11-19 14:48:39.084 [DEBUG] BALL_DETECT: Found at X=0.0106m, Y=0.0024m, radius=29.0px
+2025-11-19 14:48:39.099 [INFO] CONTROL: t=19.264s | Pos X=0.0191m, Y=0.0070m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-1.04°
+2025-11-19 14:48:39.099 [DEBUG] PID_CALC: Errors M1=-0.0024, M2=0.0103, M3=-0.0080 | Outputs M1=0.000°, M2=0.000°, M3=-0.636°
+2025-11-19 14:48:39.103 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-0.64° | Angles: M1=15°, M2=15°, M3=14° | Bytes: [15, 15, 14] (hex: 0x0f0f0e) | Checksum: 14
+2025-11-19 14:48:39.116 [DEBUG] BALL_DETECT: Found at X=0.0093m, Y=0.0014m, radius=29.0px
+2025-11-19 14:48:39.148 [DEBUG] BALL_DETECT: Found at X=0.0072m, Y=0.0009m, radius=29.1px
+2025-11-19 14:48:39.180 [DEBUG] BALL_DETECT: Found at X=0.0059m, Y=-0.0001m, radius=29.0px
+2025-11-19 14:48:39.212 [DEBUG] BALL_DETECT: Found at X=0.0045m, Y=-0.0012m, radius=29.0px
+2025-11-19 14:48:39.220 [INFO] CONTROL: t=19.386s | Pos X=0.0106m, Y=0.0024m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-0.64°
+2025-11-19 14:48:39.221 [DEBUG] PID_CALC: Errors M1=0.0012, M2=0.0034, M3=-0.0045 | Outputs M1=0.000°, M2=0.000°, M3=-0.362°
+2025-11-19 14:48:39.226 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-0.36° | Angles: M1=15°, M2=15°, M3=14° | Bytes: [15, 15, 14] (hex: 0x0f0f0e) | Checksum: 14
+2025-11-19 14:48:39.244 [DEBUG] BALL_DETECT: Found at X=0.0026m, Y=-0.0018m, radius=28.9px
+2025-11-19 14:48:39.292 [DEBUG] BALL_DETECT: Found at X=0.0012m, Y=-0.0030m, radius=29.0px
+2025-11-19 14:48:39.324 [DEBUG] BALL_DETECT: Found at X=-0.0003m, Y=-0.0031m, radius=29.6px
+2025-11-19 14:48:39.346 [INFO] CONTROL: t=19.512s | Pos X=0.0045m, Y=-0.0012m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-0.36°
+2025-11-19 14:48:39.346 [DEBUG] PID_CALC: Errors M1=0.0031, M2=-0.0018, M3=-0.0012 | Outputs M1=0.000°, M2=0.000°, M3=-0.099°
+2025-11-19 14:48:39.351 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=-0.10° | Angles: M1=15°, M2=15°, M3=14° | Bytes: [15, 15, 14] (hex: 0x0f0f0e) | Checksum: 14
+2025-11-19 14:48:39.356 [DEBUG] BALL_DETECT: Found at X=-0.0020m, Y=-0.0043m, radius=29.1px
+2025-11-19 14:48:39.388 [DEBUG] BALL_DETECT: Found at X=-0.0034m, Y=-0.0053m, radius=29.0px
+2025-11-19 14:48:39.420 [DEBUG] BALL_DETECT: Found at X=-0.0049m, Y=-0.0058m, radius=29.6px
+2025-11-19 14:48:39.452 [DEBUG] BALL_DETECT: Found at X=-0.0071m, Y=-0.0070m, radius=28.6px
+2025-11-19 14:48:39.469 [INFO] CONTROL: t=19.635s | Pos X=-0.0003m, Y=-0.0031m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=-0.10°
+2025-11-19 14:48:39.469 [DEBUG] PID_CALC: Errors M1=0.0070, M2=-0.0096, M3=0.0026 | Outputs M1=0.000°, M2=0.000°, M3=0.210°
+2025-11-19 14:48:39.474 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.21° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:39.484 [DEBUG] BALL_DETECT: Found at X=-0.0084m, Y=-0.0082m, radius=28.7px
+2025-11-19 14:48:39.516 [DEBUG] BALL_DETECT: Found at X=-0.0105m, Y=-0.0086m, radius=28.7px
+2025-11-19 14:48:39.548 [DEBUG] BALL_DETECT: Found at X=-0.0120m, Y=-0.0102m, radius=28.3px
+2025-11-19 14:48:39.580 [DEBUG] BALL_DETECT: Found at X=-0.0135m, Y=-0.0111m, radius=28.4px
+2025-11-19 14:48:39.589 [INFO] CONTROL: t=19.755s | Pos X=-0.0071m, Y=-0.0070m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.21°
+2025-11-19 14:48:39.589 [DEBUG] PID_CALC: Errors M1=0.0111, M2=-0.0172, M3=0.0061 | Outputs M1=0.000°, M2=0.000°, M3=0.492°
+2025-11-19 14:48:39.594 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.49° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:39.628 [DEBUG] BALL_DETECT: Found at X=-0.0156m, Y=-0.0119m, radius=28.5px
+2025-11-19 14:48:39.661 [DEBUG] BALL_DETECT: Found at X=-0.0171m, Y=-0.0125m, radius=29.1px
+2025-11-19 14:48:39.692 [DEBUG] BALL_DETECT: Found at X=-0.0192m, Y=-0.0139m, radius=28.5px
+2025-11-19 14:48:39.714 [INFO] CONTROL: t=19.880s | Pos X=-0.0135m, Y=-0.0111m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.49°
+2025-11-19 14:48:39.714 [DEBUG] PID_CALC: Errors M1=0.0139, M2=-0.0235, M3=0.0097 | Outputs M1=0.000°, M2=0.000°, M3=0.773°
+2025-11-19 14:48:39.719 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.77° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:39.725 [DEBUG] BALL_DETECT: Found at X=-0.0207m, Y=-0.0153m, radius=28.2px
+2025-11-19 14:48:39.756 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0161m, radius=28.4px
+2025-11-19 14:48:39.789 [DEBUG] BALL_DETECT: Found at X=-0.0240m, Y=-0.0171m, radius=28.5px
+2025-11-19 14:48:39.820 [DEBUG] BALL_DETECT: Found at X=-0.0258m, Y=-0.0180m, radius=28.3px
+2025-11-19 14:48:39.833 [INFO] CONTROL: t=19.999s | Pos X=-0.0192m, Y=-0.0139m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.77°
+2025-11-19 14:48:39.833 [DEBUG] PID_CALC: Errors M1=0.0180, M2=-0.0313, M3=0.0133 | Outputs M1=0.000°, M2=0.000°, M3=1.065°
+2025-11-19 14:48:39.838 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.06° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:39.852 [DEBUG] BALL_DETECT: Found at X=-0.0278m, Y=-0.0191m, radius=28.2px
+2025-11-19 14:48:39.885 [DEBUG] BALL_DETECT: Found at X=-0.0297m, Y=-0.0203m, radius=28.4px
+2025-11-19 14:48:39.916 [DEBUG] BALL_DETECT: Found at X=-0.0312m, Y=-0.0209m, radius=28.4px
+2025-11-19 14:48:39.948 [INFO] CONTROL: t=20.114s | Pos X=-0.0258m, Y=-0.0180m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.06°
+2025-11-19 14:48:39.948 [DEBUG] BALL_DETECT: Found at X=-0.0323m, Y=-0.0217m, radius=28.2px
+2025-11-19 14:48:39.948 [DEBUG] PID_CALC: Errors M1=0.0217, M2=-0.0388, M3=0.0171 | Outputs M1=0.000°, M2=0.000°, M3=1.370°
+2025-11-19 14:48:39.953 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.37° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:39.996 [DEBUG] BALL_DETECT: Found at X=-0.0339m, Y=-0.0221m, radius=28.8px
+2025-11-19 14:48:40.028 [DEBUG] BALL_DETECT: Found at X=-0.0353m, Y=-0.0230m, radius=28.3px
+2025-11-19 14:48:40.060 [DEBUG] BALL_DETECT: Found at X=-0.0364m, Y=-0.0239m, radius=28.6px
+2025-11-19 14:48:40.072 [INFO] CONTROL: t=20.238s | Pos X=-0.0323m, Y=-0.0217m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.37°
+2025-11-19 14:48:40.072 [DEBUG] PID_CALC: Errors M1=0.0239, M2=-0.0434, M3=0.0195 | Outputs M1=0.000°, M2=0.000°, M3=1.564°
+2025-11-19 14:48:40.076 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.56° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:40.092 [DEBUG] BALL_DETECT: Found at X=-0.0375m, Y=-0.0242m, radius=28.4px
+2025-11-19 14:48:40.125 [DEBUG] BALL_DETECT: Found at X=-0.0385m, Y=-0.0246m, radius=28.5px
+2025-11-19 14:48:40.156 [DEBUG] BALL_DETECT: Found at X=-0.0394m, Y=-0.0255m, radius=28.2px
+2025-11-19 14:48:40.188 [DEBUG] BALL_DETECT: Found at X=-0.0402m, Y=-0.0259m, radius=28.3px
+2025-11-19 14:48:40.195 [INFO] CONTROL: t=20.361s | Pos X=-0.0364m, Y=-0.0239m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.56°
+2025-11-19 14:48:40.195 [DEBUG] PID_CALC: Errors M1=0.0259, M2=-0.0478, M3=0.0218 | Outputs M1=0.000°, M2=0.000°, M3=1.745°
+2025-11-19 14:48:40.199 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.74° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:40.221 [DEBUG] BALL_DETECT: Found at X=-0.0411m, Y=-0.0263m, radius=28.4px
+2025-11-19 14:48:40.252 [DEBUG] BALL_DETECT: Found at X=-0.0415m, Y=-0.0270m, radius=28.4px
+2025-11-19 14:48:40.284 [DEBUG] BALL_DETECT: Found at X=-0.0422m, Y=-0.0273m, radius=28.5px
+2025-11-19 14:48:40.317 [INFO] CONTROL: t=20.483s | Pos X=-0.0402m, Y=-0.0259m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.74°
+2025-11-19 14:48:40.318 [DEBUG] PID_CALC: Errors M1=0.0273, M2=-0.0502, M3=0.0229 | Outputs M1=0.000°, M2=0.000°, M3=1.829°
+2025-11-19 14:48:40.323 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.83° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:40.332 [DEBUG] BALL_DETECT: Found at X=-0.0429m, Y=-0.0275m, radius=28.5px
+2025-11-19 14:48:40.364 [DEBUG] BALL_DETECT: Found at X=-0.0438m, Y=-0.0270m, radius=28.9px
+2025-11-19 14:48:40.396 [DEBUG] BALL_DETECT: Found at X=-0.0438m, Y=-0.0280m, radius=28.6px
+2025-11-19 14:48:40.428 [DEBUG] BALL_DETECT: Found at X=-0.0438m, Y=-0.0285m, radius=28.6px
+2025-11-19 14:48:40.434 [INFO] CONTROL: t=20.599s | Pos X=-0.0422m, Y=-0.0273m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.83°
+2025-11-19 14:48:40.434 [DEBUG] PID_CALC: Errors M1=0.0285, M2=-0.0522, M3=0.0237 | Outputs M1=0.000°, M2=0.000°, M3=1.899°
+2025-11-19 14:48:40.438 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.90° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:40.460 [DEBUG] BALL_DETECT: Found at X=-0.0446m, Y=-0.0284m, radius=28.6px
+2025-11-19 14:48:40.492 [DEBUG] BALL_DETECT: Found at X=-0.0447m, Y=-0.0288m, radius=28.5px
+2025-11-19 14:48:40.524 [DEBUG] BALL_DETECT: Found at X=-0.0446m, Y=-0.0292m, radius=28.8px
+2025-11-19 14:48:40.549 [INFO] CONTROL: t=20.715s | Pos X=-0.0438m, Y=-0.0285m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.90°
+2025-11-19 14:48:40.549 [DEBUG] PID_CALC: Errors M1=0.0292, M2=-0.0533, M3=0.0241 | Outputs M1=0.000°, M2=0.000°, M3=1.926°
+2025-11-19 14:48:40.553 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.93° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:40.556 [DEBUG] BALL_DETECT: Found at X=-0.0448m, Y=-0.0290m, radius=28.5px
+2025-11-19 14:48:40.588 [DEBUG] BALL_DETECT: Found at X=-0.0453m, Y=-0.0286m, radius=28.8px
+2025-11-19 14:48:40.620 [DEBUG] BALL_DETECT: Found at X=-0.0448m, Y=-0.0296m, radius=28.8px
+2025-11-19 14:48:40.668 [DEBUG] BALL_DETECT: Found at X=-0.0453m, Y=-0.0288m, radius=28.6px
+2025-11-19 14:48:40.674 [INFO] CONTROL: t=20.839s | Pos X=-0.0446m, Y=-0.0292m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.93°
+2025-11-19 14:48:40.674 [DEBUG] PID_CALC: Errors M1=0.0288, M2=-0.0536, M3=0.0248 | Outputs M1=0.000°, M2=0.000°, M3=1.985°
+2025-11-19 14:48:40.678 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.99° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:40.700 [DEBUG] BALL_DETECT: Found at X=-0.0453m, Y=-0.0286m, radius=28.8px
+2025-11-19 14:48:40.732 [DEBUG] BALL_DETECT: Found at X=-0.0453m, Y=-0.0289m, radius=28.7px
+2025-11-19 14:48:40.764 [DEBUG] BALL_DETECT: Found at X=-0.0451m, Y=-0.0287m, radius=28.9px
+2025-11-19 14:48:40.797 [DEBUG] BALL_DETECT: Found at X=-0.0449m, Y=-0.0290m, radius=28.7px
+2025-11-19 14:48:40.797 [INFO] CONTROL: t=20.962s | Pos X=-0.0453m, Y=-0.0288m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.99°
+2025-11-19 14:48:40.797 [DEBUG] PID_CALC: Errors M1=0.0290, M2=-0.0534, M3=0.0244 | Outputs M1=0.000°, M2=0.000°, M3=1.954°
+2025-11-19 14:48:40.801 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.95° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:40.828 [DEBUG] BALL_DETECT: Found at X=-0.0445m, Y=-0.0291m, radius=29.1px
+2025-11-19 14:48:40.860 [DEBUG] BALL_DETECT: Found at X=-0.0447m, Y=-0.0287m, radius=28.6px
+2025-11-19 14:48:40.892 [DEBUG] BALL_DETECT: Found at X=-0.0445m, Y=-0.0289m, radius=28.8px
+2025-11-19 14:48:40.919 [INFO] CONTROL: t=21.085s | Pos X=-0.0449m, Y=-0.0290m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.95°
+2025-11-19 14:48:40.919 [DEBUG] PID_CALC: Errors M1=0.0289, M2=-0.0530, M3=0.0241 | Outputs M1=0.000°, M2=0.000°, M3=1.928°
+2025-11-19 14:48:40.923 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.93° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:40.924 [DEBUG] BALL_DETECT: Found at X=-0.0445m, Y=-0.0285m, radius=28.6px
+2025-11-19 14:48:40.956 [DEBUG] BALL_DETECT: Found at X=-0.0439m, Y=-0.0287m, radius=28.6px
+2025-11-19 14:48:40.988 [DEBUG] BALL_DETECT: Found at X=-0.0440m, Y=-0.0284m, radius=28.8px
+2025-11-19 14:48:41.036 [DEBUG] BALL_DETECT: Found at X=-0.0438m, Y=-0.0281m, radius=28.5px
+2025-11-19 14:48:41.044 [INFO] CONTROL: t=21.210s | Pos X=-0.0445m, Y=-0.0289m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.93°
+2025-11-19 14:48:41.045 [DEBUG] PID_CALC: Errors M1=0.0281, M2=-0.0520, M3=0.0239 | Outputs M1=0.000°, M2=0.000°, M3=1.908°
+2025-11-19 14:48:41.049 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.91° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:41.067 [DEBUG] BALL_DETECT: Found at X=-0.0438m, Y=-0.0275m, radius=28.9px
+2025-11-19 14:48:41.100 [DEBUG] BALL_DETECT: Found at X=-0.0432m, Y=-0.0278m, radius=28.7px
+2025-11-19 14:48:41.132 [DEBUG] BALL_DETECT: Found at X=-0.0430m, Y=-0.0273m, radius=28.7px
+2025-11-19 14:48:41.164 [DEBUG] BALL_DETECT: Found at X=-0.0420m, Y=-0.0276m, radius=29.0px
+2025-11-19 14:48:41.165 [INFO] CONTROL: t=21.331s | Pos X=-0.0438m, Y=-0.0281m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.91°
+2025-11-19 14:48:41.165 [DEBUG] PID_CALC: Errors M1=0.0276, M2=-0.0502, M3=0.0226 | Outputs M1=0.000°, M2=0.000°, M3=1.807°
+2025-11-19 14:48:41.170 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.81° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:41.196 [DEBUG] BALL_DETECT: Found at X=-0.0420m, Y=-0.0271m, radius=28.5px
+2025-11-19 14:48:41.228 [DEBUG] BALL_DETECT: Found at X=-0.0414m, Y=-0.0267m, radius=28.6px
+2025-11-19 14:48:41.260 [DEBUG] BALL_DETECT: Found at X=-0.0411m, Y=-0.0263m, radius=28.4px
+2025-11-19 14:48:41.288 [INFO] CONTROL: t=21.454s | Pos X=-0.0420m, Y=-0.0276m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.81°
+2025-11-19 14:48:41.288 [DEBUG] PID_CALC: Errors M1=0.0263, M2=-0.0487, M3=0.0225 | Outputs M1=0.000°, M2=0.000°, M3=1.798°
+2025-11-19 14:48:41.293 [DEBUG] BALL_DETECT: Found at X=-0.0403m, Y=-0.0262m, radius=28.3px
+2025-11-19 14:48:41.293 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.80° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:41.324 [DEBUG] BALL_DETECT: Found at X=-0.0399m, Y=-0.0257m, radius=28.5px
+2025-11-19 14:48:41.372 [DEBUG] BALL_DETECT: Found at X=-0.0392m, Y=-0.0252m, radius=28.3px
+2025-11-19 14:48:41.404 [DEBUG] BALL_DETECT: Found at X=-0.0386m, Y=-0.0246m, radius=28.5px
+2025-11-19 14:48:41.405 [INFO] CONTROL: t=21.571s | Pos X=-0.0411m, Y=-0.0263m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.80°
+2025-11-19 14:48:41.405 [DEBUG] PID_CALC: Errors M1=0.0246, M2=-0.0457, M3=0.0211 | Outputs M1=0.000°, M2=0.000°, M3=1.686°
+2025-11-19 14:48:41.409 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.69° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:41.436 [DEBUG] BALL_DETECT: Found at X=-0.0375m, Y=-0.0243m, radius=28.5px
+2025-11-19 14:48:41.468 [DEBUG] BALL_DETECT: Found at X=-0.0366m, Y=-0.0241m, radius=28.4px
+2025-11-19 14:48:41.500 [DEBUG] BALL_DETECT: Found at X=-0.0355m, Y=-0.0235m, radius=28.3px
+2025-11-19 14:48:41.530 [INFO] CONTROL: t=21.695s | Pos X=-0.0386m, Y=-0.0246m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.69°
+2025-11-19 14:48:41.530 [DEBUG] PID_CALC: Errors M1=0.0235, M2=-0.0425, M3=0.0190 | Outputs M1=0.000°, M2=0.000°, M3=1.519°
+2025-11-19 14:48:41.533 [DEBUG] BALL_DETECT: Found at X=-0.0346m, Y=-0.0229m, radius=28.3px
+2025-11-19 14:48:41.534 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.52° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:41.564 [DEBUG] BALL_DETECT: Found at X=-0.0338m, Y=-0.0218m, radius=28.8px
+2025-11-19 14:48:41.596 [DEBUG] BALL_DETECT: Found at X=-0.0322m, Y=-0.0216m, radius=28.3px
+2025-11-19 14:48:41.629 [DEBUG] BALL_DETECT: Found at X=-0.0311m, Y=-0.0210m, radius=28.2px
+2025-11-19 14:48:41.652 [INFO] CONTROL: t=21.818s | Pos X=-0.0355m, Y=-0.0235m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.52°
+2025-11-19 14:48:41.653 [DEBUG] PID_CALC: Errors M1=0.0210, M2=-0.0374, M3=0.0164 | Outputs M1=0.000°, M2=0.000°, M3=1.314°
+2025-11-19 14:48:41.656 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.31° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:41.660 [DEBUG] BALL_DETECT: Found at X=-0.0299m, Y=-0.0204m, radius=28.3px
+2025-11-19 14:48:41.708 [DEBUG] BALL_DETECT: Found at X=-0.0285m, Y=-0.0196m, radius=28.4px
+2025-11-19 14:48:41.740 [DEBUG] BALL_DETECT: Found at X=-0.0273m, Y=-0.0187m, radius=28.3px
+2025-11-19 14:48:41.772 [DEBUG] BALL_DETECT: Found at X=-0.0254m, Y=-0.0182m, radius=28.6px
+2025-11-19 14:48:41.776 [INFO] CONTROL: t=21.941s | Pos X=-0.0311m, Y=-0.0210m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.31°
+2025-11-19 14:48:41.776 [DEBUG] PID_CALC: Errors M1=0.0182, M2=-0.0311, M3=0.0129 | Outputs M1=0.000°, M2=0.000°, M3=1.031°
+2025-11-19 14:48:41.780 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.03° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:41.805 [DEBUG] BALL_DETECT: Found at X=-0.0241m, Y=-0.0173m, radius=28.5px
+2025-11-19 14:48:41.836 [DEBUG] BALL_DETECT: Found at X=-0.0230m, Y=-0.0164m, radius=28.2px
+2025-11-19 14:48:41.868 [DEBUG] BALL_DETECT: Found at X=-0.0216m, Y=-0.0157m, radius=28.4px
+2025-11-19 14:48:41.900 [INFO] CONTROL: t=22.066s | Pos X=-0.0254m, Y=-0.0182m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.03°
+2025-11-19 14:48:41.900 [DEBUG] BALL_DETECT: Found at X=-0.0203m, Y=-0.0148m, radius=28.4px
+2025-11-19 14:48:41.900 [DEBUG] PID_CALC: Errors M1=0.0148, M2=-0.0250, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.818°
+2025-11-19 14:48:41.905 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:41.932 [DEBUG] BALL_DETECT: Found at X=-0.0191m, Y=-0.0142m, radius=28.4px
+2025-11-19 14:48:41.964 [DEBUG] BALL_DETECT: Found at X=-0.0179m, Y=-0.0131m, radius=28.5px
+2025-11-19 14:48:41.996 [DEBUG] BALL_DETECT: Found at X=-0.0167m, Y=-0.0125m, radius=28.3px
+2025-11-19 14:48:42.021 [INFO] CONTROL: t=22.187s | Pos X=-0.0203m, Y=-0.0148m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:42.021 [DEBUG] PID_CALC: Errors M1=0.0125, M2=-0.0207, M3=0.0082 | Outputs M1=0.000°, M2=0.000°, M3=0.653°
+2025-11-19 14:48:42.025 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.65° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:42.043 [DEBUG] BALL_DETECT: Found at X=-0.0156m, Y=-0.0118m, radius=28.5px
+2025-11-19 14:48:42.076 [DEBUG] BALL_DETECT: Found at X=-0.0145m, Y=-0.0119m, radius=28.4px
+2025-11-19 14:48:42.108 [DEBUG] BALL_DETECT: Found at X=-0.0134m, Y=-0.0110m, radius=28.5px
+2025-11-19 14:48:42.140 [INFO] CONTROL: t=22.306s | Pos X=-0.0167m, Y=-0.0125m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.65°
+2025-11-19 14:48:42.140 [DEBUG] PID_CALC: Errors M1=0.0110, M2=-0.0171, M3=0.0061 | Outputs M1=0.000°, M2=0.000°, M3=0.489°
+2025-11-19 14:48:42.140 [DEBUG] BALL_DETECT: Found at X=-0.0127m, Y=-0.0103m, radius=28.8px
+2025-11-19 14:48:42.144 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.49° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:42.172 [DEBUG] BALL_DETECT: Found at X=-0.0119m, Y=-0.0100m, radius=28.4px
+2025-11-19 14:48:42.204 [DEBUG] BALL_DETECT: Found at X=-0.0109m, Y=-0.0094m, radius=28.5px
+2025-11-19 14:48:42.236 [DEBUG] BALL_DETECT: Found at X=-0.0100m, Y=-0.0090m, radius=28.3px
+2025-11-19 14:48:42.265 [INFO] CONTROL: t=22.431s | Pos X=-0.0134m, Y=-0.0110m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.49°
+2025-11-19 14:48:42.265 [DEBUG] PID_CALC: Errors M1=0.0090, M2=-0.0132, M3=0.0041 | Outputs M1=0.000°, M2=0.000°, M3=0.331°
+2025-11-19 14:48:42.268 [DEBUG] BALL_DETECT: Found at X=-0.0093m, Y=-0.0086m, radius=28.7px
+2025-11-19 14:48:42.269 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.33° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:42.300 [DEBUG] BALL_DETECT: Found at X=-0.0088m, Y=-0.0084m, radius=28.2px
+2025-11-19 14:48:42.332 [DEBUG] BALL_DETECT: Found at X=-0.0084m, Y=-0.0079m, radius=28.6px
+2025-11-19 14:48:42.364 [DEBUG] BALL_DETECT: Found at X=-0.0082m, Y=-0.0074m, radius=28.6px
+2025-11-19 14:48:42.383 [INFO] CONTROL: t=22.548s | Pos X=-0.0100m, Y=-0.0090m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.33°
+2025-11-19 14:48:42.383 [DEBUG] PID_CALC: Errors M1=0.0074, M2=-0.0108, M3=0.0034 | Outputs M1=0.000°, M2=0.000°, M3=0.270°
+2025-11-19 14:48:42.387 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.27° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:42.412 [DEBUG] BALL_DETECT: Found at X=-0.0076m, Y=-0.0069m, radius=29.3px
+2025-11-19 14:48:42.443 [DEBUG] BALL_DETECT: Found at X=-0.0075m, Y=-0.0073m, radius=28.2px
+2025-11-19 14:48:42.476 [DEBUG] BALL_DETECT: Found at X=-0.0070m, Y=-0.0068m, radius=28.6px
+2025-11-19 14:48:42.503 [INFO] CONTROL: t=22.669s | Pos X=-0.0082m, Y=-0.0074m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.27°
+2025-11-19 14:48:42.503 [DEBUG] PID_CALC: Errors M1=0.0068, M2=-0.0095, M3=0.0027 | Outputs M1=0.000°, M2=0.000°, M3=0.213°
+2025-11-19 14:48:42.507 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.21° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:42.508 [DEBUG] BALL_DETECT: Found at X=-0.0069m, Y=-0.0068m, radius=28.7px
+2025-11-19 14:48:42.540 [DEBUG] BALL_DETECT: Found at X=-0.0062m, Y=-0.0065m, radius=28.9px
+2025-11-19 14:48:42.572 [DEBUG] BALL_DETECT: Found at X=-0.0061m, Y=-0.0066m, radius=28.8px
+2025-11-19 14:48:42.604 [DEBUG] BALL_DETECT: Found at X=-0.0063m, Y=-0.0068m, radius=28.2px
+2025-11-19 14:48:42.620 [INFO] CONTROL: t=22.785s | Pos X=-0.0070m, Y=-0.0068m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.21°
+2025-11-19 14:48:42.620 [DEBUG] PID_CALC: Errors M1=0.0068, M2=-0.0088, M3=0.0021 | Outputs M1=0.000°, M2=0.000°, M3=0.166°
+2025-11-19 14:48:42.624 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.17° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:42.636 [DEBUG] BALL_DETECT: Found at X=-0.0062m, Y=-0.0066m, radius=28.3px
+2025-11-19 14:48:42.668 [DEBUG] BALL_DETECT: Found at X=-0.0061m, Y=-0.0067m, radius=28.6px
+2025-11-19 14:48:42.700 [DEBUG] BALL_DETECT: Found at X=-0.0060m, Y=-0.0066m, radius=28.6px
+2025-11-19 14:48:42.737 [INFO] CONTROL: t=22.903s | Pos X=-0.0063m, Y=-0.0068m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.17°
+2025-11-19 14:48:42.737 [DEBUG] PID_CALC: Errors M1=0.0066, M2=-0.0085, M3=0.0019 | Outputs M1=0.000°, M2=0.000°, M3=0.151°
+2025-11-19 14:48:42.742 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.15° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:42.748 [DEBUG] BALL_DETECT: Found at X=-0.0060m, Y=-0.0068m, radius=28.6px
+2025-11-19 14:48:42.780 [DEBUG] BALL_DETECT: Found at X=-0.0064m, Y=-0.0073m, radius=28.4px
+2025-11-19 14:48:42.813 [DEBUG] BALL_DETECT: Found at X=-0.0070m, Y=-0.0068m, radius=28.7px
+2025-11-19 14:48:42.845 [DEBUG] BALL_DETECT: Found at X=-0.0071m, Y=-0.0069m, radius=28.6px
+2025-11-19 14:48:42.853 [INFO] CONTROL: t=23.018s | Pos X=-0.0060m, Y=-0.0066m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.15°
+2025-11-19 14:48:42.853 [DEBUG] PID_CALC: Errors M1=0.0069, M2=-0.0095, M3=0.0027 | Outputs M1=0.000°, M2=0.000°, M3=0.215°
+2025-11-19 14:48:42.857 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.21° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:42.873 [INFO] PID_GAIN: Motor 3 Ki changed from 0.000 to 0.000
+2025-11-19 14:48:42.877 [DEBUG] BALL_DETECT: Found at X=-0.0071m, Y=-0.0072m, radius=28.6px
+2025-11-19 14:48:42.908 [DEBUG] BALL_DETECT: Found at X=-0.0076m, Y=-0.0074m, radius=28.1px
+2025-11-19 14:48:42.940 [DEBUG] BALL_DETECT: Found at X=-0.0075m, Y=-0.0077m, radius=28.4px
+2025-11-19 14:48:42.973 [INFO] CONTROL: t=23.139s | Pos X=-0.0071m, Y=-0.0069m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.21°
+2025-11-19 14:48:42.973 [DEBUG] PID_CALC: Errors M1=0.0077, M2=-0.0104, M3=0.0027 | Outputs M1=0.000°, M2=0.000°, M3=0.213°
+2025-11-19 14:48:42.974 [DEBUG] BALL_DETECT: Found at X=-0.0082m, Y=-0.0074m, radius=28.7px
+2025-11-19 14:48:42.977 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.21° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:43.004 [DEBUG] BALL_DETECT: Found at X=-0.0083m, Y=-0.0078m, radius=28.7px
+2025-11-19 14:48:43.036 [DEBUG] BALL_DETECT: Found at X=-0.0086m, Y=-0.0079m, radius=28.2px
+2025-11-19 14:48:43.083 [DEBUG] BALL_DETECT: Found at X=-0.0088m, Y=-0.0084m, radius=28.2px
+2025-11-19 14:48:43.093 [INFO] CONTROL: t=23.259s | Pos X=-0.0075m, Y=-0.0077m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.21°
+2025-11-19 14:48:43.093 [DEBUG] PID_CALC: Errors M1=0.0084, M2=-0.0119, M3=0.0034 | Outputs M1=0.000°, M2=0.000°, M3=0.275°
+2025-11-19 14:48:43.097 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.27° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:43.116 [DEBUG] BALL_DETECT: Found at X=-0.0093m, Y=-0.0085m, radius=28.6px
+2025-11-19 14:48:43.148 [DEBUG] BALL_DETECT: Found at X=-0.0099m, Y=-0.0089m, radius=28.3px
+2025-11-19 14:48:43.180 [DEBUG] BALL_DETECT: Found at X=-0.0101m, Y=-0.0090m, radius=28.1px
+2025-11-19 14:48:43.209 [INFO] CONTROL: t=23.375s | Pos X=-0.0088m, Y=-0.0084m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.27°
+2025-11-19 14:48:43.209 [DEBUG] PID_CALC: Errors M1=0.0090, M2=-0.0132, M3=0.0042 | Outputs M1=0.000°, M2=0.000°, M3=0.335°
+2025-11-19 14:48:43.212 [DEBUG] BALL_DETECT: Found at X=-0.0106m, Y=-0.0091m, radius=28.7px
+2025-11-19 14:48:43.213 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.34° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:43.244 [DEBUG] BALL_DETECT: Found at X=-0.0111m, Y=-0.0096m, radius=28.2px
+2025-11-19 14:48:43.276 [DEBUG] BALL_DETECT: Found at X=-0.0118m, Y=-0.0104m, radius=28.2px
+2025-11-19 14:48:43.308 [DEBUG] BALL_DETECT: Found at X=-0.0123m, Y=-0.0102m, radius=28.3px
+2025-11-19 14:48:43.327 [INFO] CONTROL: t=23.493s | Pos X=-0.0101m, Y=-0.0090m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.34°
+2025-11-19 14:48:43.327 [DEBUG] PID_CALC: Errors M1=0.0102, M2=-0.0158, M3=0.0056 | Outputs M1=0.000°, M2=0.000°, M3=0.445°
+2025-11-19 14:48:43.332 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.45° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:43.340 [DEBUG] BALL_DETECT: Found at X=-0.0132m, Y=-0.0107m, radius=28.3px
+2025-11-19 14:48:43.372 [DEBUG] BALL_DETECT: Found at X=-0.0138m, Y=-0.0113m, radius=28.2px
+2025-11-19 14:48:43.403 [DEBUG] BALL_DETECT: Found at X=-0.0143m, Y=-0.0114m, radius=28.4px
+2025-11-19 14:48:43.446 [INFO] CONTROL: t=23.612s | Pos X=-0.0123m, Y=-0.0102m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.45°
+2025-11-19 14:48:43.446 [DEBUG] PID_CALC: Errors M1=0.0114, M2=-0.0181, M3=0.0067 | Outputs M1=0.000°, M2=0.000°, M3=0.538°
+2025-11-19 14:48:43.450 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.54° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:43.452 [DEBUG] BALL_DETECT: Found at X=-0.0153m, Y=-0.0115m, radius=28.8px
+2025-11-19 14:48:43.484 [DEBUG] BALL_DETECT: Found at X=-0.0156m, Y=-0.0120m, radius=28.5px
+2025-11-19 14:48:43.516 [DEBUG] BALL_DETECT: Found at X=-0.0167m, Y=-0.0124m, radius=28.1px
+2025-11-19 14:48:43.548 [DEBUG] BALL_DETECT: Found at X=-0.0175m, Y=-0.0128m, radius=28.6px
+2025-11-19 14:48:43.565 [INFO] CONTROL: t=23.731s | Pos X=-0.0143m, Y=-0.0114m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.54°
+2025-11-19 14:48:43.565 [DEBUG] PID_CALC: Errors M1=0.0128, M2=-0.0216, M3=0.0088 | Outputs M1=0.000°, M2=0.000°, M3=0.702°
+2025-11-19 14:48:43.570 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.70° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:43.580 [DEBUG] BALL_DETECT: Found at X=-0.0179m, Y=-0.0134m, radius=28.3px
+2025-11-19 14:48:43.612 [DEBUG] BALL_DETECT: Found at X=-0.0190m, Y=-0.0139m, radius=28.4px
+2025-11-19 14:48:43.644 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:43.676 [DEBUG] BALL_DETECT: Found at X=-0.0208m, Y=-0.0152m, radius=28.4px
+2025-11-19 14:48:43.690 [INFO] CONTROL: t=23.855s | Pos X=-0.0175m, Y=-0.0128m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.70°
+2025-11-19 14:48:43.690 [DEBUG] PID_CALC: Errors M1=0.0152, M2=-0.0256, M3=0.0104 | Outputs M1=0.000°, M2=0.000°, M3=0.832°
+2025-11-19 14:48:43.694 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.83° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:43.708 [DEBUG] BALL_DETECT: Found at X=-0.0216m, Y=-0.0156m, radius=28.4px
+2025-11-19 14:48:43.740 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0161m, radius=28.4px
+2025-11-19 14:48:43.788 [DEBUG] BALL_DETECT: Found at X=-0.0234m, Y=-0.0168m, radius=28.3px
+2025-11-19 14:48:43.810 [INFO] CONTROL: t=23.975s | Pos X=-0.0208m, Y=-0.0152m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.83°
+2025-11-19 14:48:43.810 [DEBUG] PID_CALC: Errors M1=0.0168, M2=-0.0287, M3=0.0119 | Outputs M1=0.000°, M2=0.000°, M3=0.951°
+2025-11-19 14:48:43.815 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.95° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:43.820 [DEBUG] BALL_DETECT: Found at X=-0.0240m, Y=-0.0169m, radius=28.4px
+2025-11-19 14:48:43.852 [DEBUG] BALL_DETECT: Found at X=-0.0249m, Y=-0.0172m, radius=28.5px
+2025-11-19 14:48:43.884 [DEBUG] BALL_DETECT: Found at X=-0.0262m, Y=-0.0180m, radius=28.5px
+2025-11-19 14:48:43.916 [DEBUG] BALL_DETECT: Found at X=-0.0266m, Y=-0.0184m, radius=28.2px
+2025-11-19 14:48:43.930 [INFO] CONTROL: t=24.096s | Pos X=-0.0234m, Y=-0.0168m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.95°
+2025-11-19 14:48:43.930 [DEBUG] PID_CALC: Errors M1=0.0184, M2=-0.0323, M3=0.0138 | Outputs M1=0.000°, M2=0.000°, M3=1.107°
+2025-11-19 14:48:43.935 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.11° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:43.948 [DEBUG] BALL_DETECT: Found at X=-0.0276m, Y=-0.0188m, radius=28.3px
+2025-11-19 14:48:43.980 [DEBUG] BALL_DETECT: Found at X=-0.0280m, Y=-0.0193m, radius=28.0px
+2025-11-19 14:48:44.012 [DEBUG] BALL_DETECT: Found at X=-0.0287m, Y=-0.0199m, radius=28.2px
+2025-11-19 14:48:44.044 [DEBUG] BALL_DETECT: Found at X=-0.0295m, Y=-0.0200m, radius=28.6px
+2025-11-19 14:48:44.048 [INFO] CONTROL: t=24.214s | Pos X=-0.0266m, Y=-0.0184m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.11°
+2025-11-19 14:48:44.048 [DEBUG] PID_CALC: Errors M1=0.0200, M2=-0.0356, M3=0.0155 | Outputs M1=0.000°, M2=0.000°, M3=1.241°
+2025-11-19 14:48:44.053 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.24° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:44.076 [DEBUG] BALL_DETECT: Found at X=-0.0299m, Y=-0.0204m, radius=28.3px
+2025-11-19 14:48:44.124 [DEBUG] BALL_DETECT: Found at X=-0.0303m, Y=-0.0206m, radius=28.2px
+2025-11-19 14:48:44.156 [DEBUG] BALL_DETECT: Found at X=-0.0308m, Y=-0.0207m, radius=28.5px
+2025-11-19 14:48:44.167 [INFO] CONTROL: t=24.333s | Pos X=-0.0295m, Y=-0.0200m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.24°
+2025-11-19 14:48:44.167 [DEBUG] PID_CALC: Errors M1=0.0207, M2=-0.0370, M3=0.0163 | Outputs M1=0.000°, M2=0.000°, M3=1.304°
+2025-11-19 14:48:44.171 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.30° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:44.188 [DEBUG] BALL_DETECT: Found at X=-0.0310m, Y=-0.0210m, radius=28.3px
+2025-11-19 14:48:44.221 [DEBUG] BALL_DETECT: Found at X=-0.0311m, Y=-0.0210m, radius=28.2px
+2025-11-19 14:48:44.253 [DEBUG] BALL_DETECT: Found at X=-0.0316m, Y=-0.0209m, radius=28.8px
+2025-11-19 14:48:44.284 [INFO] CONTROL: t=24.450s | Pos X=-0.0308m, Y=-0.0207m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.30°
+2025-11-19 14:48:44.284 [DEBUG] PID_CALC: Errors M1=0.0209, M2=-0.0378, M3=0.0169 | Outputs M1=0.000°, M2=0.000°, M3=1.351°
+2025-11-19 14:48:44.286 [DEBUG] BALL_DETECT: Found at X=-0.0313m, Y=-0.0215m, radius=28.2px
+2025-11-19 14:48:44.289 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.35° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:44.317 [DEBUG] BALL_DETECT: Found at X=-0.0318m, Y=-0.0212m, radius=28.6px
+2025-11-19 14:48:44.349 [DEBUG] BALL_DETECT: Found at X=-0.0316m, Y=-0.0210m, radius=28.7px
+2025-11-19 14:48:44.380 [DEBUG] BALL_DETECT: Found at X=-0.0313m, Y=-0.0211m, radius=28.3px
+2025-11-19 14:48:44.409 [INFO] CONTROL: t=24.575s | Pos X=-0.0316m, Y=-0.0209m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.35°
+2025-11-19 14:48:44.409 [DEBUG] PID_CALC: Errors M1=0.0211, M2=-0.0377, M3=0.0166 | Outputs M1=0.000°, M2=0.000°, M3=1.328°
+2025-11-19 14:48:44.412 [DEBUG] BALL_DETECT: Found at X=-0.0313m, Y=-0.0209m, radius=28.3px
+2025-11-19 14:48:44.413 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.33° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:44.444 [DEBUG] BALL_DETECT: Found at X=-0.0311m, Y=-0.0210m, radius=28.2px
+2025-11-19 14:48:44.492 [DEBUG] BALL_DETECT: Found at X=-0.0310m, Y=-0.0210m, radius=28.3px
+2025-11-19 14:48:44.524 [DEBUG] BALL_DETECT: Found at X=-0.0308m, Y=-0.0206m, radius=28.4px
+2025-11-19 14:48:44.531 [INFO] CONTROL: t=24.697s | Pos X=-0.0313m, Y=-0.0211m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.33°
+2025-11-19 14:48:44.532 [DEBUG] PID_CALC: Errors M1=0.0206, M2=-0.0369, M3=0.0164 | Outputs M1=0.000°, M2=0.000°, M3=1.308°
+2025-11-19 14:48:44.536 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.31° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:44.556 [DEBUG] BALL_DETECT: Found at X=-0.0303m, Y=-0.0206m, radius=28.2px
+2025-11-19 14:48:44.588 [DEBUG] BALL_DETECT: Found at X=-0.0301m, Y=-0.0205m, radius=28.3px
+2025-11-19 14:48:44.620 [DEBUG] BALL_DETECT: Found at X=-0.0298m, Y=-0.0202m, radius=28.2px
+2025-11-19 14:48:44.652 [DEBUG] BALL_DETECT: Found at X=-0.0293m, Y=-0.0202m, radius=28.2px
+2025-11-19 14:48:44.655 [INFO] CONTROL: t=24.821s | Pos X=-0.0308m, Y=-0.0206m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.31°
+2025-11-19 14:48:44.655 [DEBUG] PID_CALC: Errors M1=0.0202, M2=-0.0355, M3=0.0153 | Outputs M1=0.000°, M2=0.000°, M3=1.220°
+2025-11-19 14:48:44.659 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.22° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:44.684 [DEBUG] BALL_DETECT: Found at X=-0.0287m, Y=-0.0199m, radius=28.2px
+2025-11-19 14:48:44.716 [DEBUG] BALL_DETECT: Found at X=-0.0282m, Y=-0.0197m, radius=28.1px
+2025-11-19 14:48:44.748 [DEBUG] BALL_DETECT: Found at X=-0.0280m, Y=-0.0192m, radius=28.0px
+2025-11-19 14:48:44.771 [INFO] CONTROL: t=24.937s | Pos X=-0.0293m, Y=-0.0202m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.22°
+2025-11-19 14:48:44.771 [DEBUG] PID_CALC: Errors M1=0.0192, M2=-0.0338, M3=0.0146 | Outputs M1=0.000°, M2=0.000°, M3=1.169°
+2025-11-19 14:48:44.776 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.17° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:44.780 [DEBUG] BALL_DETECT: Found at X=-0.0276m, Y=-0.0188m, radius=28.3px
+2025-11-19 14:48:44.828 [DEBUG] BALL_DETECT: Found at X=-0.0266m, Y=-0.0184m, radius=28.1px
+2025-11-19 14:48:44.860 [DEBUG] BALL_DETECT: Found at X=-0.0263m, Y=-0.0183m, radius=28.5px
+2025-11-19 14:48:44.892 [DEBUG] BALL_DETECT: Found at X=-0.0251m, Y=-0.0176m, radius=28.4px
+2025-11-19 14:48:44.896 [INFO] CONTROL: t=25.062s | Pos X=-0.0280m, Y=-0.0192m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.17°
+2025-11-19 14:48:44.897 [DEBUG] PID_CALC: Errors M1=0.0176, M2=-0.0305, M3=0.0130 | Outputs M1=0.000°, M2=0.000°, M3=1.040°
+2025-11-19 14:48:44.901 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=1.04° | Angles: M1=15°, M2=15°, M3=16° | Bytes: [15, 15, 16] (hex: 0x0f0f10) | Checksum: 16
+2025-11-19 14:48:44.923 [DEBUG] BALL_DETECT: Found at X=-0.0251m, Y=-0.0179m, radius=28.4px
+2025-11-19 14:48:44.956 [DEBUG] BALL_DETECT: Found at X=-0.0240m, Y=-0.0171m, radius=28.5px
+2025-11-19 14:48:44.988 [DEBUG] BALL_DETECT: Found at X=-0.0241m, Y=-0.0170m, radius=28.3px
+2025-11-19 14:48:45.020 [INFO] CONTROL: t=25.186s | Pos X=-0.0251m, Y=-0.0176m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=1.04°
+2025-11-19 14:48:45.020 [DEBUG] PID_CALC: Errors M1=0.0170, M2=-0.0293, M3=0.0123 | Outputs M1=0.000°, M2=0.000°, M3=0.987°
+2025-11-19 14:48:45.020 [DEBUG] BALL_DETECT: Found at X=-0.0231m, Y=-0.0167m, radius=28.2px
+2025-11-19 14:48:45.025 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.99° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.052 [DEBUG] BALL_DETECT: Found at X=-0.0227m, Y=-0.0163m, radius=28.5px
+2025-11-19 14:48:45.085 [DEBUG] BALL_DETECT: Found at X=-0.0224m, Y=-0.0157m, radius=28.7px
+2025-11-19 14:48:45.116 [DEBUG] BALL_DETECT: Found at X=-0.0217m, Y=-0.0155m, radius=28.6px
+2025-11-19 14:48:45.140 [INFO] CONTROL: t=25.306s | Pos X=-0.0241m, Y=-0.0170m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.99°
+2025-11-19 14:48:45.140 [DEBUG] PID_CALC: Errors M1=0.0155, M2=-0.0265, M3=0.0110 | Outputs M1=0.000°, M2=0.000°, M3=0.882°
+2025-11-19 14:48:45.144 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.88° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.164 [DEBUG] BALL_DETECT: Found at X=-0.0215m, Y=-0.0155m, radius=28.5px
+2025-11-19 14:48:45.196 [DEBUG] BALL_DETECT: Found at X=-0.0208m, Y=-0.0152m, radius=28.4px
+2025-11-19 14:48:45.228 [DEBUG] BALL_DETECT: Found at X=-0.0206m, Y=-0.0152m, radius=28.3px
+2025-11-19 14:48:45.259 [INFO] CONTROL: t=25.425s | Pos X=-0.0217m, Y=-0.0155m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.88°
+2025-11-19 14:48:45.259 [DEBUG] PID_CALC: Errors M1=0.0152, M2=-0.0254, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.819°
+2025-11-19 14:48:45.260 [DEBUG] BALL_DETECT: Found at X=-0.0205m, Y=-0.0144m, radius=27.9px
+2025-11-19 14:48:45.263 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.292 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0146m, radius=28.0px
+2025-11-19 14:48:45.324 [DEBUG] BALL_DETECT: Found at X=-0.0196m, Y=-0.0142m, radius=28.1px
+2025-11-19 14:48:45.357 [DEBUG] BALL_DETECT: Found at X=-0.0194m, Y=-0.0143m, radius=28.1px
+2025-11-19 14:48:45.380 [INFO] CONTROL: t=25.546s | Pos X=-0.0206m, Y=-0.0152m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:45.380 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0239, M3=0.0096 | Outputs M1=0.000°, M2=0.000°, M3=0.771°
+2025-11-19 14:48:45.384 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.77° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.388 [DEBUG] BALL_DETECT: Found at X=-0.0194m, Y=-0.0142m, radius=28.1px
+2025-11-19 14:48:45.420 [DEBUG] BALL_DETECT: Found at X=-0.0193m, Y=-0.0142m, radius=28.2px
+2025-11-19 14:48:45.452 [DEBUG] BALL_DETECT: Found at X=-0.0192m, Y=-0.0141m, radius=28.2px
+2025-11-19 14:48:45.498 [INFO] CONTROL: t=25.664s | Pos X=-0.0194m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.77°
+2025-11-19 14:48:45.498 [DEBUG] PID_CALC: Errors M1=0.0141, M2=-0.0237, M3=0.0096 | Outputs M1=0.000°, M2=0.000°, M3=0.767°
+2025-11-19 14:48:45.500 [DEBUG] BALL_DETECT: Found at X=-0.0192m, Y=-0.0141m, radius=28.2px
+2025-11-19 14:48:45.503 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.77° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.532 [DEBUG] BALL_DETECT: Found at X=-0.0193m, Y=-0.0142m, radius=28.2px
+2025-11-19 14:48:45.564 [DEBUG] BALL_DETECT: Found at X=-0.0193m, Y=-0.0142m, radius=28.2px
+2025-11-19 14:48:45.596 [DEBUG] BALL_DETECT: Found at X=-0.0191m, Y=-0.0140m, radius=28.3px
+2025-11-19 14:48:45.616 [INFO] CONTROL: t=25.782s | Pos X=-0.0192m, Y=-0.0141m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.77°
+2025-11-19 14:48:45.617 [DEBUG] PID_CALC: Errors M1=0.0140, M2=-0.0235, M3=0.0095 | Outputs M1=0.000°, M2=0.000°, M3=0.764°
+2025-11-19 14:48:45.621 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.76° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.628 [DEBUG] BALL_DETECT: Found at X=-0.0195m, Y=-0.0142m, radius=28.2px
+2025-11-19 14:48:45.660 [DEBUG] BALL_DETECT: Found at X=-0.0195m, Y=-0.0143m, radius=27.9px
+2025-11-19 14:48:45.692 [DEBUG] BALL_DETECT: Found at X=-0.0196m, Y=-0.0142m, radius=28.1px
+2025-11-19 14:48:45.724 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:45.736 [INFO] CONTROL: t=25.902s | Pos X=-0.0191m, Y=-0.0140m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.76°
+2025-11-19 14:48:45.736 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0246, M3=0.0103 | Outputs M1=0.000°, M2=0.000°, M3=0.825°
+2025-11-19 14:48:45.741 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.756 [DEBUG] BALL_DETECT: Found at X=-0.0204m, Y=-0.0146m, radius=28.2px
+2025-11-19 14:48:45.788 [DEBUG] BALL_DETECT: Found at X=-0.0205m, Y=-0.0144m, radius=27.9px
+2025-11-19 14:48:45.820 [DEBUG] BALL_DETECT: Found at X=-0.0205m, Y=-0.0145m, radius=28.0px
+2025-11-19 14:48:45.856 [INFO] CONTROL: t=26.021s | Pos X=-0.0201m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:45.856 [DEBUG] PID_CALC: Errors M1=0.0145, M2=-0.0250, M3=0.0105 | Outputs M1=0.000°, M2=0.000°, M3=0.838°
+2025-11-19 14:48:45.861 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.84° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.868 [DEBUG] BALL_DETECT: Found at X=-0.0205m, Y=-0.0145m, radius=27.9px
+2025-11-19 14:48:45.900 [DEBUG] BALL_DETECT: Found at X=-0.0203m, Y=-0.0145m, radius=28.2px
+2025-11-19 14:48:45.932 [DEBUG] BALL_DETECT: Found at X=-0.0204m, Y=-0.0144m, radius=28.1px
+2025-11-19 14:48:45.964 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:45.976 [INFO] CONTROL: t=26.142s | Pos X=-0.0205m, Y=-0.0145m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.84°
+2025-11-19 14:48:45.976 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0246, M3=0.0103 | Outputs M1=0.000°, M2=0.000°, M3=0.825°
+2025-11-19 14:48:45.981 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:45.995 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:46.028 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0144m, radius=28.3px
+2025-11-19 14:48:46.060 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0143m, radius=28.6px
+2025-11-19 14:48:46.092 [DEBUG] BALL_DETECT: Found at X=-0.0197m, Y=-0.0145m, radius=27.7px
+2025-11-19 14:48:46.095 [INFO] CONTROL: t=26.261s | Pos X=-0.0201m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:46.095 [DEBUG] PID_CALC: Errors M1=0.0145, M2=-0.0243, M3=0.0098 | Outputs M1=0.000°, M2=0.000°, M3=0.785°
+2025-11-19 14:48:46.100 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.79° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:46.124 [DEBUG] BALL_DETECT: Found at X=-0.0198m, Y=-0.0139m, radius=28.6px
+2025-11-19 14:48:46.156 [DEBUG] BALL_DETECT: Found at X=-0.0197m, Y=-0.0145m, radius=27.7px
+2025-11-19 14:48:46.204 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:46.216 [INFO] CONTROL: t=26.382s | Pos X=-0.0197m, Y=-0.0145m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.79°
+2025-11-19 14:48:46.216 [DEBUG] PID_CALC: Errors M1=0.0142, M2=-0.0243, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.813°
+2025-11-19 14:48:46.221 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:46.236 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0142m, radius=28.4px
+2025-11-19 14:48:46.268 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:46.301 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0145m, radius=28.3px
+2025-11-19 14:48:46.332 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:46.334 [INFO] CONTROL: t=26.500s | Pos X=-0.0199m, Y=-0.0142m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:46.334 [DEBUG] PID_CALC: Errors M1=0.0142, M2=-0.0243, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.813°
+2025-11-19 14:48:46.338 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:46.364 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:46.396 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:46.428 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:46.453 [INFO] CONTROL: t=26.619s | Pos X=-0.0199m, Y=-0.0142m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:46.453 [DEBUG] PID_CALC: Errors M1=0.0142, M2=-0.0243, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.813°
+2025-11-19 14:48:46.458 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:46.460 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.2px
+2025-11-19 14:48:46.492 [DEBUG] BALL_DETECT: Found at X=-0.0197m, Y=-0.0145m, radius=28.2px
+2025-11-19 14:48:46.540 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:46.572 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0143m, radius=28.6px
+2025-11-19 14:48:46.575 [INFO] CONTROL: t=26.741s | Pos X=-0.0199m, Y=-0.0142m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:46.575 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0244, M3=0.0101 | Outputs M1=0.000°, M2=0.000°, M3=0.811°
+2025-11-19 14:48:46.580 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:46.604 [DEBUG] BALL_DETECT: Found at X=-0.0203m, Y=-0.0149m, radius=28.5px
+2025-11-19 14:48:46.636 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:46.669 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0145m, radius=28.3px
+2025-11-19 14:48:46.694 [INFO] CONTROL: t=26.860s | Pos X=-0.0199m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:46.694 [DEBUG] PID_CALC: Errors M1=0.0145, M2=-0.0248, M3=0.0103 | Outputs M1=0.000°, M2=0.000°, M3=0.821°
+2025-11-19 14:48:46.698 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:46.700 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.2px
+2025-11-19 14:48:46.732 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:46.764 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:46.796 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:46.812 [INFO] CONTROL: t=26.977s | Pos X=-0.0202m, Y=-0.0145m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:46.812 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0246, M3=0.0103 | Outputs M1=0.000°, M2=0.000°, M3=0.825°
+2025-11-19 14:48:46.816 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:46.828 [DEBUG] BALL_DETECT: Found at X=-0.0200m, Y=-0.0146m, radius=27.9px
+2025-11-19 14:48:46.860 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0145m, radius=28.4px
+2025-11-19 14:48:46.908 [DEBUG] BALL_DETECT: Found at X=-0.0197m, Y=-0.0145m, radius=28.2px
+2025-11-19 14:48:46.928 [INFO] CONTROL: t=27.094s | Pos X=-0.0201m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:46.928 [DEBUG] PID_CALC: Errors M1=0.0145, M2=-0.0244, M3=0.0098 | Outputs M1=0.000°, M2=0.000°, M3=0.786°
+2025-11-19 14:48:46.932 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.79° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:46.940 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0148m, radius=27.7px
+2025-11-19 14:48:46.972 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.004 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0144m, radius=28.3px
+2025-11-19 14:48:47.036 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.048 [INFO] CONTROL: t=27.213s | Pos X=-0.0197m, Y=-0.0145m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.79°
+2025-11-19 14:48:47.048 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0246, M3=0.0103 | Outputs M1=0.000°, M2=0.000°, M3=0.824°
+2025-11-19 14:48:47.052 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:47.068 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:47.100 [DEBUG] BALL_DETECT: Found at X=-0.0198m, Y=-0.0146m, radius=28.0px
+2025-11-19 14:48:47.132 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0144m, radius=28.3px
+2025-11-19 14:48:47.164 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.166 [INFO] CONTROL: t=27.332s | Pos X=-0.0202m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:47.166 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0246, M3=0.0103 | Outputs M1=0.000°, M2=0.000°, M3=0.824°
+2025-11-19 14:48:47.170 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:47.196 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.244 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.276 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.284 [INFO] CONTROL: t=27.450s | Pos X=-0.0202m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:47.284 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0246, M3=0.0103 | Outputs M1=0.000°, M2=0.000°, M3=0.824°
+2025-11-19 14:48:47.288 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:47.308 [DEBUG] BALL_DETECT: Found at X=-0.0198m, Y=-0.0139m, radius=28.6px
+2025-11-19 14:48:47.341 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0144m, radius=28.3px
+2025-11-19 14:48:47.372 [DEBUG] BALL_DETECT: Found at X=-0.0201m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.402 [INFO] CONTROL: t=27.568s | Pos X=-0.0202m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:47.402 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0246, M3=0.0103 | Outputs M1=0.000°, M2=0.000°, M3=0.825°
+2025-11-19 14:48:47.405 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:47.407 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.82° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:47.436 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.2px
+2025-11-19 14:48:47.468 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:47.500 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:47.521 [INFO] CONTROL: t=27.686s | Pos X=-0.0201m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.82°
+2025-11-19 14:48:47.521 [DEBUG] PID_CALC: Errors M1=0.0142, M2=-0.0243, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.813°
+2025-11-19 14:48:47.525 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:47.532 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.580 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0144m, radius=28.3px
+2025-11-19 14:48:47.612 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0144m, radius=28.3px
+2025-11-19 14:48:47.644 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:47.647 [INFO] CONTROL: t=27.812s | Pos X=-0.0199m, Y=-0.0142m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:47.647 [DEBUG] PID_CALC: Errors M1=0.0142, M2=-0.0243, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.813°
+2025-11-19 14:48:47.651 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:47.676 [DEBUG] BALL_DETECT: Found at X=-0.0197m, Y=-0.0147m, radius=28.0px
+2025-11-19 14:48:47.708 [DEBUG] BALL_DETECT: Found at X=-0.0197m, Y=-0.0147m, radius=28.0px
+2025-11-19 14:48:47.740 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:47.765 [INFO] CONTROL: t=27.931s | Pos X=-0.0199m, Y=-0.0142m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:47.765 [DEBUG] PID_CALC: Errors M1=0.0142, M2=-0.0243, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.813°
+2025-11-19 14:48:47.770 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:47.772 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.804 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:47.836 [DEBUG] BALL_DETECT: Found at X=-0.0198m, Y=-0.0139m, radius=28.6px
+2025-11-19 14:48:47.868 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0143m, radius=28.6px
+2025-11-19 14:48:47.885 [INFO] CONTROL: t=28.051s | Pos X=-0.0199m, Y=-0.0142m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:47.885 [DEBUG] PID_CALC: Errors M1=0.0143, M2=-0.0244, M3=0.0101 | Outputs M1=0.000°, M2=0.000°, M3=0.811°
+2025-11-19 14:48:47.890 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:47.897 [INFO] PID_GAIN: Motor 3 Ki changed from 0.000 to 0.000
+2025-11-19 14:48:47.916 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:47.948 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:47.980 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:48.004 [INFO] CONTROL: t=28.170s | Pos X=-0.0199m, Y=-0.0143m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:48.004 [DEBUG] PID_CALC: Errors M1=0.0142, M2=-0.0243, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.813°
+2025-11-19 14:48:48.009 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:48.012 [DEBUG] BALL_DETECT: Found at X=-0.0202m, Y=-0.0143m, radius=28.3px
+2025-11-19 14:48:48.044 [DEBUG] BALL_DETECT: Found at X=-0.0196m, Y=-0.0143m, radius=28.1px
+2025-11-19 14:48:48.076 [DEBUG] BALL_DETECT: Found at X=-0.0197m, Y=-0.0145m, radius=28.2px
+2025-11-19 14:48:48.108 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:48.120 [INFO] CONTROL: t=28.286s | Pos X=-0.0199m, Y=-0.0142m | Setpoint X=0.0000m, Y=0.0000m | Motor Outputs M1=0.00°, M2=0.00°, M3=0.81°
+2025-11-19 14:48:48.120 [DEBUG] PID_CALC: Errors M1=0.0142, M2=-0.0243, M3=0.0102 | Outputs M1=0.000°, M2=0.000°, M3=0.813°
+2025-11-19 14:48:48.124 [DEBUG] MOTOR_CMD: PID Outputs: M1=0.00°, M2=0.00°, M3=0.81° | Angles: M1=15°, M2=15°, M3=15° | Bytes: [15, 15, 15] (hex: 0x0f0f0f) | Checksum: 15
+2025-11-19 14:48:48.140 [DEBUG] BALL_DETECT: Found at X=-0.0199m, Y=-0.0142m, radius=28.6px
+2025-11-19 14:48:48.153 [INFO] ============================================================
+2025-11-19 14:48:48.153 [INFO] Stewart Platform Controller Stopped
+2025-11-19 14:48:48.153 [INFO] Total runtime: 28.29 seconds
+2025-11-19 14:48:48.153 [INFO] Total control cycles: 232
+2025-11-19 14:48:48.154 [INFO] ============================================================

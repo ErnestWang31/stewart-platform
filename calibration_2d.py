@@ -16,7 +16,7 @@ class StewartPlatformCalibrator:
     def __init__(self):
         """Initialize calibration parameters and default values."""
         # Physical system parameters
-        self.PLATFORM_RADIUS_M = 0.1  # Known platform radius in meters (circular platform)
+        self.PLATFORM_RADIUS_M = 0.15  # Known platform radius in meters (circular platform)
         self.PLATFORM_DIAMETER_M = 2 * self.PLATFORM_RADIUS_M  # Platform diameter
         
         # Camera configuration
@@ -48,15 +48,16 @@ class StewartPlatformCalibrator:
         self.servo_serial = None  # Single serial connection to Arduino
         self.servo_port = "COM3"  # Single port for all motors
         self.neutral_angles = [15, 15, 15]  # Servo neutral position angles
+        self.debug_packets = False  # Debug flag for raw packet logging
         
         # Load existing config to preserve settings like roll_direction_invert
         self.load_existing_config()
         
-        # Position limit results
-        self.position_min_x = None  # Minimum ball position in X (meters)
-        self.position_max_x = None  # Maximum ball position in X (meters)
-        self.position_min_y = None  # Minimum ball position in Y (meters)
-        self.position_max_y = None  # Maximum ball position in Y (meters)
+        # Position limits (simple defaults based on platform radius)
+        self.position_min_x = -self.PLATFORM_RADIUS_M
+        self.position_max_x = self.PLATFORM_RADIUS_M
+        self.position_min_y = -self.PLATFORM_RADIUS_M
+        self.position_max_y = self.PLATFORM_RADIUS_M
     
     def load_existing_config(self):
         """Load existing config file to preserve settings like servo ports and neutral angles."""
@@ -125,21 +126,55 @@ class StewartPlatformCalibrator:
         Args:
             angles: List of 3 angles in degrees (0-30 range)
         """
-        if self.servo_serial:
-            try:
-                # Clip all angles to safe range (0-30 degrees)
-                motor1_angle = int(np.clip(angles[0], 0, 30))
-                motor2_angle = int(np.clip(angles[1], 0, 30))
-                motor3_angle = int(np.clip(angles[2], 0, 30))
-                
-                # Send all 3 servo commands to Arduino as 3 bytes
-                # Clear input buffer periodically to prevent Arduino debug messages from filling it up
-                if self.servo_serial.in_waiting > 50:
+        if not self.servo_serial:
+            return
+        
+        try:
+            # Clip all angles to safe range (0-30 degrees)
+            motor1_angle = int(np.clip(angles[0], 0, 30))
+            motor2_angle = int(np.clip(angles[1], 0, 30))
+            motor3_angle = int(np.clip(angles[2], 0, 30))
+            
+            # CRITICAL FIX: Aggressively clear input buffer BEFORE sending to prevent
+            # Arduino from reading stale data mixed with new commands
+            # Clear multiple times unconditionally (matches working test pattern)
+            for _ in range(3):
+                if self.servo_serial.in_waiting > 0:
                     self.servo_serial.reset_input_buffer()
-                
-                self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
-            except Exception as e:
-                print(f"[ARDUINO] Send failed: {e}")
+                time.sleep(0.001)  # Tiny delay between clears
+            
+            # Send all 3 servo commands to Arduino as 3 bytes atomically
+            command_bytes = bytes([motor1_angle, motor2_angle, motor3_angle])
+            if len(command_bytes) != 3:
+                print(f"[ARDUINO] ERROR: Invalid command length: {len(command_bytes)}")
+                return
+            
+            # DEBUG: Show raw packet being sent
+            if self.debug_packets:
+                print(f"[PACKET] Input Angles: M1={angles[0]:.2f}°, M2={angles[1]:.2f}°, M3={angles[2]:.2f}°")
+                print(f"[PACKET] Clipped Angles: M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
+                print(f"[PACKET] Raw Bytes (decimal): [{command_bytes[0]}, {command_bytes[1]}, {command_bytes[2]}]")
+                print(f"[PACKET] Raw Bytes (hex): 0x{command_bytes.hex()}")
+                print(f"[PACKET] Raw Bytes (binary): {bin(command_bytes[0])}, {bin(command_bytes[1])}, {bin(command_bytes[2])}")
+            
+            bytes_written = self.servo_serial.write(command_bytes)
+            if bytes_written != 3:
+                print(f"[ARDUINO] WARNING: Only {bytes_written} of 3 bytes sent")
+            
+            # Flush to ensure data is sent immediately
+            self.servo_serial.flush()
+            
+            # CRITICAL FIX: Always read Arduino responses to prevent buffer buildup
+            # This prevents debug messages from accumulating and causing byte misalignment
+            time.sleep(0.01)  # Small delay for Arduino to respond
+            try:
+                if self.servo_serial.in_waiting > 0:
+                    # Read and discard Arduino debug messages
+                    self.servo_serial.readline().decode('utf-8', errors='ignore')
+            except Exception:
+                pass  # Ignore read errors, but we tried to clear the buffer
+        except Exception as e:
+            print(f"[ARDUINO] Send failed: {e}")
     
     def mouse_callback(self, event, x, y, flags, param):
         """Handle mouse click events for interactive calibration.
@@ -413,74 +448,6 @@ class StewartPlatformCalibrator:
         else:
             return None
     
-    def find_limits_automatically(self):
-        """Use servo motors to automatically find ball position limits."""
-        if not self.servo_serial:
-            # Estimate limits without servos if connection failed
-            # Use platform radius for circular platform
-            if self.platform_radius_pixels and self.pixel_to_meter_ratio:
-                estimated_radius_m = self.PLATFORM_RADIUS_M
-            else:
-                estimated_radius_m = 0.1  # Default fallback
-            self.position_min_x = -estimated_radius_m
-            self.position_max_x = estimated_radius_m
-            self.position_min_y = -estimated_radius_m
-            self.position_max_y = estimated_radius_m
-            print("[LIMITS] Estimated without servos")
-            return
-        
-        print("[LIMITS] Finding limits with servos...")
-        positions_x = []
-        positions_y = []
-        
-        # Test platform at different tilt angles to find position range
-        # Test angles: neutral, roll left, roll right, pitch forward, pitch backward
-        test_configs = [
-            ([15, 15, 15], "neutral"),
-            ([20, 12, 12], "roll_left"),
-            ([10, 18, 18], "roll_right"),
-            ([15, 20, 10], "pitch_forward"),
-            ([15, 10, 20], "pitch_backward")
-        ]
-        
-        for angles, name in test_configs:
-            # Move platform to test configuration
-            self.send_servo_angles(angles)
-            time.sleep(2)  # Wait for ball to settle
-            
-            # Collect multiple position measurements
-            config_positions = []
-            start_time = time.time()
-            while time.time() - start_time < 1.0:
-                ret, frame = self.cap.read()
-                if ret:
-                    pos = self.detect_ball_position(frame)
-                    if pos is not None:
-                        config_positions.append(pos)
-                time.sleep(0.05)
-            
-            # Calculate average position for this configuration
-            if config_positions:
-                avg_pos_x = np.mean([p[0] for p in config_positions])
-                avg_pos_y = np.mean([p[1] for p in config_positions])
-                positions_x.append(avg_pos_x)
-                positions_y.append(avg_pos_y)
-                print(f"[LIMITS] {name}: X={avg_pos_x:.4f}m, Y={avg_pos_y:.4f}m")
-        
-        # Return platform to neutral position
-        self.send_servo_angles(self.neutral_angles)
-        
-        # Determine position limits from collected data
-        if len(positions_x) >= 2:
-            self.position_min_x = min(positions_x)
-            self.position_max_x = max(positions_x)
-            self.position_min_y = min(positions_y)
-            self.position_max_y = max(positions_y)
-            print(f"[LIMITS] X Range: {self.position_min_x:.4f}m to {self.position_max_x:.4f}m")
-            print(f"[LIMITS] Y Range: {self.position_min_y:.4f}m to {self.position_max_y:.4f}m")
-        else:
-            print("[LIMITS] Failed to find limits")
-    
     def save_config(self):
         """Save all calibration results to config_stewart.json file.
         
@@ -535,10 +502,11 @@ class StewartPlatformCalibrator:
         config["calibration"]["pixel_to_meter_ratio"] = float(self.pixel_to_meter_ratio) if self.pixel_to_meter_ratio else None
         config["calibration"]["pixel_to_meter_ratio_x"] = float(self.pixel_to_meter_ratio) if self.pixel_to_meter_ratio else None
         config["calibration"]["pixel_to_meter_ratio_y"] = float(self.pixel_to_meter_ratio) if self.pixel_to_meter_ratio else None
-        config["calibration"]["position_min_x_m"] = float(self.position_min_x) if self.position_min_x else None
-        config["calibration"]["position_max_x_m"] = float(self.position_max_x) if self.position_max_x else None
-        config["calibration"]["position_min_y_m"] = float(self.position_min_y) if self.position_min_y else None
-        config["calibration"]["position_max_y_m"] = float(self.position_max_y) if self.position_max_y else None
+        # Set position limits based on platform radius
+        config["calibration"]["position_min_x_m"] = float(-self.PLATFORM_RADIUS_M)
+        config["calibration"]["position_max_x_m"] = float(self.PLATFORM_RADIUS_M)
+        config["calibration"]["position_min_y_m"] = float(-self.PLATFORM_RADIUS_M)
+        config["calibration"]["position_max_y_m"] = float(self.PLATFORM_RADIUS_M)
         
         # Update servo settings (preserve existing fields like motor_direction_invert)
         if "servo" not in config:
@@ -608,7 +576,7 @@ class StewartPlatformCalibrator:
         phase_text = {
             "color": "Click on ball to sample colors. Press 'c' when done.",
             "geometry": "Click on 3 motor attachment points in order (Motor 1, Motor 2, Motor 3)",
-            "complete": "Calibration complete! Press 's' to save, 'l' to find limits"
+            "complete": "Calibration complete! Press 's' to save"
         }
         
         # Draw current phase and instructions
@@ -621,6 +589,18 @@ class StewartPlatformCalibrator:
         if self.hsv_samples:
             cv2.putText(overlay, f"Color samples: {len(self.hsv_samples)}", (10, 90),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        
+        # Show HSV color range after calibration
+        if self.lower_hsv and self.upper_hsv:
+            y_offset = 120
+            cv2.putText(overlay, "HSV Color Range:", (10, y_offset),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+            cv2.putText(overlay, f"Lower: [{self.lower_hsv[0]:.1f}, {self.lower_hsv[1]:.1f}, {self.lower_hsv[2]:.1f}]",
+                       (10, y_offset + 20),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+            cv2.putText(overlay, f"Upper: [{self.upper_hsv[0]:.1f}, {self.upper_hsv[1]:.1f}, {self.upper_hsv[2]:.1f}]",
+                       (10, y_offset + 40),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
         
         # Show geometry calibration points (circular platform)
         # Draw motor attachment points
@@ -684,18 +664,6 @@ class StewartPlatformCalibrator:
                                        (int(x)+20, int(y)+20),
                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
         
-        # Show final results if limit calibration is complete
-        if (self.position_min_x is not None and self.position_max_x is not None and
-            self.position_min_y is not None and self.position_max_y is not None):
-            # For circular platform, show radial limits
-            max_radius = np.sqrt(max(self.position_max_x**2, self.position_min_x**2, 
-                                    self.position_max_y**2, self.position_min_y**2))
-            cv2.putText(overlay, f"X Range: {self.position_min_x:.4f}m to {self.position_max_x:.4f}m",
-                       (10, overlay.shape[0] - 40),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
-            cv2.putText(overlay, f"Y Range: {self.position_min_y:.4f}m to {self.position_max_y:.4f}m",
-                       (10, overlay.shape[0] - 20),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
         
         return overlay
     
@@ -719,7 +687,6 @@ class StewartPlatformCalibrator:
         print("Phase 1: Click on ball to sample colors, press 'c' when done")
         print("Phase 2: Click on 3 motor attachment points in order (Motor 1, Motor 2, Motor 3)")
         print("         This will determine: center, radius, axis orientation, and motor positions")
-        print("Phase 3: Press 'l' to find limits automatically")
         print("Press 's' to save, 'q' to quit")
         
         # Main calibration loop
@@ -745,9 +712,6 @@ class StewartPlatformCalibrator:
                 if self.hsv_samples:
                     self.phase = "geometry"
                     print("[INFO] Color calibration complete. Click on platform corners.")
-            elif key == ord('l') and self.phase == "complete":
-                # Start automatic limit finding
-                self.find_limits_automatically()
             elif key == ord('s') and self.phase == "complete":
                 # Save configuration and exit
                 self.save_config()

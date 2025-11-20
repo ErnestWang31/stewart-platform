@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-11-17T19:53:44.279577",
+  "timestamp": "2025-11-20T10:28:23.390653",
   "platform_type": "circular",
   "platform_radius_m": 0.1,
   "platform_center_pixels": [
-    344,
-    263
+    263,
+    220
   ],
-  "platform_radius_pixels": 171.49748612297276,
+  "platform_radius_pixels": 165.20484895642073,
   "camera": {
     "index": 1,
     "frame_width": 640,
@@ -14,24 +14,24 @@
   },
   "ball_detection": {
     "lower_hsv": [
-      8.0,
-      127.35,
-      72.9
+      5.0,
+      63.8,
+      133.1
     ],
     "upper_hsv": [
-      25.0,
+      26.0,
       255.0,
       255.0
     ]
   },
   "calibration": {
-    "pixel_to_meter_ratio": 0.0005830989261748987,
-    "pixel_to_meter_ratio_x": 0.0005830989261748987,
-    "pixel_to_meter_ratio_y": 0.0005830989261748987,
-    "position_min_x_m": -0.08973654379848775,
-    "position_max_x_m": 0.07903136276139608,
-    "position_min_y_m": -0.05176597781310743,
-    "position_max_y_m": 0.028116476180082006
+    "pixel_to_meter_ratio": 0.0006053091094582758,
+    "pixel_to_meter_ratio_x": 0.0006053091094582758,
+    "pixel_to_meter_ratio_y": 0.0006053091094582758,
+    "position_min_x_m": -0.1,
+    "position_max_x_m": 0.1,
+    "position_min_y_m": -0.1,
+    "position_max_y_m": 0.1
   },
   "servo": {
     "port": "COM3",
@@ -47,7 +47,8 @@
       false,
       false,
       false
-    ]
+    ],
+    "debug_packets": true
   },
   "pid": {
     "Kp_x": 1.6,
@@ -55,7 +56,16 @@
     "Kd_x": 2.825,
     "Kp_y": 1.6,
     "Ki_y": 0.08,
-    "Kd_y": 2.825
+    "Kd_y": 2.825,
+    "Kp_m1": 1.0,
+    "Ki_m1": 0.0,
+    "Kd_m1": 0.0,
+    "Kp_m2": 0.0,
+    "Ki_m2": 0.0,
+    "Kd_m2": 0.0,
+    "Kp_m3": 0.0,
+    "Ki_m3": 0.0,
+    "Kd_m3": 0.0
   },
   "platform": {
     "max_roll_angle": 15.0,
@@ -64,22 +74,26 @@
   },
   "motor_positions_pixels": [
     [
-      328,
-      93
+      270,
+      386
     ],
     [
-      197,
-      352
+      122,
+      136
     ],
     [
-      501,
-      333
+      406,
+      137
     ]
   ],
   "motor_angles_deg": [
-    264.62329457194926,
-    148.8075190162013,
-    24.030174447537455
+    87.58534347914922,
+    210.78414652632642,
+    329.8682813584982
   ],
-  "axis_rotation_deg": -174.62329457194926
+  "axis_rotation_deg": 2.4146565208507837,
+  "logging": {
+    "enable": true,
+    "log_directory": "logs"
+  }
 }
