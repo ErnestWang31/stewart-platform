@@ -10,10 +10,11 @@ import sys
 import json
 
 class MotorTester:
-    def __init__(self, port="COM3", baudrate=9600):
+    def __init__(self, port="COM3", baudrate=115200, write_timeout=0.05):
         """Initialize motor tester with serial connection."""
         self.port = port
         self.baudrate = baudrate
+        self.write_timeout = write_timeout
         self.serial_conn = None
         self.neutral = 15  # Neutral angle (0-30 range)
         
@@ -21,7 +22,12 @@ class MotorTester:
         """Connect to Arduino."""
         try:
             print(f"Connecting to Arduino on {self.port} at {self.baudrate} baud...")
-            self.serial_conn = serial.Serial(self.port, self.baudrate, timeout=1)
+            self.serial_conn = serial.Serial(
+                self.port,
+                self.baudrate,
+                timeout=1,
+                write_timeout=self.write_timeout
+            )
             time.sleep(2.5)  # Wait for Arduino to initialize (Arduino may reset on connection)
             
             # Read any initial messages from Arduino (like "Stewart Platform Arduino Ready")
@@ -50,6 +56,10 @@ class MotorTester:
             print(f"  Make sure Arduino is connected to {self.port}")
             print(f"  Check Device Manager (Windows) or ls /dev/tty* (Linux/Mac)")
             print(f"  Close any other programs using the serial port (Arduino IDE Serial Monitor, etc.)")
+            return False
+        except serial.SerialTimeoutException:
+            print("✗ Connection timed out while sending initialization bytes. "
+                  "Ensure Arduino firmware debug prints are disabled or increase baud rate.")
             return False
         except Exception as e:
             print(f"✗ Unexpected error: {e}")
@@ -104,6 +114,10 @@ class MotorTester:
                         print(f"  Arduino: {line}")
             
             return True
+        except serial.SerialTimeoutException:
+            print("✗ Write timed out - Arduino is not draining the serial buffer. "
+                  "Disable firmware debug prints or ensure baud rate is 115200.")
+            return False
         except Exception as e:
             print(f"✗ Failed to send command: {e}")
             import traceback

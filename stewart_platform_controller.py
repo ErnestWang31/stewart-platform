@@ -55,11 +55,18 @@ class StewartPlatformController:
         
         # Servo configuration (for 3 motors using Adafruit PWM Servo Driver on Arduino)
         # Single Arduino controls all 3 servos via I2C PWM driver
-        self.servo_port = self.config.get('servo', {}).get('port', "COM3")
-        self.neutral_angles = self.config.get('servo', {}).get('neutral_angles', [15, 15, 15])
+        servo_config = self.config.get('servo', {})
+        self.servo_port = servo_config.get('port', "COM3")
+        self.servo_baud_rate = servo_config.get('baud_rate', 115200)
+        self.servo_read_timeout = max(servo_config.get('timeout_seconds', 1.0), 0.0)
+        write_timeout_ms = servo_config.get('write_timeout_ms', 50)
+        if write_timeout_ms is None:
+            write_timeout_ms = 50
+        self.servo_write_timeout = max(write_timeout_ms, 0) / 1000.0
+        self.neutral_angles = servo_config.get('neutral_angles', [15, 15, 15])
         # Motor direction inversion: [False, False, False] means all motors normal direction
         # Set to True for any motor that spins the wrong way
-        self.motor_direction_invert = self.config.get('servo', {}).get('motor_direction_invert', [False, False, False])
+        self.motor_direction_invert = servo_config.get('motor_direction_invert', [False, False, False])
         self.servo_serial = None
         
         # Use inverse kinematics flag (can be toggled)
@@ -79,6 +86,12 @@ class StewartPlatformController:
         self.control_x_log = []
         self.control_y_log = []
         self.start_time = None
+        self.latest_position = (0.0, 0.0)
+        self.latest_error = (0.0, 0.0)
+        self.telemetry_window = None
+        self.telemetry_canvas = None
+        self.position_display_range = self._determine_position_range()
+        self.telemetry_canvas_size = 360
         
         # Thread-safe queue for most recent ball position measurement
         self.position_queue = queue.Queue(maxsize=1)
@@ -114,7 +127,12 @@ class StewartPlatformController:
     def connect_servos(self):
         """Try to open serial connection to Arduino with PWM Servo Driver, return True if succeeds."""
         try:
-            self.servo_serial = serial.Serial(self.servo_port, 9600, timeout=1)
+            self.servo_serial = serial.Serial(
+                self.servo_port,
+                self.servo_baud_rate,
+                timeout=self.servo_read_timeout,
+                write_timeout=self.servo_write_timeout
+            )
             time.sleep(2)  # Wait for Arduino to initialize
             # Flush any initial data
             self.servo_serial.reset_input_buffer()
@@ -191,6 +209,11 @@ class StewartPlatformController:
             try:
                 self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
                 self.servo_serial.flush()  # Ensure data is sent immediately
+            except serial.SerialTimeoutException:
+                print("[ARDUINO] Send timed out - Arduino likely busy printing serial logs. "
+                      "Disable firmware debugging or raise baud rate.")
+            except serial.SerialException as e:
+                print(f"[ARDUINO] Serial error: {e}")
             except Exception as e:
                 print(f"[ARDUINO] Send failed: {e}")
         else:
@@ -312,6 +335,8 @@ class StewartPlatformController:
                 
                 print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
                       f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
+                self.latest_position = (position_x, position_y)
+                self.latest_error = (self.setpoint_x - position_x, self.setpoint_y - position_y)
                 
             except queue.Empty:
                 continue
@@ -424,11 +449,15 @@ class StewartPlatformController:
                    command=self.reset_integral).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Plot Results",
                    command=self.plot_results).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Show Telemetry",
+                   command=self.show_telemetry_window).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Stop",
                    command=self.stop).pack(side=tk.LEFT, padx=5)
         
         # Schedule periodic GUI update
         self.update_gui()
+        # Launch telemetry window immediately
+        self.show_telemetry_window()
     
     def update_gui(self):
         """Reflect latest values from sliders into program and update display."""
@@ -452,6 +481,7 @@ class StewartPlatformController:
             self.kd_y_label.config(text=f"Kd_y: {self.pid.Kd_y:.1f}")
             self.setpoint_x_label.config(text=f"Setpoint X: {self.setpoint_x:.4f}m")
             self.setpoint_y_label.config(text=f"Setpoint Y: {self.setpoint_y:.4f}m")
+            self.update_telemetry()
             
             # Call again after 50 ms
             self.root.after(50, self.update_gui)
@@ -466,41 +496,68 @@ class StewartPlatformController:
             print("[PLOT] No data to plot")
             return
         
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        fig = plt.figure(figsize=(12, 12))
+        gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 1.1])
+        
+        ax_x = fig.add_subplot(gs[0, 0])
+        ax_y = fig.add_subplot(gs[0, 1])
+        ax_roll = fig.add_subplot(gs[1, 0])
+        ax_pitch = fig.add_subplot(gs[1, 1])
+        ax_plane = fig.add_subplot(gs[2, :])
         
         # X position trace
-        axes[0, 0].plot(self.time_log, self.position_x_log, label="Ball X Position", linewidth=2)
-        axes[0, 0].plot(self.time_log, self.setpoint_x_log, label="Setpoint X",
-                       linestyle="--", linewidth=2)
-        axes[0, 0].set_ylabel("Position X (m)")
-        axes[0, 0].set_title("X-Axis (Roll) Control")
-        axes[0, 0].legend()
-        axes[0, 0].grid(True, alpha=0.3)
+        ax_x.plot(self.time_log, self.position_x_log, label="Ball X Position", linewidth=2)
+        ax_x.plot(self.time_log, self.setpoint_x_log, label="Setpoint X",
+                  linestyle="--", linewidth=2)
+        ax_x.set_ylabel("Position X (m)")
+        ax_x.set_title("X-Axis (Roll) Control")
+        ax_x.legend()
+        ax_x.grid(True, alpha=0.3)
         
         # Y position trace
-        axes[0, 1].plot(self.time_log, self.position_y_log, label="Ball Y Position", linewidth=2, color='green')
-        axes[0, 1].plot(self.time_log, self.setpoint_y_log, label="Setpoint Y",
-                       linestyle="--", linewidth=2)
-        axes[0, 1].set_ylabel("Position Y (m)")
-        axes[0, 1].set_title("Y-Axis (Pitch) Control")
-        axes[0, 1].legend()
-        axes[0, 1].grid(True, alpha=0.3)
+        ax_y.plot(self.time_log, self.position_y_log, label="Ball Y Position", linewidth=2, color='green')
+        ax_y.plot(self.time_log, self.setpoint_y_log, label="Setpoint Y",
+                  linestyle="--", linewidth=2)
+        ax_y.set_ylabel("Position Y (m)")
+        ax_y.set_title("Y-Axis (Pitch) Control")
+        ax_y.legend()
+        ax_y.grid(True, alpha=0.3)
         
         # X control output trace
-        axes[1, 0].plot(self.time_log, self.control_x_log, label="Roll Output",
-                       color="orange", linewidth=2)
-        axes[1, 0].set_xlabel("Time (s)")
-        axes[1, 0].set_ylabel("Roll Angle (degrees)")
-        axes[1, 0].legend()
-        axes[1, 0].grid(True, alpha=0.3)
+        ax_roll.plot(self.time_log, self.control_x_log, label="Roll Output",
+                     color="orange", linewidth=2)
+        ax_roll.set_xlabel("Time (s)")
+        ax_roll.set_ylabel("Roll Angle (degrees)")
+        ax_roll.legend()
+        ax_roll.grid(True, alpha=0.3)
         
         # Y control output trace
-        axes[1, 1].plot(self.time_log, self.control_y_log, label="Pitch Output",
-                       color="red", linewidth=2)
-        axes[1, 1].set_xlabel("Time (s)")
-        axes[1, 1].set_ylabel("Pitch Angle (degrees)")
-        axes[1, 1].legend()
-        axes[1, 1].grid(True, alpha=0.3)
+        ax_pitch.plot(self.time_log, self.control_y_log, label="Pitch Output",
+                      color="red", linewidth=2)
+        ax_pitch.set_xlabel("Time (s)")
+        ax_pitch.set_ylabel("Pitch Angle (degrees)")
+        ax_pitch.legend()
+        ax_pitch.grid(True, alpha=0.3)
+        
+        # Plane plot
+        radius = self.position_display_range
+        theta = np.linspace(0, 2 * np.pi, 400)
+        ax_plane.plot(radius * np.cos(theta), radius * np.sin(theta),
+                      color="#888888", linestyle="--", label="Plate Boundary")
+        ax_plane.plot(self.position_x_log, self.position_y_log,
+                      label="Ball Path", linewidth=2, color="#1f77b4")
+        ax_plane.scatter(self.setpoint_x_log[-1], self.setpoint_y_log[-1],
+                         marker="x", color="red", s=80, label="Target")
+        ax_plane.scatter(self.position_x_log[-1], self.position_y_log[-1],
+                         marker="o", color="green", s=50, label="Last Position")
+        ax_plane.set_xlabel("X (m)")
+        ax_plane.set_ylabel("Y (m)")
+        ax_plane.set_title("Platform Plane")
+        ax_plane.set_xlim(-radius, radius)
+        ax_plane.set_ylim(-radius, radius)
+        ax_plane.set_aspect('equal', adjustable='box')
+        ax_plane.grid(True, alpha=0.2)
+        ax_plane.legend(loc="upper right")
         
         plt.tight_layout()
         plt.show()
@@ -513,6 +570,7 @@ class StewartPlatformController:
             self.root.destroy()
         except Exception:
             pass
+        self._close_telemetry_window()
     
     def run(self):
         """Entry point: starts threads, launches GUI mainloop."""
@@ -534,6 +592,115 @@ class StewartPlatformController:
         # After GUI ends, stop everything
         self.running = False
         print("[INFO] Controller stopped")
+
+    def _determine_position_range(self):
+        """Determine display radius for telemetry plots."""
+        calibration = self.config.get('calibration', {})
+        platform_radius = (self.config.get('platform_radius_m') or
+                           self.config.get('platform', {}).get('platform_radius_m') or
+                           0.0)
+
+        def safe_abs(value):
+            return abs(value) if isinstance(value, (int, float)) else 0.0
+
+        candidates = [
+            safe_abs(calibration.get('position_max_x_m')),
+            safe_abs(calibration.get('position_min_x_m')),
+            safe_abs(calibration.get('position_max_y_m')),
+            safe_abs(calibration.get('position_min_y_m')),
+            safe_abs(platform_radius)
+        ]
+        max_candidate = max([c for c in candidates if c], default=0.1)
+        return max(0.05, float(max_candidate))
+
+    def show_telemetry_window(self):
+        """Ensure telemetry window is visible."""
+        if self.telemetry_window is None or not self.telemetry_window.winfo_exists():
+            self.create_telemetry_window()
+        else:
+            self.telemetry_window.deiconify()
+            self.telemetry_window.lift()
+
+    def create_telemetry_window(self):
+        """Create telemetry overlay window with live data."""
+        self.telemetry_window = tk.Toplevel(self.root)
+        self.telemetry_window.title("Telemetry - Position vs Setpoint")
+        self.telemetry_window.geometry("420x520")
+        self.telemetry_window.protocol("WM_DELETE_WINDOW", self._close_telemetry_window)
+        
+        self.telemetry_actual_label = ttk.Label(self.telemetry_window, text="Ball: X=0.000m, Y=0.000m",
+                                                font=("Consolas", 12))
+        self.telemetry_actual_label.pack(pady=5)
+        self.telemetry_target_label = ttk.Label(self.telemetry_window, text="Setpoint: X=0.000m, Y=0.000m",
+                                                font=("Consolas", 12))
+        self.telemetry_target_label.pack(pady=5)
+        self.telemetry_error_label = ttk.Label(self.telemetry_window, text="Error: X=0.000m, Y=0.000m",
+                                               font=("Consolas", 12, "bold"))
+        self.telemetry_error_label.pack(pady=5)
+        
+        self.telemetry_canvas = tk.Canvas(self.telemetry_window,
+                                          width=self.telemetry_canvas_size,
+                                          height=self.telemetry_canvas_size,
+                                          bg="#111111", highlightthickness=0)
+        self.telemetry_canvas.pack(pady=10)
+        self.update_telemetry(force=True)
+
+    def _close_telemetry_window(self):
+        """Handle telemetry window close event."""
+        if self.telemetry_window is not None:
+            try:
+                self.telemetry_window.destroy()
+            except Exception:
+                pass
+        self.telemetry_window = None
+        self.telemetry_canvas = None
+
+    def update_telemetry(self, force=False):
+        """Update telemetry labels and canvas."""
+        if (self.telemetry_window is None or
+                self.telemetry_canvas is None or
+                not self.telemetry_window.winfo_exists()):
+            if force:
+                self.show_telemetry_window()
+            return
+        
+        x, y = self.latest_position
+        err_x, err_y = self.latest_error
+        
+        self.telemetry_actual_label.config(text=f"Ball:     X={x:+0.4f} m  |  Y={y:+0.4f} m")
+        self.telemetry_target_label.config(text=f"Setpoint: X={self.setpoint_x:+0.4f} m  |  Y={self.setpoint_y:+0.4f} m")
+        self.telemetry_error_label.config(text=f"Error:    X={err_x:+0.4f} m  |  Y={err_y:+0.4f} m")
+        
+        canvas = self.telemetry_canvas
+        canvas.delete("all")
+        size = self.telemetry_canvas_size
+        center = size / 2
+        radius_px = center - 20
+        
+        # Draw plate boundary
+        canvas.create_oval(center - radius_px, center - radius_px,
+                           center + radius_px, center + radius_px,
+                           outline="#666", width=2)
+        canvas.create_line(center, 10, center, size - 10, fill="#333")
+        canvas.create_line(10, center, size - 10, center, fill="#333")
+        
+        def to_canvas(px, py):
+            scale = radius_px / self.position_display_range
+            limit = self.position_display_range * 1.1
+            px = max(min(px, limit), -limit)
+            py = max(min(py, limit), -limit)
+            cx = center + px * scale
+            cy = center - py * scale
+            return cx, cy
+        
+        # Draw setpoint and actual positions
+        spx, spy = to_canvas(self.setpoint_x, self.setpoint_y)
+        bx, by = to_canvas(x, y)
+        canvas.create_oval(spx - 6, spy - 6, spx + 6, spy + 6,
+                           outline="#ff5555", width=2)
+        canvas.create_oval(bx - 6, by - 6, bx + 6, by + 6,
+                           fill="#55ff55", outline="")
+        canvas.create_line(spx, spy, bx, by, fill="#ffaa00", dash=(3, 3))
 
 if __name__ == "__main__":
     try:

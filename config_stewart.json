@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-11-10T22:37:17.097096",
+  "timestamp": "2025-11-20T10:28:23.390653",
   "platform_type": "circular",
   "platform_radius_m": 0.1,
   "platform_center_pixels": [
-    306,
-    226
+    263,
+    220
   ],
-  "platform_radius_pixels": 151.46286673637206,
+  "platform_radius_pixels": 165.20484895642073,
   "camera": {
     "index": 1,
     "frame_width": 640,
@@ -14,30 +14,29 @@
   },
   "ball_detection": {
     "lower_hsv": [
-      12.0,
-      143.45,
-      134.25
+      5.0,
+      63.8,
+      133.1
     ],
     "upper_hsv": [
-      27.0,
+      26.0,
       255.0,
       255.0
     ]
   },
   "calibration": {
-    "pixel_to_meter_ratio": 0.0006602278311162201,
-    "pixel_to_meter_ratio_x": 0.0006602278311162201,
-    "pixel_to_meter_ratio_y": 0.0006602278311162201,
-    "position_min_x_m": -0.017663950836249685,
-    "position_max_x_m": 0.020617203866068332,
-    "position_min_y_m": -0.09051174178710941,
-    "position_max_y_m": 0.08073323202414555
+    "pixel_to_meter_ratio": 0.0006053091094582758,
+    "pixel_to_meter_ratio_x": 0.0006053091094582758,
+    "pixel_to_meter_ratio_y": 0.0006053091094582758,
+    "position_min_x_m": -0.1,
+    "position_max_x_m": 0.1,
+    "position_min_y_m": -0.1,
+    "position_max_y_m": 0.1
   },
   "servo": {
+    "port": "COM3",
     "ports": [
-      "COM3",
-      "COM4",
-      "COM5"
+      "COM3"
     ],
     "neutral_angles": [
       15,
@@ -47,19 +46,57 @@
     "motor_direction_invert": [
       false,
       false,
-      true
-    ]
+      false
+    ],
+    "debug_packets": true,
+    "baud_rate": 115200,
+    "write_timeout_ms": 50,
+    "timeout_seconds": 1.0
   },
   "pid": {
-    "Kp_x": 10.0,
-    "Ki_x": 0.0,
-    "Kd_x": 0.0,
-    "Kp_y": 10.0,
-    "Ki_y": 0.0,
-    "Kd_y": 0.0
+    "Kp_x": 1.5,
+    "Ki_x": 0.1,
+    "Kd_x": 0.5,
+    "Kp_y": 1.5,
+    "Ki_y": 0.1,
+    "Kd_y": 0.5,
+    "Kp_m1": 1.0,
+    "Ki_m1": 0.0,
+    "Kd_m1": 0.0,
+    "Kp_m2": 0.0,
+    "Ki_m2": 0.0,
+    "Kd_m2": 0.0,
+    "Kp_m3": 0.0,
+    "Ki_m3": 0.0,
+    "Kd_m3": 0.0
   },
   "platform": {
     "max_roll_angle": 15.0,
-    "max_pitch_angle": 15.0
+    "max_pitch_angle": 15.0,
+    "roll_direction_invert": true
+  },
+  "motor_positions_pixels": [
+    [
+      270,
+      386
+    ],
+    [
+      122,
+      136
+    ],
+    [
+      406,
+      137
+    ]
+  ],
+  "motor_angles_deg": [
+    87.58534347914922,
+    210.78414652632642,
+    329.8682813584982
+  ],
+  "axis_rotation_deg": 2.4146565208507837,
+  "logging": {
+    "enable": true,
+    "log_directory": "logs"
   }
 }

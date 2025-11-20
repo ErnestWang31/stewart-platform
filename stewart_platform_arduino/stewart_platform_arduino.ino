@@ -11,7 +11,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define ZERO_POS  375   // midpoint between 280 and 415 ≈ neutral
 
 // Servo channel assignments (0, 1, 2 on the PWM driver)
-const uint8_t SERVO_CH[3] = {0, 1, 2};
+const uint8_t SERVO_CH[3] = {0, 15, 7};
 
 // Servo angle configuration
 #define MIN_ANGLE 0     // Minimum angle in degrees (0-30 range)
@@ -23,11 +23,11 @@ int targetAngles[3] = {NEUTRAL_ANGLE, NEUTRAL_ANGLE, NEUTRAL_ANGLE};
 bool newCommand = false;
 
 // Debug mode - set to true to enable serial debugging
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 
 void setup() {
   // Initialize serial communication
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   // Wait for serial port to connect (useful for USB)
   while (!Serial && millis() < 3000) {
@@ -61,11 +61,11 @@ void setup() {
   }
   
   // Send ready message
+#if DEBUG_MODE
   Serial.println("Stewart Platform Arduino Ready");
   Serial.println("Waiting for 3 bytes: [servo1_angle, servo2_angle, servo3_angle]");
-  if (DEBUG_MODE) {
-    Serial.println("DEBUG MODE: Enabled");
-  }
+  Serial.println("DEBUG MODE: Enabled");
+#endif
 }
 
 void loop() {

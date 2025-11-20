@@ -42,6 +42,9 @@ class StewartPlatformCalibrator:
         self.servos = [None, None, None]  # Serial connections to servos
         self.servo_ports = ["COM3", "COM4", "COM5"]  # Servo communication ports
         self.neutral_angles = [15, 15, 15]  # Servo neutral position angles
+        self.servo_baud = 115200
+        self.servo_timeout = 1.0
+        self.servo_write_timeout = 0.05
         
         # Position limit results
         self.position_min_x = None  # Minimum ball position in X (meters)
@@ -58,7 +61,12 @@ class StewartPlatformCalibrator:
         connected = False
         for i, port in enumerate(self.servo_ports):
             try:
-                self.servos[i] = serial.Serial(port, 9600)
+                self.servos[i] = serial.Serial(
+                    port,
+                    self.servo_baud,
+                    timeout=self.servo_timeout,
+                    write_timeout=self.servo_write_timeout
+                )
                 time.sleep(2)  # Allow time for connection to stabilize
                 print(f"[SERVO_{i}] Connected to {port}")
                 connected = True
@@ -341,6 +349,10 @@ class StewartPlatformCalibrator:
             config["servo"] = {}
         config["servo"]["ports"] = [str(p) for p in self.servo_ports]
         config["servo"]["neutral_angles"] = [int(a) for a in self.neutral_angles]
+        config["servo"]["baud_rate"] = int(self.servo_baud)
+        config["servo"]["write_timeout_ms"] = int(self.servo_write_timeout * 1000)
+        if "timeout_seconds" not in config["servo"]:
+            config["servo"]["timeout_seconds"] = float(self.servo_timeout)
         # Note: motor_direction_invert and other servo fields are preserved if they exist
         
         # Set default PID values only if they don't exist

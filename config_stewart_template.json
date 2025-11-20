@@ -24,7 +24,11 @@
   },
   "servo": {
     "port": "COM3",
-    "neutral_angles": [15, 15, 15]
+    "neutral_angles": [15, 15, 15],
+    "motor_direction_invert": [false, false, false],
+    "baud_rate": 115200,
+    "write_timeout_ms": 50,
+    "timeout_seconds": 1.0
   },
   "pid": {
     "Kp_x": 10.0,
