@@ -95,7 +95,7 @@ class ZNCaptureController:
         self.amplitude_tolerance = merged_cfg["amplitude_tolerance"]
         self.min_prominence = self.min_amplitude / 3.0
 
-        self.axis_choice = tk.StringVar(value="x")
+        self.axis_choice = None  # Will be created in _build_gui() after root window exists
         self.capture_enabled = False
         self.target_axis = None
 
@@ -166,6 +166,9 @@ class ZNCaptureController:
         self.root = tk.Tk()
         self.root.title("ZN Ku/Tu Capture")
         self.root.geometry("420x320")
+
+        # Create tkinter variables after root window exists
+        self.axis_choice = tk.StringVar(value="x")
 
         header = ttk.Label(
             self.root,
