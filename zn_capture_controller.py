@@ -36,6 +36,7 @@ from scipy.signal import find_peaks
 from ball_detection_2d import BallDetector2D
 from pid_controller_2d import PIDController2D
 from inverse_kinematics import StewartPlatformIK
+from calibration_2d import StewartPlatformCalibrator
 
 
 class ZNCaptureController:
@@ -53,6 +54,7 @@ class ZNCaptureController:
 
     def __init__(self, config_file: str = "config_stewart.json") -> None:
         self.config_file = config_file
+        self._run_calibration_step()
         self.config = self._load_config(config_file)
 
         self.detector = BallDetector2D(config_file)
@@ -69,10 +71,18 @@ class ZNCaptureController:
         self.pid.set_setpoint(0.0, 0.0)
 
         self.ik_solver = StewartPlatformIK(self.config)
-        self.use_inverse_kinematics = False
+        self.use_inverse_kinematics = self.config.get("platform", {}).get(
+            "use_inverse_kinematics", False
+        )
 
         servo_config = self.config.get("servo", {})
         self.servo_port = servo_config.get("port") or (servo_config.get("ports") or ["COM3"])[0]
+        self.servo_baud_rate = servo_config.get("baud_rate", 115200)
+        self.servo_read_timeout = max(servo_config.get("timeout_seconds", 1.0), 0.0)
+        write_timeout_ms = servo_config.get("write_timeout_ms", 50)
+        if write_timeout_ms is None:
+            write_timeout_ms = 50
+        self.servo_write_timeout = max(write_timeout_ms, 0) / 1000.0
         self.neutral_angles = servo_config.get("neutral_angles", [15, 15, 15])
         self.motor_direction_invert = servo_config.get(
             "motor_direction_invert", [False, False, False]
@@ -128,6 +138,10 @@ class ZNCaptureController:
         self.status_text = None
         self.start_button = None
         self.axis_label = None
+        self.gain_label_var = None
+        self.roll_direction_invert = self.config.get("platform", {}).get(
+            "roll_direction_invert", False
+        )
 
         self.log_lock = Lock()
 
@@ -216,6 +230,20 @@ class ZNCaptureController:
         self.status_text.pack(fill=tk.BOTH, expand=True)
         self._update_status("Ready. Select axis and press Start.")
 
+        gain_frame = ttk.LabelFrame(self.root, text="Gain Progress", padding=10)
+        gain_frame.pack(fill=tk.X, padx=20, pady=(0, 10))
+        self.gain_label_var = tk.StringVar(value="Kp: 0.000 | Ku: --")
+        ttk.Label(
+            gain_frame,
+            textvariable=self.gain_label_var,
+            font=("Consolas", 12, "bold"),
+        ).pack(anchor=tk.W)
+        ttk.Label(
+            gain_frame,
+            text="(Updates each time Kp increases. Ku remains blank until detected.)",
+            font=("Arial", 9),
+        ).pack(anchor=tk.W, pady=(4, 0))
+
     def _update_status(self, message: str) -> None:
         if not self.status_text:
             return
@@ -223,6 +251,13 @@ class ZNCaptureController:
         self.status_text.delete("1.0", tk.END)
         self.status_text.insert("1.0", message)
         self.status_text.config(state=tk.DISABLED)
+        self._update_gain_display()
+
+    def _update_gain_display(self) -> None:
+        if not self.gain_label_var:
+            return
+        ku_text = f"{self.result_ku:.4f}" if self.result_ku else "--"
+        self.gain_label_var.set(f"Kp: {self.current_kp:6.3f} | Ku: {ku_text}")
 
     def _stop(self) -> None:
         self.capture_enabled = False
@@ -255,6 +290,7 @@ class ZNCaptureController:
         self._apply_axis_gains(axis, 0.0, 0.0, 0.0)
         other_axis = "y" if axis == "x" else "x"
         self._apply_axis_gains(other_axis, *self.base_gains[other_axis])
+        self._update_gain_display()
 
         if not self.tuning_thread or not self.tuning_thread.is_alive():
             self.tuning_thread = Thread(target=self._run_tuning_loop, daemon=True)
@@ -279,6 +315,9 @@ class ZNCaptureController:
         ):
             self.current_kp += self.kp_step
             self._apply_axis_gains(self.target_axis, self.current_kp, 0.0, 0.0)
+            # Log to console for remote monitoring
+            print(f"[ZN-CAPTURE] Axis={self.target_axis.upper()} Kp={self.current_kp:.3f}")
+            self._update_gain_display()
             self._update_status(
                 f"{self._axis_label(self.target_axis)} | "
                 f"Kp={self.current_kp:.3f}, Ki=0, Kd=0\n"
@@ -394,6 +433,7 @@ class ZNCaptureController:
                 f"Capture complete.\nKu={self.result_ku:.4f}, Tu={self.result_tu:.4f} s\n"
                 f"Results saved to {self.results_path}."
             )
+            self._update_gain_display()
         elif not success:
             messagebox.showwarning(
                 "Capture incomplete",
@@ -544,10 +584,15 @@ class ZNCaptureController:
 
     def connect_servos(self) -> bool:
         try:
-            self.servo_serial = serial.Serial(self.servo_port, 9600, timeout=1)
+            self.servo_serial = serial.Serial(
+                self.servo_port,
+                self.servo_baud_rate,
+                timeout=self.servo_read_timeout,
+                write_timeout=self.servo_write_timeout,
+            )
             time.sleep(2)
             self.servo_serial.reset_input_buffer()
-            print(f"[ARDUINO] Connected to {self.servo_port}")
+            print(f"[ARDUINO] Connected to {self.servo_port} @ {self.servo_baud_rate} baud")
             return True
         except Exception as exc:
             print(f"[ARDUINO] Failed to connect to {self.servo_port}: {exc}")
@@ -558,10 +603,7 @@ class ZNCaptureController:
         roll_angle = float(np.clip(roll_angle, -15, 15))
         pitch_angle = float(np.clip(pitch_angle, -15, 15))
 
-        roll_direction_invert = self.config.get("platform", {}).get(
-            "roll_direction_invert", False
-        )
-        if roll_direction_invert:
+        if self.roll_direction_invert:
             roll_angle = -roll_angle
 
         if self.use_inverse_kinematics:
@@ -598,23 +640,40 @@ class ZNCaptureController:
                 self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
             except Exception as exc:
                 print(f"[ARDUINO] Send failed: {exc}")
+        else:
+            print("[MOTOR] WARNING: Servo serial not connected; command skipped.")
 
     def _simplified_motor_mapping(self, roll_angle: float, pitch_angle: float):
-        motor_positions = [90, 210, 330]
-        motor_rads = [np.radians(angle) for angle in motor_positions]
-        heights = []
-        for angle_rad in motor_rads:
-            height = -roll_angle * np.cos(angle_rad) - pitch_angle * np.sin(angle_rad)
-            heights.append(height)
+        motor_angles_deg = self.config.get("motor_angles_deg")
+        if motor_angles_deg and len(motor_angles_deg) == 3:
+            motor1_angle_deg = motor_angles_deg[0] - 180
+            motor2_angle_deg = motor_angles_deg[1] - 180
+            motor3_angle_deg = motor_angles_deg[2] - 180
+        else:
+            motor1_angle_deg = -90
+            motor2_angle_deg = -210
+            motor3_angle_deg = -330
+
+        motor1_angle_rad = np.radians(motor1_angle_deg)
+        motor2_angle_rad = np.radians(motor2_angle_deg)
+        motor3_angle_rad = np.radians(motor3_angle_deg)
+
+        motor1_height = -roll_angle * np.cos(motor1_angle_rad) - pitch_angle * np.sin(
+            motor1_angle_rad
+        )
+        motor2_height = -roll_angle * np.cos(motor2_angle_rad) - pitch_angle * np.sin(
+            motor2_angle_rad
+        )
+        motor3_height = -roll_angle * np.cos(motor3_angle_rad) - pitch_angle * np.sin(
+            motor3_angle_rad
+        )
 
         scale_factor = self.config.get("platform", {}).get("motor_scale_factor", 1.0)
         dirs = [-1.0 if flag else 1.0 for flag in self.motor_direction_invert]
 
         motor_angles = []
-        for i in range(3):
-            motor_angles.append(
-                self.neutral_angles[i] + heights[i] * scale_factor * dirs[i]
-            )
+        for i, height in enumerate((motor1_height, motor2_height, motor3_height)):
+            motor_angles.append(self.neutral_angles[i] + height * scale_factor * dirs[i])
         return motor_angles
 
     # ------------------------------------------------------------------ #
@@ -623,6 +682,17 @@ class ZNCaptureController:
     @staticmethod
     def _axis_label(axis: str) -> str:
         return "X-Axis (Roll)" if axis == "x" else "Y-Axis (Pitch)"
+
+    def _run_calibration_step(self) -> None:
+        """Ensure calibration runs before capture so HSV/platform data are fresh."""
+        print("[CALIBRATION] Launching 2D calibration to refresh detection parameters.")
+        try:
+            calibrator = StewartPlatformCalibrator()
+            calibrator.run()
+            print("[CALIBRATION] Calibration completed. Using updated configuration.")
+        except Exception as exc:
+            print(f"[CALIBRATION] Failed to run calibration automatically: {exc}")
+            print("[CALIBRATION] Proceeding with existing configuration file.")
 
 
 if __name__ == "__main__":
