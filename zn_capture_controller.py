@@ -47,13 +47,15 @@ class ZNCaptureController:
     DEFAULT_CAPTURE_CONFIG = {
         "kp_step": 0.05,
         "kp_max": 20.0,
-        "dwell_time_sec": 7.0,
-        "analysis_window_sec": 12.0,
+        "dwell_time_sec": 10.0,
+        "analysis_window_sec": 14.0,
         "min_amplitude_m": 0.005,  # 5 mm
         "period_tolerance": 0.25,
         "amplitude_tolerance": 0.30,
         "min_cycles": 8,
         "max_position_ratio": 0.95,  # fraction of platform radius allowed
+        "windows_per_gain": 2,
+        "edge_guard_warmup_sec": 4.0,
     }
 
     def __init__(self, config_file: str = "config_stewart.json") -> None:
@@ -118,6 +120,8 @@ class ZNCaptureController:
         self.min_prominence = self.min_amplitude / 3.0
         self.min_cycles = int(max(3, merged_cfg.get("min_cycles", 6)))
         self.max_position_ratio = float(merged_cfg.get("max_position_ratio", 0.9))
+        self.windows_per_gain = int(max(1, merged_cfg.get("windows_per_gain", 2)))
+        self.edge_guard_warmup = float(merged_cfg.get("edge_guard_warmup_sec", 4.0))
         self.position_limit_m = self._compute_position_limit()
 
         self.axis_choice = None  # Will be created in _build_gui() after root window exists
@@ -329,18 +333,18 @@ class ZNCaptureController:
             self.capture_enabled
             and self.running
             and not self.ku_found
-            and self.current_kp <= self.kp_max
+            and self.current_kp < self.kp_max
         ):
             self.current_kp += self.kp_step
             self._apply_axis_gains(self.target_axis, self.current_kp, 0.0, 0.0)
-            # Log to console for remote monitoring
             print(f"[ZN-CAPTURE] Axis={self.target_axis.upper()} Kp={self.current_kp:.3f}")
             self._update_gain_display()
             self._update_status(
                 f"{self._axis_label(self.target_axis)} | "
                 f"Kp={self.current_kp:.3f}, Ki=0, Kd=0\n"
-                "Waiting for response..."
+                "Settling current gain..."
             )
+
             dwell_start = time.time()
             while (
                 self.running
@@ -353,16 +357,37 @@ class ZNCaptureController:
             if not self.running or not self.capture_enabled or self.ku_found:
                 break
 
-            if self._check_for_ultimate():
-                self.result_ku = round(self.current_kp, 4)
-                self.result_tu = round(self.latest_period, 4)
-                self.ku_found = True
+            for window_idx in range(self.windows_per_gain):
+                if not self.running or not self.capture_enabled or self.ku_found:
+                    break
+
                 self._update_status(
-                    f"Ku found: {self.result_ku:.4f}\n"
-                    f"Tu: {self.result_tu:.4f} s\nSaving results..."
+                    f"{self._axis_label(self.target_axis)} | Kp={self.current_kp:.3f}\n"
+                    f"Analyzing response ({window_idx + 1}/{self.windows_per_gain})"
                 )
-                self._finalize_capture(success=True)
-                return
+
+                window_start = time.time()
+                while (
+                    self.running
+                    and self.capture_enabled
+                    and not self.ku_found
+                    and (time.time() - window_start) < self.analysis_window
+                ):
+                    time.sleep(0.05)
+
+                if not self.running or not self.capture_enabled or self.ku_found:
+                    break
+
+                if self._check_for_ultimate():
+                    self.result_ku = round(self.current_kp, 4)
+                    self.result_tu = round(self.latest_period, 4)
+                    self.ku_found = True
+                    self._update_status(
+                        f"Ku found: {self.result_ku:.4f}\n"
+                        f"Tu: {self.result_tu:.4f} s\nSaving results..."
+                    )
+                    self._finalize_capture(success=True)
+                    return
 
         if not self.ku_found:
             self._update_status("Capture ended without finding sustained oscillations.")
@@ -383,7 +408,11 @@ class ZNCaptureController:
         if len(times) < 10:
             return False
 
-        if self.position_limit_m and np.max(np.abs(values)) > self.position_limit_m:
+        guard_active = (
+            self.capture_start_time is not None
+            and (time.time() - self.capture_start_time) >= self.edge_guard_warmup
+        )
+        if guard_active and self.position_limit_m and np.max(np.abs(values)) > self.position_limit_m:
             print("[ZN-CAPTURE] Ignoring window – ball hitting platform edge.")
             return False
 
@@ -555,6 +584,9 @@ class ZNCaptureController:
     def control_thread(self) -> None:
         if not self.connect_servos():
             print("[WARNING] Could not connect to servos. Running in simulation mode.")
+        else:
+            self._send_neutral_pose()
+            print("[INFO] Platform at neutral pose. Place ball near center, nudge slightly along active axis.")
 
         while self.running:
             try:
@@ -567,6 +599,10 @@ class ZNCaptureController:
                     self.capture_start_time = time.time()
 
                 control_x, control_y = self.pid.update(position_x, position_y)
+                if self.target_axis == "x":
+                    control_y = 0.0
+                elif self.target_axis == "y":
+                    control_x = 0.0
                 self.send_platform_tilt(control_x, control_y)
                 elapsed = time.time() - self.capture_start_time
                 self._log_sample(
@@ -729,6 +765,16 @@ class ZNCaptureController:
         radius = max(candidates) if any(candidates) else 0.15  # default 15 cm
         return radius * self.max_position_ratio if radius > 0 else None
 
+    def _send_neutral_pose(self) -> None:
+        if not self.servo_serial:
+            return
+        neutral_packet = bytes([int(np.clip(angle, 0, 30)) for angle in self.neutral_angles])
+        try:
+            self.servo_serial.write(neutral_packet)
+            print("[MOTOR] Neutral pose command sent.")
+        except Exception as exc:
+            print(f"[MOTOR] Failed to send neutral pose: {exc}")
+
     # ------------------------------------------------------------------ #
     # Live plot helpers
     # ------------------------------------------------------------------ #
@@ -759,7 +805,6 @@ class ZNCaptureController:
             not self.live_plot_ax
             or not self.live_plot_line
             or not self.time_log
-            or not self.capture_enabled
         ):
             return
 
