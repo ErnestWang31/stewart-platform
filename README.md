@@ -95,6 +95,42 @@ The GUI provides real-time PID tuning with sliders:
 
 Separate gains can be set for X and Y axes.
 
+### Autotuning Toolkit
+
+To capture Ziegler–Nichols ultimate-gain data without manual knob turning, run:
+
+```bash
+python zn_capture_controller.py
+```
+
+The capture GUI reuses the full Stewart platform stack but focuses on a single
+axis at a time:
+
+1. Select roll (X) or pitch (Y) in the window and click **Start Capture**.
+2. The script zeroes Ki and Kd for that axis, slowly ramps Kp, and monitors the
+   ball position until it detects sustained oscillations.
+3. Once Ku and Tu are found, they are written to `zn_capture_results.json` and a
+   plot of setpoint vs. measured position is displayed.
+
+You can tweak the ramp step, dwell time, analysis window, and detection
+thresholds by editing the optional `zn_capture` block inside
+`config_stewart.json`.
+
+After capturing Ku/Tu, convert them into actual PID gains with:
+
+```bash
+# Preview recommendations
+python zn_gain_calculator.py
+
+# Apply to config_stewart.json automatically
+python zn_gain_calculator.py --axis x --rule classic --write-config
+```
+
+The calculator reads `zn_capture_results.json` (or takes manual `--ku/--tu`
+overrides), applies the selected ZN rule, prints Kp/Ki/Kd, and optionally writes
+them back into `config_stewart.json`. Run it once per axis to populate both
+`K*_x` and `K*_y` before returning to the main controller.
+
 ## Arduino Setup
 
 The system uses a single Arduino with an **Adafruit PWM Servo Driver** shield to control all 3 servos via I2C.
