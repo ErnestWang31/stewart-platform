@@ -31,6 +31,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from matplotlib import pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from scipy.signal import find_peaks
 
 from ball_detection_2d import BallDetector2D
@@ -45,11 +46,13 @@ class ZNCaptureController:
     DEFAULT_CAPTURE_CONFIG = {
         "kp_step": 0.15,
         "kp_max": 20.0,
-        "dwell_time_sec": 4.0,
-        "analysis_window_sec": 8.0,
+        "dwell_time_sec": 7.0,
+        "analysis_window_sec": 12.0,
         "min_amplitude_m": 0.005,  # 5 mm
         "period_tolerance": 0.25,
-        "amplitude_tolerance": 0.35,
+        "amplitude_tolerance": 0.30,
+        "min_cycles": 6,
+        "max_position_ratio": 0.9,  # fraction of platform radius allowed
     }
 
     def __init__(self, config_file: str = "config_stewart.json") -> None:
@@ -104,6 +107,9 @@ class ZNCaptureController:
         self.period_tolerance = merged_cfg["period_tolerance"]
         self.amplitude_tolerance = merged_cfg["amplitude_tolerance"]
         self.min_prominence = self.min_amplitude / 3.0
+        self.min_cycles = int(max(3, merged_cfg.get("min_cycles", 6)))
+        self.max_position_ratio = float(merged_cfg.get("max_position_ratio", 0.9))
+        self.position_limit_m = self._compute_position_limit()
 
         self.axis_choice = None  # Will be created in _build_gui() after root window exists
         self.capture_enabled = False
@@ -142,6 +148,12 @@ class ZNCaptureController:
         self.roll_direction_invert = self.config.get("platform", {}).get(
             "roll_direction_invert", False
         )
+        self.live_plot_fig = None
+        self.live_plot_ax = None
+        self.live_plot_canvas = None
+        self.live_plot_line = None
+        self.live_plot_setpoint_line = None
+        self.live_plot_window_sec = 15.0
 
         self.log_lock = Lock()
 
@@ -164,6 +176,7 @@ class ZNCaptureController:
         ctrl_thread.start()
 
         self._build_gui()
+        self._schedule_live_plot_update()
         self.root.mainloop()
 
         self.running = False
@@ -243,6 +256,10 @@ class ZNCaptureController:
             text="(Updates each time Kp increases. Ku remains blank until detected.)",
             font=("Arial", 9),
         ).pack(anchor=tk.W, pady=(4, 0))
+
+        plot_frame = ttk.LabelFrame(self.root, text="Live Position Trace", padding=5)
+        plot_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 10))
+        self._init_live_plot(plot_frame)
 
     def _update_status(self, message: str) -> None:
         if not self.status_text:
@@ -365,6 +382,10 @@ class ZNCaptureController:
         if len(times) < 10:
             return False
 
+        if self.position_limit_m and np.max(np.abs(values)) > self.position_limit_m:
+            print("[ZN-CAPTURE] Ignoring window – ball hitting platform edge.")
+            return False
+
         centered = values - np.mean(values)
         amplitude = 0.5 * (centered.max() - centered.min())
         if amplitude < self.min_amplitude:
@@ -372,30 +393,27 @@ class ZNCaptureController:
 
         peaks, _ = find_peaks(centered, prominence=self.min_prominence)
         troughs, _ = find_peaks(-centered, prominence=self.min_prominence)
-        min_cycles = 4
-        if len(peaks) < min_cycles or len(troughs) < min_cycles:
+        if len(peaks) < self.min_cycles or len(troughs) < self.min_cycles:
             return False
 
         if len(peaks) >= 2:
             periods = np.diff(times[peaks])
+            periods = periods[periods > 0]
             if len(periods) < 2:
                 return False
             mean_period = np.mean(periods)
-            if mean_period <= 0:
-                return False
             spread = np.max(periods) - np.min(periods)
-            if spread / mean_period > self.period_tolerance:
+            if mean_period <= 0 or spread / mean_period > self.period_tolerance:
                 return False
         else:
             return False
 
-        recent_peaks = centered[peaks[-min_cycles:]]
-        recent_troughs = centered[troughs[-min_cycles:]]
+        recent_peaks = centered[peaks[-self.min_cycles:]]
+        recent_troughs = centered[troughs[-self.min_cycles:]]
         peak_span = np.max(recent_peaks) - np.min(recent_peaks)
         trough_span = np.max(recent_troughs) - np.min(recent_troughs)
-        if peak_span > amplitude * self.amplitude_tolerance:
-            return False
-        if trough_span > amplitude * self.amplitude_tolerance:
+        tolerance = max(self.amplitude_tolerance * amplitude, self.min_amplitude / 2)
+        if peak_span > tolerance or trough_span > tolerance:
             return False
 
         self.latest_period = mean_period
@@ -694,6 +712,86 @@ class ZNCaptureController:
             print(f"[CALIBRATION] Failed to run calibration automatically: {exc}")
             print("[CALIBRATION] Proceeding with existing configuration file.")
 
+    def _compute_position_limit(self) -> float:
+        """Use calibration/platform radius to guard against bumper hits."""
+        calib = self.config.get("calibration", {})
+        platform_radius = self.config.get("platform_radius_m") or self.config.get("platform", {}).get(
+            "platform_radius_m"
+        )
+        candidates = [
+            abs(calib.get("position_max_x_m", 0.0)),
+            abs(calib.get("position_min_x_m", 0.0)),
+            abs(calib.get("position_max_y_m", 0.0)),
+            abs(calib.get("position_min_y_m", 0.0)),
+            platform_radius or 0.0,
+        ]
+        radius = max(candidates) if any(candidates) else 0.15  # default 15 cm
+        return radius * self.max_position_ratio if radius > 0 else None
+
+    # ------------------------------------------------------------------ #
+    # Live plot helpers
+    # ------------------------------------------------------------------ #
+    def _init_live_plot(self, parent) -> None:
+        self.live_plot_fig = plt.Figure(figsize=(4.6, 2.6), dpi=100)
+        self.live_plot_ax = self.live_plot_fig.add_subplot(111)
+        self.live_plot_ax.set_xlabel("Time (s)")
+        self.live_plot_ax.set_ylabel("Position (m)")
+        self.live_plot_ax.grid(True, alpha=0.3)
+        self.live_plot_line, = self.live_plot_ax.plot([], [], color="#1f77b4", linewidth=1.5)
+        self.live_plot_setpoint_line = self.live_plot_ax.axhline(
+            0.0, color="#ff6666", linestyle="--", linewidth=1
+        )
+        self.live_plot_canvas = FigureCanvasTkAgg(self.live_plot_fig, master=parent)
+        self.live_plot_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+    def _schedule_live_plot_update(self) -> None:
+        if not hasattr(self, "root"):
+            return
+        self._update_live_plot()
+        self.root.after(250, self._schedule_live_plot_update)
+
+    def _update_live_plot(self) -> None:
+        if (
+            not self.live_plot_ax
+            or not self.live_plot_line
+            or not self.time_log
+            or not self.capture_enabled
+        ):
+            return
+
+        with self.log_lock:
+            times = np.array(self.time_log, dtype=float)
+            values = (
+                np.array(self.position_x_log, dtype=float)
+                if self.target_axis == "x"
+                else np.array(self.position_y_log, dtype=float)
+            )
+
+        if times.size == 0:
+            return
+
+        window_start = max(0.0, times[-1] - self.live_plot_window_sec)
+        mask = times >= window_start
+        times_window = times[mask]
+        values_window = values[mask]
+
+        if times_window.size < 2:
+            return
+
+        self.live_plot_line.set_data(times_window, values_window)
+        self.live_plot_setpoint_line.set_ydata(0.0)
+
+        x_min = max(0.0, times_window[-1] - self.live_plot_window_sec)
+        x_max = times_window[-1]
+        self.live_plot_ax.set_xlim(x_min, x_max if x_max > x_min else x_min + 1.0)
+
+        y_span = np.max(np.abs(values_window))
+        limit = max(self.position_limit_m or 0.05, y_span * 1.2 if y_span > 0 else 0.05)
+        self.live_plot_ax.set_ylim(-limit, limit)
+        self.live_plot_ax.set_title(f"{self._axis_label(self.target_axis)} Position")
+
+        self.live_plot_canvas.draw_idle()
+
 
 if __name__ == "__main__":
     try:
@@ -704,4 +802,5 @@ if __name__ == "__main__":
         import traceback
 
         traceback.print_exc()
+
 
