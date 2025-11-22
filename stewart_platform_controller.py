@@ -230,9 +230,9 @@ class StewartPlatformController:
             tuple: (motor1_angle, motor2_angle, motor3_angle) in degrees
         """
         # Motor positions in degrees (from +X axis, counter-clockwise)
-        motor1_angle_deg = 90
-        motor2_angle_deg = 210
-        motor3_angle_deg = 330
+        motor1_angle_deg = -90
+        motor2_angle_deg = -210
+        motor3_angle_deg = -330
         
         # Convert to radians
         motor1_angle_rad = np.radians(motor1_angle_deg)
