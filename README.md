@@ -194,11 +194,17 @@ The test script provides several test modes:
 8. **Continuous monitoring** - Continuous test with real-time Arduino feedback
 
 **Troubleshooting:**
-- If motors don't move, check that DEBUG_MODE is enabled in the Arduino sketch
 - Verify the COM port is correct (check Device Manager on Windows)
 - Ensure no other program is using the serial port
 - Check that servos are properly connected to channels 0, 1, and 2
 - Verify PWM driver is connected via I2C (SDA/SCL)
+- Only enable `DEBUG_MODE` in the Arduino sketch temporarily for diagnostics—disable it again afterward to keep the USB serial link responsive.
+
+## Serial Reliability Tips
+
+- Use `115200` baud on both the Arduino sketch (`Serial.begin(115200)`) and the Python tools (`servo.baud_rate` in `config_stewart.json`).
+- Keep firmware serial printing off (`DEBUG_MODE false`) once things are working so the Arduino can keep up with incoming motor packets.
+- Python now enforces a short `write_timeout` (configurable via `servo.write_timeout_ms`). If you still see send timeouts, double-check that the firmware debug prints are off and the USB cable/hub is reliable.
 
 ## Notes
 

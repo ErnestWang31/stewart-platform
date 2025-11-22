@@ -1,7 +1,7 @@
 {
   "timestamp": "2024-01-01T00:00:00",
   "platform_type": "circular",
-  "platform_radius_m": 0.1,
+  "platform_radius_m": 0.15,
   "platform_center_pixels": [320, 240],
   "platform_radius_pixels": 150,
   "camera": {
@@ -17,14 +17,18 @@
     "pixel_to_meter_ratio": 0.0006667,
     "pixel_to_meter_ratio_x": 0.0006667,
     "pixel_to_meter_ratio_y": 0.0006667,
-    "position_min_x_m": -0.1,
-    "position_max_x_m": 0.1,
-    "position_min_y_m": -0.1,
-    "position_max_y_m": 0.1
+    "position_min_x_m": -0.15,
+    "position_max_x_m": 0.15,
+    "position_min_y_m": -0.15,
+    "position_max_y_m": 0.15
   },
   "servo": {
     "port": "COM3",
-    "neutral_angles": [15, 15, 15]
+    "neutral_angles": [15, 15, 15],
+    "motor_direction_invert": [false, false, false],
+    "baud_rate": 115200,
+    "write_timeout_ms": 50,
+    "timeout_seconds": 1.0
   },
   "pid": {
     "Kp_x": 10.0,

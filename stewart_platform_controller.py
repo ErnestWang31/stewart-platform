@@ -55,19 +55,18 @@ class StewartPlatformController:
         
         # Servo configuration (for 3 motors using Adafruit PWM Servo Driver on Arduino)
         # Single Arduino controls all 3 servos via I2C PWM driver
-        # Handle both "port" (singular) and "ports" (plural) for backward compatibility
         servo_config = self.config.get('servo', {})
-        if 'port' in servo_config:
-            self.servo_port = servo_config['port']
-        elif 'ports' in servo_config and len(servo_config['ports']) > 0:
-            # Use first port if "ports" array is provided
-            self.servo_port = servo_config['ports'][0]
-        else:
-            self.servo_port = "COM3"  # Default fallback
+        self.servo_port = servo_config.get('port', "COM3")
+        self.servo_baud_rate = servo_config.get('baud_rate', 115200)
+        self.servo_read_timeout = max(servo_config.get('timeout_seconds', 1.0), 0.0)
+        write_timeout_ms = servo_config.get('write_timeout_ms', 50)
+        if write_timeout_ms is None:
+            write_timeout_ms = 50
+        self.servo_write_timeout = max(write_timeout_ms, 0) / 1000.0
         self.neutral_angles = servo_config.get('neutral_angles', [15, 15, 15])
         # Motor direction inversion: [False, False, False] means all motors normal direction
         # Set to True for any motor that spins the wrong way
-        self.motor_direction_invert = self.config.get('servo', {}).get('motor_direction_invert', [False, False, False])
+        self.motor_direction_invert = servo_config.get('motor_direction_invert', [False, False, False])
         self.servo_serial = None
         
         # Use inverse kinematics flag (can be toggled)
@@ -89,6 +88,12 @@ class StewartPlatformController:
         self.control_x_log = []
         self.control_y_log = []
         self.start_time = None
+        self.latest_position = (0.0, 0.0)
+        self.latest_error = (0.0, 0.0)
+        self.telemetry_window = None
+        self.telemetry_canvas = None
+        self.position_display_range = self._determine_position_range()
+        self.telemetry_canvas_size = 360
         
         # Thread-safe queue for most recent ball position measurement
         self.position_queue = queue.Queue(maxsize=1)
@@ -124,7 +129,12 @@ class StewartPlatformController:
     def connect_servos(self):
         """Try to open serial connection to Arduino with PWM Servo Driver, return True if succeeds."""
         try:
-            self.servo_serial = serial.Serial(self.servo_port, 9600, timeout=1)
+            self.servo_serial = serial.Serial(
+                self.servo_port,
+                self.servo_baud_rate,
+                timeout=self.servo_read_timeout,
+                write_timeout=self.servo_write_timeout
+            )
             time.sleep(2)  # Wait for Arduino to initialize
             # Flush any initial data
             self.servo_serial.reset_input_buffer()
@@ -212,12 +222,20 @@ class StewartPlatformController:
                 
                 self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
                 self.servo_serial.flush()  # Ensure data is sent immediately
+            except serial.SerialTimeoutException:
+                print("[ARDUINO] Send timed out - Arduino likely busy printing serial logs. "
+                      "Disable firmware debugging or raise baud rate.")
+            except serial.SerialException as e:
+                print(f"[ARDUINO] Serial error: {e}")
             except Exception as e:
                 print(f"[ARDUINO] Send failed: {e}")
         # Remove the else print statement (line 197) - it prints in tight loop
     
     def _simplified_motor_mapping(self, roll_angle, pitch_angle, original_roll_angle=None):
         """Simplified trigonometric mapping (fallback method).
+        
+        Uses calibrated motor angles from 3-point calibration if available,
+        otherwise falls back to default angles.
         
         Args:
             roll_angle: Roll angle in degrees (after inversion if configured)
@@ -227,12 +245,20 @@ class StewartPlatformController:
         Returns:
             tuple: (motor1_angle, motor2_angle, motor3_angle) in degrees
         """
-        if original_roll_angle is None:
-            original_roll_angle = roll_angle
-        # Motor positions in degrees (from +X axis, counter-clockwise)
-        motor1_angle_deg = 90
-        motor2_angle_deg = 210
-        motor3_angle_deg = 330
+        # Get motor angles from calibration if available
+        motor_angles_deg = self.config.get('motor_angles_deg', None)
+        
+        if motor_angles_deg and len(motor_angles_deg) == 3:
+            # Use calibrated motor angles (absolute angles from 3-point calibration)
+            # These angles are already calculated relative to the platform center
+            motor1_angle_deg = motor_angles_deg[0]-180
+            motor2_angle_deg = motor_angles_deg[1]-180
+            motor3_angle_deg = motor_angles_deg[2]-180
+        else:
+            # Fallback to default angles (120° spacing, starting at -90°)
+            motor1_angle_deg = -90
+            motor2_angle_deg = -210
+            motor3_angle_deg = -330
         
         # Convert to radians
         motor1_angle_rad = np.radians(motor1_angle_deg)
@@ -248,7 +274,6 @@ class StewartPlatformController:
         
         # Convert height changes to motor angles
         # Scale factor: platform tilt degrees -> servo angle change
-        # For most platforms, 1:1 mapping works, but you may need to adjust
         scale_factor = self.config.get('platform', {}).get('motor_scale_factor', 1.0)
         
         # Apply direction inversion if configured (multiply by -1 if inverted)
@@ -260,10 +285,7 @@ class StewartPlatformController:
         motor2_angle = self.neutral_angles[1] + motor2_height * scale_factor * motor2_dir
         motor3_angle = self.neutral_angles[2] + motor3_height * scale_factor * motor3_dir
         
-        # Get roll direction invert flag for debug output
-        roll_direction_invert = self.config.get('platform', {}).get('roll_direction_invert', False)
-        
-        # DEBUG: Show intermediate calculations
+        # DEBUG to show intermediate calculations
         if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
             invert_note = f" (inverted from {original_roll_angle:.1f}°)" if roll_direction_invert and abs(original_roll_angle - roll_angle) > 0.1 else ""
             print(f"[MAPPING] Roll={roll_angle:.1f}°{invert_note}, Pitch={pitch_angle:.1f}° -> "
@@ -340,6 +362,8 @@ class StewartPlatformController:
                 
                 print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
                       f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
+                self.latest_position = (position_x, position_y)
+                self.latest_error = (self.setpoint_x - position_x, self.setpoint_y - position_y)
                 
             except queue.Empty:
                 continue
@@ -490,9 +514,8 @@ class StewartPlatformController:
         pos_max_y = calib.get('position_max_y_m', 0.1)
         
         # Setpoint X
-        setpoint_x_container = ttk.LabelFrame(setpoint_frame, text="Setpoint X (meters)", padding="10")
-        setpoint_x_container.pack(pady=10, fill=tk.X)
-        
+        ttk.Label(self.root, text="Setpoint X (meters)", font=("Arial", 10)).pack()
+        pos_range = 0.15  # Default range (matches platform radius)
         self.setpoint_x_var = tk.DoubleVar(value=self.setpoint_x)
         setpoint_x_slider = ttk.Scale(setpoint_x_container, from_=pos_min_x, to=pos_max_x,
                                      variable=self.setpoint_x_var,
@@ -537,70 +560,16 @@ class StewartPlatformController:
         ttk.Button(button_frame, text="Reset Integrals",
                    command=self.reset_integral, width=15).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Plot Results",
-                   command=self.plot_results, width=15).pack(side=tk.LEFT, padx=5)
+                   command=self.plot_results).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Show Telemetry",
+                   command=self.show_telemetry_window).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Stop",
                    command=self.stop, width=15).pack(side=tk.LEFT, padx=5)
         
         # Schedule periodic GUI update
         self.update_gui()
-    
-    def update_from_text_entry(self, param_name, min_val, max_val):
-        """Update slider and PID controller from text entry box.
-        
-        Args:
-            param_name: Name of parameter ('kp_x', 'ki_x', 'kd_x', 'kp_y', 'ki_y', 'kd_y')
-            min_val: Minimum allowed value
-            max_val: Maximum allowed value
-        """
-        try:
-            # Get the entry widget and var for this parameter
-            entry_widget = getattr(self, f"{param_name}_entry")
-            var_widget = getattr(self, f"{param_name}_var")
-            
-            # Get value from text entry
-            text_value = entry_widget.get().strip()
-            if not text_value:
-                # If empty, restore current value
-                current_val = var_widget.get()
-                entry_widget.delete(0, tk.END)
-                entry_widget.insert(0, f"{current_val:.3f}")
-                return
-            
-            value = float(text_value)
-            # Clamp to valid range
-            value = max(min_val, min(max_val, value))
-            
-            # Update the variable (which updates the slider)
-            var_widget.set(value)
-            
-            # Update the text entry to show the clamped value
-            entry_widget.delete(0, tk.END)
-            entry_widget.insert(0, f"{value:.3f}")
-            
-        except ValueError:
-            # Invalid input, restore current value
-            var_widget = getattr(self, f"{param_name}_var")
-            current_val = var_widget.get()
-            entry_widget = getattr(self, f"{param_name}_entry")
-            entry_widget.delete(0, tk.END)
-            entry_widget.insert(0, f"{current_val:.3f}")
-    
-    def update_from_slider(self, param_name, value):
-        """Update text entry box from slider.
-        
-        Args:
-            param_name: Name of parameter ('kp_x', 'ki_x', 'kd_x', 'kp_y', 'ki_y', 'kd_y')
-            value: New value from slider (as string)
-        """
-        try:
-            entry_widget = getattr(self, f"{param_name}_entry")
-            # Only update text entry if it doesn't have focus (user isn't typing)
-            if self.root.focus_get() != entry_widget:
-                # Update text entry with formatted value
-                entry_widget.delete(0, tk.END)
-                entry_widget.insert(0, f"{float(value):.3f}")
-        except (ValueError, AttributeError):
-            pass
+        # Launch telemetry window immediately
+        self.show_telemetry_window()
     
     def update_gui(self):
         """Reflect latest values from sliders into program and update display."""
@@ -615,46 +584,16 @@ class StewartPlatformController:
             self.setpoint_y = self.setpoint_y_var.get()
             self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
             
-            # Update setpoint labels with range info
-            calib = self.config.get('calibration', {})
-            pos_min_x = calib.get('position_min_x_m', -0.1)
-            pos_max_x = calib.get('position_max_x_m', 0.1)
-            pos_min_y = calib.get('position_min_y_m', -0.1)
-            pos_max_y = calib.get('position_max_y_m', 0.1)
-            self.setpoint_x_label.config(text=f"Setpoint X: {self.setpoint_x:.4f}m (Range: {pos_min_x:.4f} to {pos_max_x:.4f}m)")
-            self.setpoint_y_label.config(text=f"Setpoint Y: {self.setpoint_y:.4f}m (Range: {pos_min_y:.4f} to {pos_max_y:.4f}m)")
-            
-            # Update status text (if status tab exists)
-            if hasattr(self, 'status_text'):
-                try:
-                    self.status_text.config(state=tk.NORMAL)
-                    # Clear and update status
-                    self.status_text.delete("1.0", tk.END)
-                    status_info = f"""Stewart Platform Control Status
-{'='*60}
-
-PID Gains:
-  X-Axis (Roll):  Kp={self.pid.Kp_x:.3f}, Ki={self.pid.Ki_x:.3f}, Kd={self.pid.Kd_x:.3f}
-  Y-Axis (Pitch): Kp={self.pid.Kp_y:.3f}, Ki={self.pid.Ki_y:.3f}, Kd={self.pid.Kd_y:.3f}
-
-Setpoints:
-  X: {self.setpoint_x:.4f} m
-  Y: {self.setpoint_y:.4f} m
-
-Platform Limits:
-  Max Roll:  {self.config.get('platform', {}).get('max_roll_angle', 15.0):.1f}°
-  Max Pitch: {self.config.get('platform', {}).get('max_pitch_angle', 15.0):.1f}°
-
-Control Output Limits:
-  X: ±{self.pid.output_limit_x:.1f}°
-  Y: ±{self.pid.output_limit_y:.1f}°
-
-Note: PID uses 100x error scaling (same as 1D beam balancer)
-"""
-                    self.status_text.insert("1.0", status_info)
-                    self.status_text.config(state=tk.DISABLED)
-                except:
-                    pass  # Status tab might not be ready yet
+            # Update displayed values
+            self.kp_x_label.config(text=f"Kp_x: {self.pid.Kp_x:.1f}")
+            self.ki_x_label.config(text=f"Ki_x: {self.pid.Ki_x:.1f}")
+            self.kd_x_label.config(text=f"Kd_x: {self.pid.Kd_x:.1f}")
+            self.kp_y_label.config(text=f"Kp_y: {self.pid.Kp_y:.1f}")
+            self.ki_y_label.config(text=f"Ki_y: {self.pid.Ki_y:.1f}")
+            self.kd_y_label.config(text=f"Kd_y: {self.pid.Kd_y:.1f}")
+            self.setpoint_x_label.config(text=f"Setpoint X: {self.setpoint_x:.4f}m")
+            self.setpoint_y_label.config(text=f"Setpoint Y: {self.setpoint_y:.4f}m")
+            self.update_telemetry()
             
             # Call again after 50 ms
             self.root.after(50, self.update_gui)
@@ -669,41 +608,68 @@ Note: PID uses 100x error scaling (same as 1D beam balancer)
             print("[PLOT] No data to plot")
             return
         
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        fig = plt.figure(figsize=(12, 12))
+        gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 1.1])
+        
+        ax_x = fig.add_subplot(gs[0, 0])
+        ax_y = fig.add_subplot(gs[0, 1])
+        ax_roll = fig.add_subplot(gs[1, 0])
+        ax_pitch = fig.add_subplot(gs[1, 1])
+        ax_plane = fig.add_subplot(gs[2, :])
         
         # X position trace
-        axes[0, 0].plot(self.time_log, self.position_x_log, label="Ball X Position", linewidth=2)
-        axes[0, 0].plot(self.time_log, self.setpoint_x_log, label="Setpoint X",
-                       linestyle="--", linewidth=2)
-        axes[0, 0].set_ylabel("Position X (m)")
-        axes[0, 0].set_title("X-Axis (Roll) Control")
-        axes[0, 0].legend()
-        axes[0, 0].grid(True, alpha=0.3)
+        ax_x.plot(self.time_log, self.position_x_log, label="Ball X Position", linewidth=2)
+        ax_x.plot(self.time_log, self.setpoint_x_log, label="Setpoint X",
+                  linestyle="--", linewidth=2)
+        ax_x.set_ylabel("Position X (m)")
+        ax_x.set_title("X-Axis (Roll) Control")
+        ax_x.legend()
+        ax_x.grid(True, alpha=0.3)
         
         # Y position trace
-        axes[0, 1].plot(self.time_log, self.position_y_log, label="Ball Y Position", linewidth=2, color='green')
-        axes[0, 1].plot(self.time_log, self.setpoint_y_log, label="Setpoint Y",
-                       linestyle="--", linewidth=2)
-        axes[0, 1].set_ylabel("Position Y (m)")
-        axes[0, 1].set_title("Y-Axis (Pitch) Control")
-        axes[0, 1].legend()
-        axes[0, 1].grid(True, alpha=0.3)
+        ax_y.plot(self.time_log, self.position_y_log, label="Ball Y Position", linewidth=2, color='green')
+        ax_y.plot(self.time_log, self.setpoint_y_log, label="Setpoint Y",
+                  linestyle="--", linewidth=2)
+        ax_y.set_ylabel("Position Y (m)")
+        ax_y.set_title("Y-Axis (Pitch) Control")
+        ax_y.legend()
+        ax_y.grid(True, alpha=0.3)
         
         # X control output trace
-        axes[1, 0].plot(self.time_log, self.control_x_log, label="Roll Output",
-                       color="orange", linewidth=2)
-        axes[1, 0].set_xlabel("Time (s)")
-        axes[1, 0].set_ylabel("Roll Angle (degrees)")
-        axes[1, 0].legend()
-        axes[1, 0].grid(True, alpha=0.3)
+        ax_roll.plot(self.time_log, self.control_x_log, label="Roll Output",
+                     color="orange", linewidth=2)
+        ax_roll.set_xlabel("Time (s)")
+        ax_roll.set_ylabel("Roll Angle (degrees)")
+        ax_roll.legend()
+        ax_roll.grid(True, alpha=0.3)
         
         # Y control output trace
-        axes[1, 1].plot(self.time_log, self.control_y_log, label="Pitch Output",
-                       color="red", linewidth=2)
-        axes[1, 1].set_xlabel("Time (s)")
-        axes[1, 1].set_ylabel("Pitch Angle (degrees)")
-        axes[1, 1].legend()
-        axes[1, 1].grid(True, alpha=0.3)
+        ax_pitch.plot(self.time_log, self.control_y_log, label="Pitch Output",
+                      color="red", linewidth=2)
+        ax_pitch.set_xlabel("Time (s)")
+        ax_pitch.set_ylabel("Pitch Angle (degrees)")
+        ax_pitch.legend()
+        ax_pitch.grid(True, alpha=0.3)
+        
+        # Plane plot
+        radius = self.position_display_range
+        theta = np.linspace(0, 2 * np.pi, 400)
+        ax_plane.plot(radius * np.cos(theta), radius * np.sin(theta),
+                      color="#888888", linestyle="--", label="Plate Boundary")
+        ax_plane.plot(self.position_x_log, self.position_y_log,
+                      label="Ball Path", linewidth=2, color="#1f77b4")
+        ax_plane.scatter(self.setpoint_x_log[-1], self.setpoint_y_log[-1],
+                         marker="x", color="red", s=80, label="Target")
+        ax_plane.scatter(self.position_x_log[-1], self.position_y_log[-1],
+                         marker="o", color="green", s=50, label="Last Position")
+        ax_plane.set_xlabel("X (m)")
+        ax_plane.set_ylabel("Y (m)")
+        ax_plane.set_title("Platform Plane")
+        ax_plane.set_xlim(-radius, radius)
+        ax_plane.set_ylim(-radius, radius)
+        ax_plane.set_aspect('equal', adjustable='box')
+        ax_plane.grid(True, alpha=0.2)
+        ax_plane.legend(loc="upper right")
         
         plt.tight_layout()
         plt.show()
@@ -716,6 +682,7 @@ Note: PID uses 100x error scaling (same as 1D beam balancer)
             self.root.destroy()
         except Exception:
             pass
+        self._close_telemetry_window()
     
     def run(self):
         """Entry point: starts threads, launches GUI mainloop."""
@@ -737,6 +704,146 @@ Note: PID uses 100x error scaling (same as 1D beam balancer)
         # After GUI ends, stop everything
         self.running = False
         print("[INFO] Controller stopped")
+
+    def _determine_position_range(self):
+        """Determine display radius for telemetry plots."""
+        calibration = self.config.get('calibration', {})
+        platform_radius = (self.config.get('platform_radius_m') or
+                           self.config.get('platform', {}).get('platform_radius_m') or
+                           0.0)
+
+        def safe_abs(value):
+            return abs(value) if isinstance(value, (int, float)) else 0.0
+
+        candidates = [
+            safe_abs(calibration.get('position_max_x_m')),
+            safe_abs(calibration.get('position_min_x_m')),
+            safe_abs(calibration.get('position_max_y_m')),
+            safe_abs(calibration.get('position_min_y_m')),
+            safe_abs(platform_radius)
+        ]
+        max_candidate = max([c for c in candidates if c], default=0.1)
+        return max(0.05, float(max_candidate))
+
+    def show_telemetry_window(self):
+        """Ensure telemetry window is visible."""
+        if self.telemetry_window is None or not self.telemetry_window.winfo_exists():
+            self.create_telemetry_window()
+        else:
+            self.telemetry_window.deiconify()
+            self.telemetry_window.lift()
+
+    def create_telemetry_window(self):
+        """Create telemetry overlay window with live data."""
+        self.telemetry_window = tk.Toplevel(self.root)
+        self.telemetry_window.title("Telemetry - Position vs Setpoint")
+        self.telemetry_window.geometry("420x520")
+        self.telemetry_window.protocol("WM_DELETE_WINDOW", self._close_telemetry_window)
+        
+        self.telemetry_actual_label = ttk.Label(self.telemetry_window, text="Ball: X=0.000m, Y=0.000m",
+                                                font=("Consolas", 12))
+        self.telemetry_actual_label.pack(pady=5)
+        self.telemetry_target_label = ttk.Label(self.telemetry_window, text="Setpoint: X=0.000m, Y=0.000m",
+                                                font=("Consolas", 12))
+        self.telemetry_target_label.pack(pady=5)
+        self.telemetry_error_label = ttk.Label(self.telemetry_window, text="Error: X=0.000m, Y=0.000m",
+                                               font=("Consolas", 12, "bold"))
+        self.telemetry_error_label.pack(pady=5)
+        
+        self.telemetry_canvas = tk.Canvas(self.telemetry_window,
+                                          width=self.telemetry_canvas_size,
+                                          height=self.telemetry_canvas_size,
+                                          bg="#111111", highlightthickness=0)
+        self.telemetry_canvas.pack(pady=10)
+        self.update_telemetry(force=True)
+
+    def _close_telemetry_window(self):
+        """Handle telemetry window close event."""
+        if self.telemetry_window is not None:
+            try:
+                self.telemetry_window.destroy()
+            except Exception:
+                pass
+        self.telemetry_window = None
+        self.telemetry_canvas = None
+
+    def update_telemetry(self, force=False):
+        """Update telemetry labels and canvas."""
+        if (self.telemetry_window is None or
+                self.telemetry_canvas is None or
+                not self.telemetry_window.winfo_exists()):
+            if force:
+                self.show_telemetry_window()
+            return
+        
+        x, y = self.latest_position
+        err_x, err_y = self.latest_error
+        
+        self.telemetry_actual_label.config(text=f"Ball:     X={x:+0.4f} m  |  Y={y:+0.4f} m")
+        self.telemetry_target_label.config(text=f"Setpoint: X={self.setpoint_x:+0.4f} m  |  Y={self.setpoint_y:+0.4f} m")
+        self.telemetry_error_label.config(text=f"Error:    X={err_x:+0.4f} m  |  Y={err_y:+0.4f} m")
+        
+        canvas = self.telemetry_canvas
+        canvas.delete("all")
+        size = self.telemetry_canvas_size
+        center = size / 2
+        radius_px = center - 20
+        
+        # Draw plate boundary
+        canvas.create_oval(center - radius_px, center - radius_px,
+                           center + radius_px, center + radius_px,
+                           outline="#666", width=2)
+        canvas.create_line(center, 10, center, size - 10, fill="#333")
+        canvas.create_line(10, center, size - 10, center, fill="#333")
+        
+        def to_canvas(px, py):
+            scale = radius_px / self.position_display_range
+            limit = self.position_display_range * 1.1
+            px = max(min(px, limit), -limit)
+            py = max(min(py, limit), -limit)
+            cx = center + px * scale
+            cy = center - py * scale
+            return cx, cy
+        
+        # Draw setpoint and actual positions
+        spx, spy = to_canvas(self.setpoint_x, self.setpoint_y)
+        bx, by = to_canvas(x, y)
+        canvas.create_oval(spx - 6, spy - 6, spx + 6, spy + 6,
+                           outline="#ff5555", width=2)
+        canvas.create_oval(bx - 6, by - 6, bx + 6, by + 6,
+                           fill="#55ff55", outline="")
+        canvas.create_line(spx, spy, bx, by, fill="#ffaa00", dash=(3, 3))
+        
+        # Draw motor positions if available in config
+        motor_positions_pixels = self.config.get('motor_positions_pixels', None)
+        platform_center_pixels = self.config.get('platform_center_pixels', None)
+        pixel_to_meter_ratio = self.config.get('calibration', {}).get('pixel_to_meter_ratio', None)
+        
+        if motor_positions_pixels and platform_center_pixels and pixel_to_meter_ratio:
+            motor_colors = ["#ff00ff", "#00ffff", "#ffff00"]  # Magenta, Cyan, Yellow
+            center_x_px, center_y_px = platform_center_pixels[0], platform_center_pixels[1]
+            
+            for i, motor_pos_px in enumerate(motor_positions_pixels):
+                if len(motor_pos_px) == 2:
+                    # Convert pixel position to meters relative to platform center
+                    motor_x_px, motor_y_px = motor_pos_px[0], motor_pos_px[1]
+                    motor_x_m = (motor_x_px - center_x_px) * pixel_to_meter_ratio
+                    motor_y_m = (motor_y_px - center_y_px) * pixel_to_meter_ratio
+                    
+                    # Convert to canvas coordinates
+                    mx, my = to_canvas(motor_x_m, motor_y_m)
+                    
+                    # Draw motor position
+                    color = motor_colors[i % len(motor_colors)]
+                    canvas.create_oval(mx - 5, my - 5, mx + 5, my + 5,
+                                       fill=color, outline="", width=1)
+                    canvas.create_oval(mx - 7, my - 7, mx + 7, my + 7,
+                                       outline=color, width=2)
+                    # Draw line from center to motor
+                    canvas.create_line(center, center, mx, my, fill=color, width=1, dash=(2, 2))
+                    # Label motor
+                    canvas.create_text(mx + 12, my + 12, text=f"M{i+1}", 
+                                      fill=color, font=("Arial", 10, "bold"))
 
 if __name__ == "__main__":
     try:
