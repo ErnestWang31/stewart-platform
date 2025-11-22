@@ -44,15 +44,15 @@ class ZNCaptureController:
     """Controller that automates Ku/Tu capture for a chosen axis."""
 
     DEFAULT_CAPTURE_CONFIG = {
-        "kp_step": 0.15,
+        "kp_step": 0.05,
         "kp_max": 20.0,
         "dwell_time_sec": 7.0,
         "analysis_window_sec": 12.0,
         "min_amplitude_m": 0.005,  # 5 mm
         "period_tolerance": 0.25,
         "amplitude_tolerance": 0.30,
-        "min_cycles": 6,
-        "max_position_ratio": 0.9,  # fraction of platform radius allowed
+        "min_cycles": 8,
+        "max_position_ratio": 0.95,  # fraction of platform radius allowed
     }
 
     def __init__(self, config_file: str = "config_stewart.json") -> None:
