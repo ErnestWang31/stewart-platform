@@ -25,18 +25,22 @@ class StewartPlatformCalibrator:
         
         # Calibration state tracking
         self.current_frame = None  # Current video frame
-        self.phase = "color"  # Current phase: "color", "geometry", "complete"
+        self.phase = "color"  # Current phase: "color", "motor_calibration", "complete"
         
         # Color calibration data
         self.hsv_samples = []  # Collected HSV color samples
         self.lower_hsv = None  # Lower HSV bound for ball detection
         self.upper_hsv = None  # Upper HSV bound for ball detection
         
-        # Geometry calibration data (circular platform)
-        self.platform_center = None  # Platform center pixel coordinates
-        self.platform_edge_point = None  # Platform edge point for radius calculation
-        self.platform_radius_pixels = None  # Platform radius in pixels
+        # Platform geometry (calculated from motor calibration)
+        self.platform_center = None  # Platform center pixel coordinates (from motor calibration)
+        self.platform_radius_pixels = None  # Platform radius in pixels (from motor calibration)
         self.pixel_to_meter_ratio = None  # Conversion ratio from pixels to meters (uniform for circle)
+        
+        # Motor calibration data (3-point calibration)
+        self.motor_positions = []  # List of 3 motor positions in pixels [(x1,y1), (x2,y2), (x3,y3)]
+        self.motor_angles_deg = None  # Angular positions of motors in degrees [angle1, angle2, angle3]
+        self.motor_offset_deg = None  # Offset angle for motor 1
         
         # Platform hardware configuration
         self.servos = [None, None, None]  # Serial connections to servos
@@ -46,11 +50,6 @@ class StewartPlatformCalibrator:
         self.servo_timeout = 1.0
         self.servo_write_timeout = 0.05
         
-        # Position limit results
-        self.position_min_x = None  # Minimum ball position in X (meters)
-        self.position_max_x = None  # Maximum ball position in X (meters)
-        self.position_min_y = None  # Minimum ball position in Y (meters)
-        self.position_max_y = None  # Maximum ball position in Y (meters)
     
     def connect_servos(self):
         """Establish serial connections to servo motors.
@@ -100,17 +99,17 @@ class StewartPlatformCalibrator:
             if self.phase == "color":
                 # Color sampling phase - collect HSV samples at click point
                 self.sample_color(x, y)
-            elif self.phase == "geometry":
-                if self.platform_center is None:
-                    # First click: platform center
-                    self.platform_center = (x, y)
-                    print(f"[GEO] Platform center selected at ({x}, {y})")
-                    print("[GEO] Now click on the platform edge to set radius")
-                elif self.platform_edge_point is None:
-                    # Second click: platform edge point
-                    self.platform_edge_point = (x, y)
-                    print(f"[GEO] Platform edge selected at ({x}, {y})")
-                    self.calculate_geometry()
+            elif self.phase == "motor_calibration":
+                # Motor calibration phase - collect 3 motor positions
+                if len(self.motor_positions) < 3:
+                    self.motor_positions.append((x, y))
+                    motor_num = len(self.motor_positions)
+                    print(f"[MOTOR] Motor {motor_num} selected at ({x}, {y})")
+                    if len(self.motor_positions) < 3:
+                        print(f"[MOTOR] Click on motor {motor_num + 1}")
+                    else:
+                        print("[MOTOR] All 3 motors selected, calculating calibration...")
+                        self.calculate_motor_calibration()
     
     def sample_color(self, x, y):
         """Sample HSV color values in a 5x5 region around click point.
@@ -157,27 +156,134 @@ class StewartPlatformCalibrator:
             
             print(f"[COLOR] Samples: {len(self.hsv_samples)}")
     
-    def calculate_geometry(self):
-        """Calculate pixel-to-meter conversion ratio from circular platform geometry."""
-        if self.platform_center is None or self.platform_edge_point is None:
+    def calculate_motor_calibration(self):
+        """Calculate motor positions and angles from 3-point calibration.
+        
+        Uses 3 motor positions to:
+        1. Calculate platform center (circumcenter of triangle formed by 3 motors)
+        2. Calculate platform radius (average distance from center to motors)
+        3. Calculate angular positions of motors relative to motor 1
+        4. Determine motor 1 offset angle
+        """
+        if len(self.motor_positions) != 3:
             return
         
-        # Calculate radius in pixels
-        dx = self.platform_edge_point[0] - self.platform_center[0]
-        dy = self.platform_edge_point[1] - self.platform_center[1]
-        self.platform_radius_pixels = np.sqrt(dx*dx + dy*dy)
+        # Extract motor positions
+        p1 = np.array(self.motor_positions[0])
+        p2 = np.array(self.motor_positions[1])
+        p3 = np.array(self.motor_positions[2])
         
-        # Calculate pixel-to-meter conversion ratio
-        # For a circular platform, the ratio is uniform in all directions
-        self.pixel_to_meter_ratio = self.PLATFORM_RADIUS_M / self.platform_radius_pixels
+        # Calculate circumcenter of triangle (platform center)
+        # Using formula for circumcenter: intersection of perpendicular bisectors
+        # Vector from p1 to p2 and p1 to p3
+        v12 = p2 - p1
+        v13 = p3 - p1
         
-        # Store for compatibility with ball detection (X and Y use same ratio for circle)
-        self.pixel_to_meter_ratio_x = self.pixel_to_meter_ratio
-        self.pixel_to_meter_ratio_y = self.pixel_to_meter_ratio
+        # Check if points are collinear
+        cross_product = v12[0] * v13[1] - v12[1] * v13[0]
+        if abs(cross_product) < 1e-6:
+            # Points are collinear, use centroid as fallback
+            center = (p1 + p2 + p3) / 3.0
+            print("[MOTOR] Warning: Motors appear collinear, using centroid")
+        else:
+            # Calculate perpendicular bisectors
+            # Midpoint of edge p1-p2
+            mid12 = (p1 + p2) / 2.0
+            # Midpoint of edge p1-p3
+            mid13 = (p1 + p3) / 2.0
+            
+            # Direction vectors perpendicular to edges (rotated 90 degrees)
+            # Perpendicular to v12: rotate by 90 degrees
+            dir12 = np.array([-v12[1], v12[0]])
+            # Perpendicular to v13: rotate by 90 degrees
+            dir13 = np.array([-v13[1], v13[0]])
+            
+            # Normalize direction vectors
+            norm12 = np.linalg.norm(dir12)
+            norm13 = np.linalg.norm(dir13)
+            
+            if norm12 < 1e-6 or norm13 < 1e-6:
+                # Degenerate case, use centroid
+                center = (p1 + p2 + p3) / 3.0
+                print("[MOTOR] Warning: Degenerate triangle, using centroid")
+            else:
+                dir12 = dir12 / norm12
+                dir13 = dir13 / norm13
+                
+                # Solve for intersection of perpendicular bisectors
+                # Line 1: mid12 + t * dir12
+                # Line 2: mid13 + s * dir13
+                # Find t such that mid12 + t*dir12 = mid13 + s*dir13
+                # Rearranged: t*dir12 - s*dir13 = mid13 - mid12
+                A = np.array([[dir12[0], -dir13[0]], [dir12[1], -dir13[1]]])
+                b_vec = mid13 - mid12
+                
+                try:
+                    # Solve for t
+                    t = np.linalg.solve(A, b_vec)[0]
+                    center = mid12 + t * dir12
+                except np.linalg.LinAlgError:
+                    # Fallback to centroid if solve fails
+                    center = (p1 + p2 + p3) / 3.0
+                    print("[MOTOR] Warning: Solve failed, using centroid")
         
-        print(f"[GEO] Platform center: {self.platform_center}")
-        print(f"[GEO] Platform radius: {self.platform_radius_pixels:.2f} pixels = {self.PLATFORM_RADIUS_M:.4f} meters")
-        print(f"[GEO] Pixel-to-meter ratio: {self.pixel_to_meter_ratio:.6f} m/pixel")
+        # Update platform center
+        self.platform_center = tuple(center.astype(int))
+        
+        # Calculate radius as average distance from center to motors
+        r1 = np.linalg.norm(p1 - center)
+        r2 = np.linalg.norm(p2 - center)
+        r3 = np.linalg.norm(p3 - center)
+        self.platform_radius_pixels = (r1 + r2 + r3) / 3.0
+        
+        # Recalculate pixel-to-meter ratio if we have a known physical radius
+        if self.PLATFORM_RADIUS_M > 0:
+            self.pixel_to_meter_ratio = self.PLATFORM_RADIUS_M / self.platform_radius_pixels
+            self.pixel_to_meter_ratio_x = self.pixel_to_meter_ratio
+            self.pixel_to_meter_ratio_y = self.pixel_to_meter_ratio
+        
+        # Calculate angular positions of motors relative to center
+        # Angle measured from positive X axis, counter-clockwise
+        # Note: Controller expects -90° to be "up" (0° in controller = -90° in calibration)
+        def angle_from_center(point):
+            """Calculate angle in degrees from center to point."""
+            dx = point[0] - center[0]
+            dy = point[1] - center[1]
+            angle_rad = np.arctan2(dy, dx)
+            angle_deg = np.degrees(angle_rad)
+            # Normalize to 0-360
+            if angle_deg < 0:
+                angle_deg += 360
+            return angle_deg
+        
+        angle1 = angle_from_center(p1)
+        angle2 = angle_from_center(p2)
+        angle3 = angle_from_center(p3)
+        
+        # Motor 1 offset is its angle (this is the reference)
+        self.motor_offset_deg = angle1
+        
+        # Calculate relative angles (motor 1 is at offset, others relative to it)
+        # Normalize so motor 1 is at 0 degrees (after applying offset)
+        motor1_angle = 0.0  # Motor 1 is the reference
+        motor2_angle = angle2 - angle1
+        motor3_angle = angle3 - angle1
+        
+        # Normalize angles to 0-360
+        if motor2_angle < 0:
+            motor2_angle += 360
+        if motor3_angle < 0:
+            motor3_angle += 360
+        
+        # Store absolute angles (for reference) and relative angles
+        self.motor_angles_deg = [angle1, angle2, angle3]
+        
+        print(f"[MOTOR] Platform center: ({center[0]:.1f}, {center[1]:.1f})")
+        print(f"[MOTOR] Platform radius: {self.platform_radius_pixels:.2f} pixels")
+        print(f"[MOTOR] Motor 1 angle: {angle1:.2f}° (offset: {self.motor_offset_deg:.2f}°)")
+        print(f"[MOTOR] Motor 2 angle: {angle2:.2f}° (relative: {motor2_angle:.2f}°)")
+        print(f"[MOTOR] Motor 3 angle: {angle3:.2f}° (relative: {motor3_angle:.2f}°)")
+        print(f"[MOTOR] Pixel-to-meter ratio: {self.pixel_to_meter_ratio:.6f} m/pixel")
         
         # Advance to complete phase
         self.phase = "complete"
@@ -235,69 +341,6 @@ class StewartPlatformCalibrator:
         else:
             return None
     
-    def find_limits_automatically(self):
-        """Use servo motors to automatically find ball position limits."""
-        if not any(self.servos):
-            # Estimate limits without servos if connection failed
-            self.position_min_x = -self.PLATFORM_SIZE_X_M / 2
-            self.position_max_x = self.PLATFORM_SIZE_X_M / 2
-            self.position_min_y = -self.PLATFORM_SIZE_Y_M / 2
-            self.position_max_y = self.PLATFORM_SIZE_Y_M / 2
-            print("[LIMITS] Estimated without servos")
-            return
-        
-        print("[LIMITS] Finding limits with servos...")
-        positions_x = []
-        positions_y = []
-        
-        # Test platform at different tilt angles to find position range
-        # Test angles: neutral, roll left, roll right, pitch forward, pitch backward
-        test_configs = [
-            ([15, 15, 15], "neutral"),
-            ([20, 12, 12], "roll_left"),
-            ([10, 18, 18], "roll_right"),
-            ([15, 20, 10], "pitch_forward"),
-            ([15, 10, 20], "pitch_backward")
-        ]
-        
-        for angles, name in test_configs:
-            # Move platform to test configuration
-            self.send_servo_angles(angles)
-            time.sleep(2)  # Wait for ball to settle
-            
-            # Collect multiple position measurements
-            config_positions = []
-            start_time = time.time()
-            while time.time() - start_time < 1.0:
-                ret, frame = self.cap.read()
-                if ret:
-                    pos = self.detect_ball_position(frame)
-                    if pos is not None:
-                        config_positions.append(pos)
-                time.sleep(0.05)
-            
-            # Calculate average position for this configuration
-            if config_positions:
-                avg_pos_x = np.mean([p[0] for p in config_positions])
-                avg_pos_y = np.mean([p[1] for p in config_positions])
-                positions_x.append(avg_pos_x)
-                positions_y.append(avg_pos_y)
-                print(f"[LIMITS] {name}: X={avg_pos_x:.4f}m, Y={avg_pos_y:.4f}m")
-        
-        # Return platform to neutral position
-        self.send_servo_angles(self.neutral_angles)
-        
-        # Determine position limits from collected data
-        if len(positions_x) >= 2:
-            self.position_min_x = min(positions_x)
-            self.position_max_x = max(positions_x)
-            self.position_min_y = min(positions_y)
-            self.position_max_y = max(positions_y)
-            print(f"[LIMITS] X Range: {self.position_min_x:.4f}m to {self.position_max_x:.4f}m")
-            print(f"[LIMITS] Y Range: {self.position_min_y:.4f}m to {self.position_max_y:.4f}m")
-        else:
-            print("[LIMITS] Failed to find limits")
-    
     def save_config(self):
         """Save all calibration results to config_stewart.json file.
         
@@ -339,10 +382,14 @@ class StewartPlatformCalibrator:
         config["calibration"]["pixel_to_meter_ratio"] = float(self.pixel_to_meter_ratio) if self.pixel_to_meter_ratio else None
         config["calibration"]["pixel_to_meter_ratio_x"] = float(self.pixel_to_meter_ratio) if self.pixel_to_meter_ratio else None
         config["calibration"]["pixel_to_meter_ratio_y"] = float(self.pixel_to_meter_ratio) if self.pixel_to_meter_ratio else None
-        config["calibration"]["position_min_x_m"] = float(self.position_min_x) if self.position_min_x else None
-        config["calibration"]["position_max_x_m"] = float(self.position_max_x) if self.position_max_x else None
-        config["calibration"]["position_min_y_m"] = float(self.position_min_y) if self.position_min_y else None
-        config["calibration"]["position_max_y_m"] = float(self.position_max_y) if self.position_max_y else None
+        
+        # Update motor calibration data (3-point calibration)
+        if len(self.motor_positions) == 3:
+            config["motor_positions_pixels"] = [[int(p[0]), int(p[1])] for p in self.motor_positions]
+            if self.motor_angles_deg:
+                config["motor_angles_deg"] = [float(a) for a in self.motor_angles_deg]
+            if self.motor_offset_deg is not None:
+                config["axis_rotation_deg"] = float(self.motor_offset_deg)
         
         # Update servo settings (preserve existing fields like motor_direction_invert)
         if "servo" not in config:
@@ -400,8 +447,8 @@ class StewartPlatformCalibrator:
         # Phase-specific instruction text
         phase_text = {
             "color": "Click on ball to sample colors. Press 'c' when done.",
-            "geometry": "Click on platform center, then click on platform edge (2 points)",
-            "complete": "Calibration complete! Press 's' to save, 'l' to find limits"
+            "motor_calibration": f"Click on 3 motors ({len(self.motor_positions)}/3 clicked)",
+            "complete": "Calibration complete! Press 's' to save, 'q' to quit"
         }
         
         # Draw current phase and instructions
@@ -415,22 +462,25 @@ class StewartPlatformCalibrator:
             cv2.putText(overlay, f"Color samples: {len(self.hsv_samples)}", (10, 90),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
         
-        # Show geometry calibration points (circular platform)
-        if self.platform_center:
+        # Show platform center and circle (from motor calibration)
+        if self.platform_center and self.platform_radius_pixels:
+            radius = int(self.platform_radius_pixels)
+            cv2.circle(overlay, self.platform_center, radius, (255, 0, 0), 2)
             cv2.circle(overlay, self.platform_center, 8, (0, 255, 0), -1)
             cv2.putText(overlay, "Center", (self.platform_center[0]+10, self.platform_center[1]-10),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
         
-        if self.platform_edge_point:
-            cv2.circle(overlay, self.platform_edge_point, 8, (0, 255, 0), -1)
-            cv2.putText(overlay, "Edge", (self.platform_edge_point[0]+10, self.platform_edge_point[1]-10),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-        
-        # Draw platform circle if center and edge are selected
-        if self.platform_center and self.platform_edge_point:
-            radius = int(np.sqrt((self.platform_edge_point[0] - self.platform_center[0])**2 + 
-                                (self.platform_edge_point[1] - self.platform_center[1])**2))
-            cv2.circle(overlay, self.platform_center, radius, (255, 0, 0), 2)
+        # Show motor calibration points
+        motor_colors = [(255, 0, 255), (0, 255, 255), (255, 255, 0)]  # Magenta, Cyan, Yellow
+        for i, motor_pos in enumerate(self.motor_positions):
+            color = motor_colors[i % len(motor_colors)]
+            cv2.circle(overlay, motor_pos, 10, color, -1)
+            cv2.circle(overlay, motor_pos, 12, color, 2)
+            cv2.putText(overlay, f"M{i+1}", (motor_pos[0]+15, motor_pos[1]+5),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+            # Draw line from center to motor if center is known
+            if self.platform_center:
+                cv2.line(overlay, self.platform_center, motor_pos, color, 1)
         
         # Show real-time ball detection if color calibration is complete
         if self.lower_hsv:
@@ -453,26 +503,13 @@ class StewartPlatformCalibrator:
                     cv2.circle(overlay, (int(x), int(y)), int(radius), (0, 255, 255), 2)
                     cv2.circle(overlay, (int(x), int(y)), 3, (0, 255, 255), -1)
                     
-                    # Show position if geometry calibration is complete
+                    # Show position if calibration is complete
                     if self.pixel_to_meter_ratio:
                         pos = self.detect_ball_position(frame)
                         if pos is not None:
                             cv2.putText(overlay, f"Pos: X={pos[0]:.4f}m, Y={pos[1]:.4f}m",
                                        (int(x)+20, int(y)+20),
                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
-        
-        # Show final results if limit calibration is complete
-        if (self.position_min_x is not None and self.position_max_x is not None and
-            self.position_min_y is not None and self.position_max_y is not None):
-            # For circular platform, show radial limits
-            max_radius = np.sqrt(max(self.position_max_x**2, self.position_min_x**2, 
-                                    self.position_max_y**2, self.position_min_y**2))
-            cv2.putText(overlay, f"X Range: {self.position_min_x:.4f}m to {self.position_max_x:.4f}m",
-                       (10, overlay.shape[0] - 40),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
-            cv2.putText(overlay, f"Y Range: {self.position_min_y:.4f}m to {self.position_max_y:.4f}m",
-                       (10, overlay.shape[0] - 20),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
         
         return overlay
     
@@ -494,8 +531,7 @@ class StewartPlatformCalibrator:
         # Display instructions
         print("[INFO] Stewart Platform 2D Calibration (Circular Platform)")
         print("Phase 1: Click on ball to sample colors, press 'c' when done")
-        print("Phase 2: Click on platform center, then click on platform edge")
-        print("Phase 3: Press 'l' to find limits automatically")
+        print("Phase 2: Click on 3 motors (any order) for motor calibration")
         print("Press 's' to save, 'q' to quit")
         
         # Main calibration loop
@@ -519,11 +555,8 @@ class StewartPlatformCalibrator:
             elif key == ord('c') and self.phase == "color":
                 # Complete color calibration phase
                 if self.hsv_samples:
-                    self.phase = "geometry"
-                    print("[INFO] Color calibration complete. Click on platform corners.")
-            elif key == ord('l') and self.phase == "complete":
-                # Start automatic limit finding
-                self.find_limits_automatically()
+                    self.phase = "motor_calibration"
+                    print("[INFO] Color calibration complete. Click on the 3 motors (any order).")
             elif key == ord('s') and self.phase == "complete":
                 # Save configuration and exit
                 self.save_config()

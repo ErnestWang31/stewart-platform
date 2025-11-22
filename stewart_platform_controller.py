@@ -222,6 +222,9 @@ class StewartPlatformController:
     def _simplified_motor_mapping(self, roll_angle, pitch_angle):
         """Simplified trigonometric mapping (fallback method).
         
+        Uses calibrated motor angles from 3-point calibration if available,
+        otherwise falls back to default angles.
+        
         Args:
             roll_angle: Roll angle in degrees
             pitch_angle: Pitch angle in degrees
@@ -229,10 +232,20 @@ class StewartPlatformController:
         Returns:
             tuple: (motor1_angle, motor2_angle, motor3_angle) in degrees
         """
-        # Motor positions in degrees (from +X axis, counter-clockwise)
-        motor1_angle_deg = 90
-        motor2_angle_deg = 210
-        motor3_angle_deg = 330
+        # Get motor angles from calibration if available
+        motor_angles_deg = self.config.get('motor_angles_deg', None)
+        
+        if motor_angles_deg and len(motor_angles_deg) == 3:
+            # Use calibrated motor angles (absolute angles from 3-point calibration)
+            # These angles are already calculated relative to the platform center
+            motor1_angle_deg = -motor_angles_deg[0]
+            motor2_angle_deg = -motor_angles_deg[1]
+            motor3_angle_deg = -motor_angles_deg[2]
+        else:
+            # Fallback to default angles (120° spacing, starting at -90°)
+            motor1_angle_deg = -90
+            motor2_angle_deg = -210
+            motor3_angle_deg = -330
         
         # Convert to radians
         motor1_angle_rad = np.radians(motor1_angle_deg)
@@ -247,7 +260,6 @@ class StewartPlatformController:
         
         # Convert height changes to motor angles
         # Scale factor: platform tilt degrees -> servo angle change
-        # For most platforms, 1:1 mapping works, but you may need to adjust
         scale_factor = self.config.get('platform', {}).get('motor_scale_factor', 1.0)
         
         # Apply direction inversion if configured (multiply by -1 if inverted)
@@ -259,7 +271,7 @@ class StewartPlatformController:
         motor2_angle = self.neutral_angles[1] + motor2_height * scale_factor * motor2_dir
         motor3_angle = self.neutral_angles[2] + motor3_height * scale_factor * motor3_dir
         
-        # DEBUG: Show intermediate calculations
+        # DEBUG to show intermediate calculations
         if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
             print(f"[MAPPING] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
                   f"Heights: M1={motor1_height:.2f}, M2={motor2_height:.2f}, M3={motor3_height:.2f} -> "

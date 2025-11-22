@@ -10,8 +10,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define SERVO_FREQ 50   // 50 Hz for analog servos
 #define ZERO_POS  375   // midpoint between 280 and 415 ≈ neutral
 
-// Servo channel assignments (0, 1, 2 on the PWM driver)
-const uint8_t SERVO_CH[3] = {0, 15, 7};
+const uint8_t SERVO_CH[3] = {0, 7, 15};
 
 // Servo angle configuration
 #define MIN_ANGLE 0     // Minimum angle in degrees (0-30 range)
