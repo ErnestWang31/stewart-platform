@@ -23,6 +23,16 @@ class StewartPlatformCalibrator:
         self.CAM_INDEX = 1  # Default camera index
         self.FRAME_W, self.FRAME_H = 640, 480  # Frame dimensions
         
+        # Load offset adjustment from config if it exists (for trial and error)
+        try:
+            with open("config_stewart.json", "r") as f:
+                config = json.load(f)
+                self.offset_adjustment_deg = config.get("offset_adjustment_deg", 0.0)
+                if self.offset_adjustment_deg != 0.0:
+                    print(f"[CALIB] Loaded offset adjustment: {self.offset_adjustment_deg:.2f}°")
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass  # Use default 0.0 if config doesn't exist
+        
         # Calibration state tracking
         self.current_frame = None  # Current video frame
         self.phase = "color"  # Current phase: "color", "motor_calibration", "complete"
@@ -41,6 +51,7 @@ class StewartPlatformCalibrator:
         self.motor_positions = []  # List of 3 motor positions in pixels [(x1,y1), (x2,y2), (x3,y3)]
         self.motor_angles_deg = None  # Angular positions of motors in degrees [angle1, angle2, angle3]
         self.motor_offset_deg = None  # Offset angle for motor 1
+        self.offset_adjustment_deg = 0.0  # Manual adjustment for trial and error (adds to offset)
         
         # Platform hardware configuration
         self.servos = [None, None, None]  # Serial connections to servos
@@ -147,11 +158,14 @@ class StewartPlatformCalibrator:
                 max(0, np.min(samples[:, 2]) - v_margin)
             ]
             
-            # Set upper bounds with margin
+            # Set upper bounds with margin (prevent overflow by using np.clip)
+            max_h = float(np.max(samples[:, 0]))
+            max_s = float(np.max(samples[:, 1]))
+            max_v = float(np.max(samples[:, 2]))
             self.upper_hsv = [
-                min(179, np.max(samples[:, 0]) + h_margin),
-                min(255, np.max(samples[:, 1]) + s_margin),
-                min(255, np.max(samples[:, 2]) + v_margin)
+                min(179, max_h + h_margin),
+                min(255, max_s + s_margin),
+                min(255, max_v + v_margin)
             ]
             
             print(f"[COLOR] Samples: {len(self.hsv_samples)}")
@@ -227,8 +241,8 @@ class StewartPlatformCalibrator:
                     center = (p1 + p2 + p3) / 3.0
                     print("[MOTOR] Warning: Solve failed, using centroid")
         
-        # Update platform center
-        self.platform_center = tuple(center.astype(int))
+        # Update platform center (convert NumPy types to native Python ints)
+        self.platform_center = tuple(int(x) for x in center.astype(int))
         
         # Calculate radius as average distance from center to motors
         r1 = np.linalg.norm(p1 - center)
@@ -260,7 +274,7 @@ class StewartPlatformCalibrator:
         angle2 = angle_from_center(p2)
         angle3 = angle_from_center(p3)
         
-        # Motor 1 offset is its angle (this is the reference)
+        # Motor 1 offset is its logged angle (use directly, no adjustment)
         self.motor_offset_deg = angle1
         
         # Calculate relative angles (motor 1 is at offset, others relative to it)
@@ -341,6 +355,28 @@ class StewartPlatformCalibrator:
         else:
             return None
     
+    def _convert_to_native_types(self, obj):
+        """Recursively convert NumPy types to native Python types for JSON serialization.
+        
+        Args:
+            obj: Object that may contain NumPy types
+            
+        Returns:
+            Object with all NumPy types converted to native Python types
+        """
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {key: self._convert_to_native_types(value) for key, value in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [self._convert_to_native_types(item) for item in obj]
+        else:
+            return obj
+    
     def save_config(self):
         """Save all calibration results to config_stewart.json file.
         
@@ -348,11 +384,17 @@ class StewartPlatformCalibrator:
         calibration-related fields.
         """
         # Load existing config if it exists, otherwise start with empty dict
+        # Handle both file not found and corrupted JSON gracefully
         try:
             with open("config_stewart.json", "r") as f:
                 config = json.load(f)
-        except FileNotFoundError:
+            # Update offset adjustment from config if it changed
+            if "offset_adjustment_deg" in config:
+                self.offset_adjustment_deg = config.get("offset_adjustment_deg", 0.0)
+        except (FileNotFoundError, json.JSONDecodeError):
+            # If file doesn't exist or is corrupted, start with empty config
             config = {}
+            print("[SAVE] Warning: Could not load existing config (file not found or corrupted), starting fresh")
         
         # Update timestamp
         config["timestamp"] = datetime.now().isoformat()
@@ -389,7 +431,16 @@ class StewartPlatformCalibrator:
             if self.motor_angles_deg:
                 config["motor_angles_deg"] = [float(a) for a in self.motor_angles_deg]
             if self.motor_offset_deg is not None:
-                config["axis_rotation_deg"] = float(self.motor_offset_deg)
+                # Apply adjustment and save the final offset
+                final_offset = self.motor_offset_deg + self.offset_adjustment_deg
+                # Normalize to 0-360 range
+                final_offset = final_offset % 360
+                if final_offset < 0:
+                    final_offset += 360
+                config["axis_rotation_deg"] = float(final_offset)
+                # Save the adjustment so it can be easily edited for trial and error
+                config["offset_adjustment_deg"] = float(self.offset_adjustment_deg)
+                print(f"[SAVE] Offset: {self.motor_offset_deg:.2f}° + adjustment: {self.offset_adjustment_deg:.2f}° = {final_offset:.2f}°")
         
         # Update servo settings (preserve existing fields like motor_direction_invert)
         if "servo" not in config:
@@ -426,6 +477,9 @@ class StewartPlatformCalibrator:
         if "max_pitch_angle" not in config["platform"]:
             config["platform"]["max_pitch_angle"] = 15.0
         # Note: Other platform fields (like use_inverse_kinematics, motor_scale_factor, etc.) are preserved
+        
+        # Convert all NumPy types to native Python types before JSON serialization
+        config = self._convert_to_native_types(config)
         
         # Write configuration to JSON file
         with open("config_stewart.json", "w") as f:

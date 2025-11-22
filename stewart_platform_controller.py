@@ -238,9 +238,9 @@ class StewartPlatformController:
         if motor_angles_deg and len(motor_angles_deg) == 3:
             # Use calibrated motor angles (absolute angles from 3-point calibration)
             # These angles are already calculated relative to the platform center
-            motor1_angle_deg = -motor_angles_deg[0]
-            motor2_angle_deg = -motor_angles_deg[1]
-            motor3_angle_deg = -motor_angles_deg[2]
+            motor1_angle_deg = -motor_angles_deg[0]-120
+            motor2_angle_deg = -motor_angles_deg[2]-120
+            motor3_angle_deg = -motor_angles_deg[1]-120
         else:
             # Fallback to default angles (120° spacing, starting at -90°)
             motor1_angle_deg = -90
@@ -713,6 +713,37 @@ class StewartPlatformController:
         canvas.create_oval(bx - 6, by - 6, bx + 6, by + 6,
                            fill="#55ff55", outline="")
         canvas.create_line(spx, spy, bx, by, fill="#ffaa00", dash=(3, 3))
+        
+        # Draw motor positions if available in config
+        motor_positions_pixels = self.config.get('motor_positions_pixels', None)
+        platform_center_pixels = self.config.get('platform_center_pixels', None)
+        pixel_to_meter_ratio = self.config.get('calibration', {}).get('pixel_to_meter_ratio', None)
+        
+        if motor_positions_pixels and platform_center_pixels and pixel_to_meter_ratio:
+            motor_colors = ["#ff00ff", "#00ffff", "#ffff00"]  # Magenta, Cyan, Yellow
+            center_x_px, center_y_px = platform_center_pixels[0], platform_center_pixels[1]
+            
+            for i, motor_pos_px in enumerate(motor_positions_pixels):
+                if len(motor_pos_px) == 2:
+                    # Convert pixel position to meters relative to platform center
+                    motor_x_px, motor_y_px = motor_pos_px[0], motor_pos_px[1]
+                    motor_x_m = (motor_x_px - center_x_px) * pixel_to_meter_ratio
+                    motor_y_m = (motor_y_px - center_y_px) * pixel_to_meter_ratio
+                    
+                    # Convert to canvas coordinates
+                    mx, my = to_canvas(motor_x_m, motor_y_m)
+                    
+                    # Draw motor position
+                    color = motor_colors[i % len(motor_colors)]
+                    canvas.create_oval(mx - 5, my - 5, mx + 5, my + 5,
+                                       fill=color, outline="", width=1)
+                    canvas.create_oval(mx - 7, my - 7, mx + 7, my + 7,
+                                       outline=color, width=2)
+                    # Draw line from center to motor
+                    canvas.create_line(center, center, mx, my, fill=color, width=1, dash=(2, 2))
+                    # Label motor
+                    canvas.create_text(mx + 12, my + 12, text=f"M{i+1}", 
+                                      fill=color, font=("Arial", 10, "bold"))
 
 if __name__ == "__main__":
     try:
