@@ -1,7 +1,7 @@
 {
   "timestamp": "2025-11-20T10:28:23.390653",
   "platform_type": "circular",
-  "platform_radius_m": 0.1,
+  "platform_radius_m": 0.15,
   "platform_center_pixels": [
     263,
     220
@@ -28,10 +28,10 @@
     "pixel_to_meter_ratio": 0.0006053091094582758,
     "pixel_to_meter_ratio_x": 0.0006053091094582758,
     "pixel_to_meter_ratio_y": 0.0006053091094582758,
-    "position_min_x_m": -0.1,
-    "position_max_x_m": 0.1,
-    "position_min_y_m": -0.1,
-    "position_max_y_m": 0.1
+    "position_min_x_m": -0.15,
+    "position_max_x_m": 0.15,
+    "position_min_y_m": -0.15,
+    "position_max_y_m": 0.15
   },
   "servo": {
     "port": "COM3",

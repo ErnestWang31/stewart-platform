@@ -423,7 +423,7 @@ class StewartPlatformController:
         
         # Setpoint X
         ttk.Label(self.root, text="Setpoint X (meters)", font=("Arial", 10)).pack()
-        pos_range = 0.1  # Default range
+        pos_range = 0.15  # Default range (matches platform radius)
         self.setpoint_x_var = tk.DoubleVar(value=self.setpoint_x)
         setpoint_x_slider = ttk.Scale(self.root, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_x_var,

@@ -16,7 +16,7 @@ class StewartPlatformCalibrator:
     def __init__(self):
         """Initialize calibration parameters and default values."""
         # Physical system parameters
-        self.PLATFORM_RADIUS_M = 0.1  # Known platform radius in meters (circular platform)
+        self.PLATFORM_RADIUS_M = 0.15  # Known platform radius in meters (circular platform)
         self.PLATFORM_DIAMETER_M = 2 * self.PLATFORM_RADIUS_M  # Platform diameter
         
         # Camera configuration
