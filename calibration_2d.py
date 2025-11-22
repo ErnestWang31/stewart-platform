@@ -46,9 +46,6 @@ class StewartPlatformCalibrator:
         self.platform_center = None  # Platform center pixel coordinates (from motor calibration)
         self.platform_radius_pixels = None  # Platform radius in pixels (from motor calibration)
         self.pixel_to_meter_ratio = None  # Conversion ratio from pixels to meters (uniform for circle)
-        self.motor_positions_pixels = [None, None, None]  # Pixel positions of motors 1, 2, 3
-        self.motor_angles_deg = [None, None, None]  # Angles of motors 1, 2, 3 in degrees (from +X axis, counter-clockwise)
-        self.axis_rotation_deg = 0.0  # Rotation angle to align camera frame with platform coordinate system
         
         # Motor calibration data (3-point calibration)
         self.motor_positions = []  # List of 3 motor positions in pixels [(x1,y1), (x2,y2), (x3,y3)]
@@ -57,10 +54,8 @@ class StewartPlatformCalibrator:
         self.offset_adjustment_deg = 0.0  # Manual adjustment for trial and error (adds to offset)
         
         # Platform hardware configuration
-        # All 3 motors are controlled through a single Arduino on COM3
-        # The Arduino uses an I2C PWM Servo Driver to control all 3 servos
-        self.servo_serial = None  # Single serial connection to Arduino
-        self.servo_port = "COM3"  # Single port for all motors
+        self.servos = [None, None, None]  # Serial connections to servos
+        self.servo_ports = ["COM3", "COM4", "COM5"]  # Servo communication ports
         self.neutral_angles = [15, 15, 15]  # Servo neutral position angles
         self.servo_baud = 115200
         self.servo_timeout = 1.0
@@ -68,7 +63,7 @@ class StewartPlatformCalibrator:
         
     
     def connect_servos(self):
-        """Establish serial connection to Arduino controlling all 3 servos.
+        """Establish serial connections to servo motors.
         
         Returns:
             bool: True if at least one connection successful, False otherwise
@@ -91,29 +86,16 @@ class StewartPlatformCalibrator:
         return connected
     
     def send_servo_angles(self, angles):
-        """Send angle commands to all 3 servo motors via single Arduino.
-        
-        All 3 motors are controlled through a single Arduino with I2C PWM Servo Driver.
-        Sends all 3 angles as 3 bytes: [motor1_angle, motor2_angle, motor3_angle]
+        """Send angle commands to servo motors with safety clipping.
         
         Args:
-            angles: List of 3 angles in degrees (0-30 range)
+            angles: List of 3 angles in degrees
         """
-        if self.servo_serial:
-            try:
-                # Clip all angles to safe range (0-30 degrees)
-                motor1_angle = int(np.clip(angles[0], 0, 30))
-                motor2_angle = int(np.clip(angles[1], 0, 30))
-                motor3_angle = int(np.clip(angles[2], 0, 30))
-                
-                # Send all 3 servo commands to Arduino as 3 bytes
-                # Clear input buffer periodically to prevent Arduino debug messages from filling it up
-                if self.servo_serial.in_waiting > 50:
-                    self.servo_serial.reset_input_buffer()
-                
-                self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
-            except Exception as e:
-                print(f"[ARDUINO] Send failed: {e}")
+        for i, (servo, angle) in enumerate(zip(self.servos, angles)):
+            if servo:
+                # Clip angle to safe range and send as byte
+                angle = int(np.clip(angle, 0, 30))
+                servo.write(bytes([angle]))
     
     def mouse_callback(self, event, x, y, flags, param):
         """Handle mouse click events for interactive calibration.
@@ -320,26 +302,6 @@ class StewartPlatformCalibrator:
         # Advance to complete phase
         self.phase = "complete"
     
-    def calculate_geometry(self):
-        """Legacy method for backward compatibility. Redirects to new method."""
-        if len(self.motor_attachment_points) >= 3:
-            self.calculate_geometry_from_motors()
-        elif len(self.motor_attachment_points) >= 2:
-            # Fallback: if only 2 points, use old 2-point method
-            self.calculate_geometry_from_motors()
-        elif self.platform_center is not None and self.platform_edge_point is not None:
-            # Old 2-point method (center + edge)
-            dx = self.platform_edge_point[0] - self.platform_center[0]
-            dy = self.platform_edge_point[1] - self.platform_center[1]
-            self.platform_radius_pixels = np.sqrt(dx*dx + dy*dy)
-            self.pixel_to_meter_ratio = self.PLATFORM_RADIUS_M / self.platform_radius_pixels
-            self.pixel_to_meter_ratio_x = self.pixel_to_meter_ratio
-            self.pixel_to_meter_ratio_y = self.pixel_to_meter_ratio
-            print(f"[GEO] Platform center: {self.platform_center}")
-            print(f"[GEO] Platform radius: {self.platform_radius_pixels:.2f} pixels = {self.PLATFORM_RADIUS_M:.4f} meters")
-            print(f"[GEO] Pixel-to-meter ratio: {self.pixel_to_meter_ratio:.6f} m/pixel")
-            self.phase = "complete"
-    
     def detect_ball_position(self, frame):
         """Detect ball in frame and return position in meters from center.
         
@@ -440,18 +402,8 @@ class StewartPlatformCalibrator:
         # Update platform info
         config["platform_type"] = "circular"
         config["platform_radius_m"] = float(self.PLATFORM_RADIUS_M)
-        # Convert platform_center to native Python types
-        if self.platform_center:
-            config["platform_center_pixels"] = [int(x) for x in self.platform_center]
-        else:
-            config["platform_center_pixels"] = None
+        config["platform_center_pixels"] = list(self.platform_center) if self.platform_center else None
         config["platform_radius_pixels"] = float(self.platform_radius_pixels) if self.platform_radius_pixels else None
-        
-        # Store motor positions and angles if available
-        if all(self.motor_positions_pixels):
-            config["motor_positions_pixels"] = [[int(x) for x in pos] for pos in self.motor_positions_pixels]
-            config["motor_angles_deg"] = [float(angle) for angle in self.motor_angles_deg]
-            config["axis_rotation_deg"] = float(self.axis_rotation_deg)
         
         # Update camera settings
         if "camera" not in config:
@@ -493,11 +445,7 @@ class StewartPlatformCalibrator:
         # Update servo settings (preserve existing fields like motor_direction_invert)
         if "servo" not in config:
             config["servo"] = {}
-        # Update calibration-related servo fields
-        # Store as "port" (singular) since all motors use one Arduino
-        config["servo"]["port"] = str(self.servo_port)
-        # Also keep "ports" for backward compatibility (array with single port)
-        config["servo"]["ports"] = [str(self.servo_port)]
+        config["servo"]["ports"] = [str(p) for p in self.servo_ports]
         config["servo"]["neutral_angles"] = [int(a) for a in self.neutral_angles]
         config["servo"]["baud_rate"] = int(self.servo_baud)
         config["servo"]["write_timeout_ms"] = int(self.servo_write_timeout * 1000)
@@ -522,22 +470,13 @@ class StewartPlatformCalibrator:
             config["pid"]["Kd_y"] = 0.0
         
         # Set default platform limits only if they don't exist
-        # IMPORTANT: Preserve all existing platform fields (roll_direction_invert, use_inverse_kinematics, etc.)
         if "platform" not in config:
             config["platform"] = {}
-        else:
-            # Explicitly preserve all existing platform fields (don't overwrite them)
-            # This ensures roll_direction_invert and other settings are kept
-            pass  # All existing fields in config["platform"] are already preserved
-        
-        # Only set defaults if fields don't exist
         if "max_roll_angle" not in config["platform"]:
             config["platform"]["max_roll_angle"] = 15.0
         if "max_pitch_angle" not in config["platform"]:
             config["platform"]["max_pitch_angle"] = 15.0
-        # Note: roll_direction_invert, use_inverse_kinematics, motor_scale_factor, 
-        # and all other existing platform fields are automatically preserved since
-        # we load the existing config first and only add defaults for missing fields
+        # Note: Other platform fields (like use_inverse_kinematics, motor_scale_factor, etc.) are preserved
         
         # Convert all NumPy types to native Python types before JSON serialization
         config = self._convert_to_native_types(config)
@@ -680,11 +619,11 @@ class StewartPlatformCalibrator:
         # Clean up resources
         self.cap.release()
         cv2.destroyAllWindows()
-        if self.servo_serial:
-            self.servo_serial.close()
+        for servo in self.servos:
+            if servo:
+                servo.close()
 
 if __name__ == "__main__":
     """Run calibration when script is executed directly."""
     calibrator = StewartPlatformCalibrator()
     calibrator.run()
-

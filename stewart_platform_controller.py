@@ -31,12 +31,12 @@ class StewartPlatformController:
         
         # Initialize 2D PID controller
         # X-axis (roll) PID gains
-        Kp_x = self.config.get('pid', {}).get('Kp_x', 0.0)
+        Kp_x = self.config.get('pid', {}).get('Kp_x', 10.0)
         Ki_x = self.config.get('pid', {}).get('Ki_x', 0.0)
         Kd_x = self.config.get('pid', {}).get('Kd_x', 0.0)
         
         # Y-axis (pitch) PID gains
-        Kp_y = self.config.get('pid', {}).get('Kp_y', 0.0)
+        Kp_y = self.config.get('pid', {}).get('Kp_y', 10.0)
         Ki_y = self.config.get('pid', {}).get('Ki_y', 0.0)
         Kd_y = self.config.get('pid', {}).get('Kd_y', 0.0)
         
@@ -70,10 +70,8 @@ class StewartPlatformController:
         self.servo_serial = None
         
         # Use inverse kinematics flag (can be toggled)
-        # Force to False to use simplified mapping (faster, more reliable for real-time control)
-        # Full IK uses scipy.optimize.fsolve which adds 10-50ms delay per iteration
-        self.use_inverse_kinematics = False  # Always use simplified method for real-time control
-        print("[CONTROLLER] Using simplified motor mapping (fast, <1ms delay)")
+        # Default to False to use simplified mapping (more reliable)
+        self.use_inverse_kinematics = self.config.get('platform', {}).get('use_inverse_kinematics', False)
         
         # Controller-internal state
         self.setpoint_x = 0.0
@@ -108,12 +106,12 @@ class StewartPlatformController:
                 'frame_height': 480
             },
             'pid': {
-                'Kp_x': 0.0,
+                'Kp_x': 3.0,
                 'Ki_x': 0.0,
-                'Kd_x': 0.0,
-                'Kp_y': 0.0,
+                'Kd_x': 2.0,
+                'Kp_y': 3.0,
                 'Ki_y': 0.0,
-                'Kd_y': 0.0
+                'Kd_y': 2.0
             },
             'platform': {
                 'max_roll_angle': 15.0,
@@ -159,14 +157,6 @@ class StewartPlatformController:
         roll_angle = np.clip(roll_angle, -15, 15)
         pitch_angle = np.clip(pitch_angle, -15, 15)
         
-        # Store original PID output for debugging
-        original_roll_angle = roll_angle
-        
-        # Apply roll direction inversion if configured (before IK or simplified mapping)
-        roll_direction_invert = self.config.get('platform', {}).get('roll_direction_invert', False)
-        if roll_direction_invert:
-            roll_angle = -roll_angle
-        
         if self.use_inverse_kinematics:
             # Use inverse kinematics to calculate motor angles
             try:
@@ -199,10 +189,10 @@ class StewartPlatformController:
             except Exception as e:
                 print(f"[IK] Error in inverse kinematics: {e}, falling back to simplified method")
                 # Fall back to simplified method on error
-                motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle, original_roll_angle)
+                motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle)
         else:
             # Use simplified trigonometric mapping (fallback)
-            motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle, original_roll_angle)
+            motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle)
         
         # Clip to servo range (0-30 degrees as per Arduino code)
         motor1_angle = int(np.clip(motor1_angle, 0, 30))
@@ -210,16 +200,13 @@ class StewartPlatformController:
         motor3_angle = int(np.clip(motor3_angle, 0, 30))
         
         # DEBUG: Print motor angles being sent
-        # print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
-        #       f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
+        print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
+              f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
         
         # Send all 3 servo commands to Arduino as 3 bytes
+        # Arduino expects: byte1 (servo1), byte2 (servo2), byte3 (servo3)
         if self.servo_serial:
             try:
-                # CRITICAL FIX: Clear input buffer periodically to prevent Arduino debug messages from filling it up
-                if self.servo_serial.in_waiting > 50:  # If buffer has accumulated data
-                    self.servo_serial.reset_input_buffer()
-                
                 self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
                 self.servo_serial.flush()  # Ensure data is sent immediately
             except serial.SerialTimeoutException:
@@ -229,18 +216,18 @@ class StewartPlatformController:
                 print(f"[ARDUINO] Serial error: {e}")
             except Exception as e:
                 print(f"[ARDUINO] Send failed: {e}")
-        # Remove the else print statement (line 197) - it prints in tight loop
+        else:
+            print(f"[MOTOR] WARNING: No servo connection, not sending commands")
     
-    def _simplified_motor_mapping(self, roll_angle, pitch_angle, original_roll_angle=None):
+    def _simplified_motor_mapping(self, roll_angle, pitch_angle):
         """Simplified trigonometric mapping (fallback method).
         
         Uses calibrated motor angles from 3-point calibration if available,
         otherwise falls back to default angles.
         
         Args:
-            roll_angle: Roll angle in degrees (after inversion if configured)
+            roll_angle: Roll angle in degrees
             pitch_angle: Pitch angle in degrees
-            original_roll_angle: Original roll angle before inversion (for debugging)
             
         Returns:
             tuple: (motor1_angle, motor2_angle, motor3_angle) in degrees
@@ -267,7 +254,6 @@ class StewartPlatformController:
         
         # Calculate height changes for each motor
         # Negative signs are needed for correct platform tilt direction
-        # Note: roll_angle is already inverted in send_platform_tilt() if roll_direction_invert is True
         motor1_height = -roll_angle * np.cos(motor1_angle_rad) - pitch_angle * np.sin(motor1_angle_rad)
         motor2_height = -roll_angle * np.cos(motor2_angle_rad) - pitch_angle * np.sin(motor2_angle_rad)
         motor3_height = -roll_angle * np.cos(motor3_angle_rad) - pitch_angle * np.sin(motor3_angle_rad)
@@ -287,8 +273,7 @@ class StewartPlatformController:
         
         # DEBUG to show intermediate calculations
         if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
-            invert_note = f" (inverted from {original_roll_angle:.1f}°)" if roll_direction_invert and abs(original_roll_angle - roll_angle) > 0.1 else ""
-            print(f"[MAPPING] Roll={roll_angle:.1f}°{invert_note}, Pitch={pitch_angle:.1f}° -> "
+            print(f"[MAPPING] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
                   f"Heights: M1={motor1_height:.2f}, M2={motor2_height:.2f}, M3={motor3_height:.2f} -> "
                   f"Angles: M1={motor1_angle:.1f}°, M2={motor2_angle:.1f}°, M3={motor3_angle:.1f}°")
         
@@ -377,194 +362,109 @@ class StewartPlatformController:
             self.servo_serial.close()
     
     def create_gui(self):
-        """Build Tkinter GUI with improved layout and optimized ranges for Stewart platform."""
+        """Build Tkinter GUI with large sliders and labeled controls."""
         self.root = tk.Tk()
         self.root.title("Stewart Platform PID Controller")
-        self.root.geometry("750x900")
-        
-        # Main container with padding
-        main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        self.root.geometry("600x700")
         
         # Title label
-        title_label = ttk.Label(main_frame, text="Stewart Platform Control", 
-                               font=("Arial", 20, "bold"))
-        title_label.pack(pady=(0, 15))
+        ttk.Label(self.root, text="Stewart Platform Control", font=("Arial", 18, "bold")).pack(pady=10)
         
-        # Create notebook for tabs (X and Y axes)
-        notebook = ttk.Notebook(main_frame)
-        notebook.pack(fill=tk.BOTH, expand=True, pady=5)
+        # X-axis (Roll) controls
+        ttk.Label(self.root, text="X-Axis (Roll) PID Gains", font=("Arial", 14, "bold")).pack(pady=5)
         
-        # X-axis (Roll) tab
-        x_frame = ttk.Frame(notebook, padding="10")
-        notebook.add(x_frame, text="X-Axis (Roll)")
-        
-        ttk.Label(x_frame, text="X-Axis (Roll) PID Gains", 
-                 font=("Arial", 14, "bold")).pack(pady=(0, 10))
-        
-        # Kp_x slider with text box
-        kp_x_frame = ttk.Frame(x_frame)
-        kp_x_frame.pack(pady=5, fill=tk.X)
-        ttk.Label(kp_x_frame, text="Kp (Proportional)", font=("Arial", 11), width=18).pack(side=tk.LEFT, padx=5)
+        # Kp_x slider
+        ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 10)).pack()
         self.kp_x_var = tk.DoubleVar(value=self.pid.Kp_x)
-        kp_x_slider = ttk.Scale(kp_x_frame, from_=0, to=20, variable=self.kp_x_var,
-                               orient=tk.HORIZONTAL, length=450)
-        kp_x_slider.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        self.kp_x_entry = tk.Entry(kp_x_frame, width=10, font=("Arial", 10))
-        self.kp_x_entry.insert(0, f"{self.pid.Kp_x:.3f}")
-        self.kp_x_entry.pack(side=tk.LEFT, padx=5)
-        self.kp_x_entry.bind('<Return>', lambda e: self.update_from_text_entry('kp_x', 0, 20))
-        self.kp_x_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('kp_x', 0, 20))
-        kp_x_slider.config(command=lambda v: self.update_from_slider('kp_x', v))
+        kp_x_slider = ttk.Scale(self.root, from_=0, to=100, variable=self.kp_x_var,
+                               orient=tk.HORIZONTAL, length=550)
+        kp_x_slider.pack(pady=2)
+        self.kp_x_label = ttk.Label(self.root, text=f"Kp_x: {self.pid.Kp_x:.1f}", font=("Arial", 9))
+        self.kp_x_label.pack()
         
-        # Ki_x slider with text box
-        ki_x_frame = ttk.Frame(x_frame)
-        ki_x_frame.pack(pady=5, fill=tk.X)
-        ttk.Label(ki_x_frame, text="Ki (Integral)", font=("Arial", 11), width=18).pack(side=tk.LEFT, padx=5)
+        # Ki_x slider
+        ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 10)).pack()
         self.ki_x_var = tk.DoubleVar(value=self.pid.Ki_x)
-        ki_x_slider = ttk.Scale(ki_x_frame, from_=0, to=5, variable=self.ki_x_var,
-                               orient=tk.HORIZONTAL, length=450)
-        ki_x_slider.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        self.ki_x_entry = tk.Entry(ki_x_frame, width=10, font=("Arial", 10))
-        self.ki_x_entry.insert(0, f"{self.pid.Ki_x:.3f}")
-        self.ki_x_entry.pack(side=tk.LEFT, padx=5)
-        self.ki_x_entry.bind('<Return>', lambda e: self.update_from_text_entry('ki_x', 0, 5))
-        self.ki_x_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('ki_x', 0, 5))
-        ki_x_slider.config(command=lambda v: self.update_from_slider('ki_x', v))
+        ki_x_slider = ttk.Scale(self.root, from_=0, to=10, variable=self.ki_x_var,
+                               orient=tk.HORIZONTAL, length=550)
+        ki_x_slider.pack(pady=2)
+        self.ki_x_label = ttk.Label(self.root, text=f"Ki_x: {self.pid.Ki_x:.1f}", font=("Arial", 9))
+        self.ki_x_label.pack()
         
-        # Kd_x slider with text box
-        kd_x_frame = ttk.Frame(x_frame)
-        kd_x_frame.pack(pady=5, fill=tk.X)
-        ttk.Label(kd_x_frame, text="Kd (Derivative)", font=("Arial", 11), width=18).pack(side=tk.LEFT, padx=5)
+        # Kd_x slider
+        ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 10)).pack()
         self.kd_x_var = tk.DoubleVar(value=self.pid.Kd_x)
-        kd_x_slider = ttk.Scale(kd_x_frame, from_=0, to=10, variable=self.kd_x_var,
-                               orient=tk.HORIZONTAL, length=450)
-        kd_x_slider.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        self.kd_x_entry = tk.Entry(kd_x_frame, width=10, font=("Arial", 10))
-        self.kd_x_entry.insert(0, f"{self.pid.Kd_x:.3f}")
-        self.kd_x_entry.pack(side=tk.LEFT, padx=5)
-        self.kd_x_entry.bind('<Return>', lambda e: self.update_from_text_entry('kd_x', 0, 10))
-        self.kd_x_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('kd_x', 0, 10))
-        kd_x_slider.config(command=lambda v: self.update_from_slider('kd_x', v))
+        kd_x_slider = ttk.Scale(self.root, from_=0, to=20, variable=self.kd_x_var,
+                               orient=tk.HORIZONTAL, length=550)
+        kd_x_slider.pack(pady=2)
+        self.kd_x_label = ttk.Label(self.root, text=f"Kd_x: {self.pid.Kd_x:.1f}", font=("Arial", 9))
+        self.kd_x_label.pack()
         
-        # Y-axis (Pitch) tab
-        y_frame = ttk.Frame(notebook, padding="10")
-        notebook.add(y_frame, text="Y-Axis (Pitch)")
+        # Y-axis (Pitch) controls
+        ttk.Label(self.root, text="Y-Axis (Pitch) PID Gains", font=("Arial", 14, "bold")).pack(pady=5)
         
-        ttk.Label(y_frame, text="Y-Axis (Pitch) PID Gains", 
-                 font=("Arial", 14, "bold")).pack(pady=(0, 10))
-        
-        # Kp_y slider with text box
-        kp_y_frame = ttk.Frame(y_frame)
-        kp_y_frame.pack(pady=5, fill=tk.X)
-        ttk.Label(kp_y_frame, text="Kp (Proportional)", font=("Arial", 11), width=18).pack(side=tk.LEFT, padx=5)
+        # Kp_y slider
+        ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 10)).pack()
         self.kp_y_var = tk.DoubleVar(value=self.pid.Kp_y)
-        kp_y_slider = ttk.Scale(kp_y_frame, from_=0, to=20, variable=self.kp_y_var,
-                               orient=tk.HORIZONTAL, length=450)
-        kp_y_slider.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        self.kp_y_entry = tk.Entry(kp_y_frame, width=10, font=("Arial", 10))
-        self.kp_y_entry.insert(0, f"{self.pid.Kp_y:.3f}")
-        self.kp_y_entry.pack(side=tk.LEFT, padx=5)
-        self.kp_y_entry.bind('<Return>', lambda e: self.update_from_text_entry('kp_y', 0, 20))
-        self.kp_y_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('kp_y', 0, 20))
-        kp_y_slider.config(command=lambda v: self.update_from_slider('kp_y', v))
+        kp_y_slider = ttk.Scale(self.root, from_=0, to=100, variable=self.kp_y_var,
+                               orient=tk.HORIZONTAL, length=550)
+        kp_y_slider.pack(pady=2)
+        self.kp_y_label = ttk.Label(self.root, text=f"Kp_y: {self.pid.Kp_y:.1f}", font=("Arial", 9))
+        self.kp_y_label.pack()
         
-        # Ki_y slider with text box
-        ki_y_frame = ttk.Frame(y_frame)
-        ki_y_frame.pack(pady=5, fill=tk.X)
-        ttk.Label(ki_y_frame, text="Ki (Integral)", font=("Arial", 11), width=18).pack(side=tk.LEFT, padx=5)
+        # Ki_y slider
+        ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 10)).pack()
         self.ki_y_var = tk.DoubleVar(value=self.pid.Ki_y)
-        ki_y_slider = ttk.Scale(ki_y_frame, from_=0, to=5, variable=self.ki_y_var,
-                               orient=tk.HORIZONTAL, length=450)
-        ki_y_slider.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        self.ki_y_entry = tk.Entry(ki_y_frame, width=10, font=("Arial", 10))
-        self.ki_y_entry.insert(0, f"{self.pid.Ki_y:.3f}")
-        self.ki_y_entry.pack(side=tk.LEFT, padx=5)
-        self.ki_y_entry.bind('<Return>', lambda e: self.update_from_text_entry('ki_y', 0, 5))
-        self.ki_y_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('ki_y', 0, 5))
-        ki_y_slider.config(command=lambda v: self.update_from_slider('ki_y', v))
+        ki_y_slider = ttk.Scale(self.root, from_=0, to=10, variable=self.ki_y_var,
+                               orient=tk.HORIZONTAL, length=550)
+        ki_y_slider.pack(pady=2)
+        self.ki_y_label = ttk.Label(self.root, text=f"Ki_y: {self.pid.Ki_y:.1f}", font=("Arial", 9))
+        self.ki_y_label.pack()
         
-        # Kd_y slider with text box
-        kd_y_frame = ttk.Frame(y_frame)
-        kd_y_frame.pack(pady=5, fill=tk.X)
-        ttk.Label(kd_y_frame, text="Kd (Derivative)", font=("Arial", 11), width=18).pack(side=tk.LEFT, padx=5)
+        # Kd_y slider
+        ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 10)).pack()
         self.kd_y_var = tk.DoubleVar(value=self.pid.Kd_y)
-        kd_y_slider = ttk.Scale(kd_y_frame, from_=0, to=10, variable=self.kd_y_var,
-                               orient=tk.HORIZONTAL, length=450)
-        kd_y_slider.pack(side=tk.LEFT, padx=5, fill=tk.X, expand=True)
-        self.kd_y_entry = tk.Entry(kd_y_frame, width=10, font=("Arial", 10))
-        self.kd_y_entry.insert(0, f"{self.pid.Kd_y:.3f}")
-        self.kd_y_entry.pack(side=tk.LEFT, padx=5)
-        self.kd_y_entry.bind('<Return>', lambda e: self.update_from_text_entry('kd_y', 0, 10))
-        self.kd_y_entry.bind('<FocusOut>', lambda e: self.update_from_text_entry('kd_y', 0, 10))
-        kd_y_slider.config(command=lambda v: self.update_from_slider('kd_y', v))
+        kd_y_slider = ttk.Scale(self.root, from_=0, to=20, variable=self.kd_y_var,
+                               orient=tk.HORIZONTAL, length=550)
+        kd_y_slider.pack(pady=2)
+        self.kd_y_label = ttk.Label(self.root, text=f"Kd_y: {self.pid.Kd_y:.1f}", font=("Arial", 9))
+        self.kd_y_label.pack()
         
-        # Setpoint tab
-        setpoint_frame = ttk.Frame(notebook, padding="10")
-        notebook.add(setpoint_frame, text="Setpoint")
-        
-        ttk.Label(setpoint_frame, text="Ball Position Setpoints", 
-                 font=("Arial", 14, "bold")).pack(pady=(0, 15))
-        
-        # Get position limits from config if available
-        calib = self.config.get('calibration', {})
-        pos_min_x = calib.get('position_min_x_m', -0.1)
-        pos_max_x = calib.get('position_max_x_m', 0.1)
-        pos_min_y = calib.get('position_min_y_m', -0.1)
-        pos_max_y = calib.get('position_max_y_m', 0.1)
+        # Setpoint controls
+        ttk.Label(self.root, text="Setpoint", font=("Arial", 12)).pack(pady=5)
         
         # Setpoint X
         ttk.Label(self.root, text="Setpoint X (meters)", font=("Arial", 10)).pack()
         pos_range = 0.15  # Default range (matches platform radius)
         self.setpoint_x_var = tk.DoubleVar(value=self.setpoint_x)
-        setpoint_x_slider = ttk.Scale(setpoint_x_container, from_=pos_min_x, to=pos_max_x,
+        setpoint_x_slider = ttk.Scale(self.root, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_x_var,
-                                     orient=tk.HORIZONTAL, length=600)
-        setpoint_x_slider.pack(pady=5, fill=tk.X)
-        self.setpoint_x_label = ttk.Label(setpoint_x_container, 
-                                          text=f"Setpoint X: {self.setpoint_x:.4f}m (Range: {pos_min_x:.4f} to {pos_max_x:.4f}m)", 
-                                          font=("Arial", 10))
+                                     orient=tk.HORIZONTAL, length=550)
+        setpoint_x_slider.pack(pady=2)
+        self.setpoint_x_label = ttk.Label(self.root, text=f"Setpoint X: {self.setpoint_x:.4f}m", font=("Arial", 9))
         self.setpoint_x_label.pack()
         
         # Setpoint Y
-        setpoint_y_container = ttk.LabelFrame(setpoint_frame, text="Setpoint Y (meters)", padding="10")
-        setpoint_y_container.pack(pady=10, fill=tk.X)
-        
+        ttk.Label(self.root, text="Setpoint Y (meters)", font=("Arial", 10)).pack()
         self.setpoint_y_var = tk.DoubleVar(value=self.setpoint_y)
-        setpoint_y_slider = ttk.Scale(setpoint_y_container, from_=pos_min_y, to=pos_max_y,
+        setpoint_y_slider = ttk.Scale(self.root, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_y_var,
-                                     orient=tk.HORIZONTAL, length=600)
-        setpoint_y_slider.pack(pady=5, fill=tk.X)
-        self.setpoint_y_label = ttk.Label(setpoint_y_container, 
-                                          text=f"Setpoint Y: {self.setpoint_y:.4f}m (Range: {pos_min_y:.4f} to {pos_max_y:.4f}m)", 
-                                          font=("Arial", 10))
+                                     orient=tk.HORIZONTAL, length=550)
+        setpoint_y_slider.pack(pady=2)
+        self.setpoint_y_label = ttk.Label(self.root, text=f"Setpoint Y: {self.setpoint_y:.4f}m", font=("Arial", 9))
         self.setpoint_y_label.pack()
         
-        # Status/Info tab
-        info_frame = ttk.Frame(notebook, padding="10")
-        notebook.add(info_frame, text="Status")
-        
-        ttk.Label(info_frame, text="System Status", 
-                 font=("Arial", 14, "bold")).pack(pady=(0, 10))
-        
-        # Status labels
-        self.status_text = tk.Text(info_frame, height=15, width=70, font=("Courier", 9), wrap=tk.WORD)
-        self.status_text.pack(fill=tk.BOTH, expand=True)
-        self.status_text.insert("1.0", "System initialized. Waiting for ball detection...\n")
-        self.status_text.config(state=tk.DISABLED)
-        
-        # Button group for actions (at bottom, outside notebook)
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(pady=15)
-        
+        # Button group for actions
+        button_frame = ttk.Frame(self.root)
+        button_frame.pack(pady=10)
         ttk.Button(button_frame, text="Reset Integrals",
-                   command=self.reset_integral, width=15).pack(side=tk.LEFT, padx=5)
+                   command=self.reset_integral).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Plot Results",
                    command=self.plot_results).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Show Telemetry",
                    command=self.show_telemetry_window).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Stop",
-                   command=self.stop, width=15).pack(side=tk.LEFT, padx=5)
+                   command=self.stop).pack(side=tk.LEFT, padx=5)
         
         # Schedule periodic GUI update
         self.update_gui()
@@ -853,4 +753,3 @@ if __name__ == "__main__":
         print(f"[ERROR] {e}")
         import traceback
         traceback.print_exc()
-
