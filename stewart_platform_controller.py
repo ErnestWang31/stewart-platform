@@ -238,9 +238,9 @@ class StewartPlatformController:
         if motor_angles_deg and len(motor_angles_deg) == 3:
             # Use calibrated motor angles (absolute angles from 3-point calibration)
             # These angles are already calculated relative to the platform center
-            motor1_angle_deg = -motor_angles_deg[0]-120
-            motor2_angle_deg = -motor_angles_deg[2]-120
-            motor3_angle_deg = -motor_angles_deg[1]-120
+            motor1_angle_deg = motor_angles_deg[0]-180
+            motor2_angle_deg = motor_angles_deg[1]-180
+            motor3_angle_deg = motor_angles_deg[2]-180
         else:
             # Fallback to default angles (120° spacing, starting at -90°)
             motor1_angle_deg = -90
