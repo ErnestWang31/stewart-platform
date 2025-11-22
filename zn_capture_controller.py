@@ -32,6 +32,7 @@ from tkinter import ttk, messagebox
 
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 from scipy.signal import find_peaks
 
 from ball_detection_2d import BallDetector2D
@@ -61,13 +62,21 @@ class ZNCaptureController:
         self.config = self._load_config(config_file)
 
         self.detector = BallDetector2D(config_file)
+        configured_pid = self.config.get("pid", {})
+        kp_x = configured_pid.get("Kp_x", 0.0)
+        ki_x = configured_pid.get("Ki_x", 0.0)
+        kd_x = configured_pid.get("Kd_x", 0.0)
+        kp_y = configured_pid.get("Kp_y", 0.0)
+        ki_y = configured_pid.get("Ki_y", 0.0)
+        kd_y = configured_pid.get("Kd_y", 0.0)
+
         self.pid = PIDController2D(
-            Kp_x=self.config.get("pid", {}).get("Kp_x", 0.0),
-            Ki_x=self.config.get("pid", {}).get("Ki_x", 0.0),
-            Kd_x=self.config.get("pid", {}).get("Kd_x", 0.0),
-            Kp_y=self.config.get("pid", {}).get("Kp_y", 0.0),
-            Ki_y=self.config.get("pid", {}).get("Ki_y", 0.0),
-            Kd_y=self.config.get("pid", {}).get("Kd_y", 0.0),
+            Kp_x=0.0,
+            Ki_x=0.0,
+            Kd_x=0.0,
+            Kp_y=0.0,
+            Ki_y=0.0,
+            Kd_y=0.0,
             output_limit_x=self.config.get("platform", {}).get("max_roll_angle", 15.0),
             output_limit_y=self.config.get("platform", {}).get("max_pitch_angle", 15.0),
         )
@@ -126,16 +135,8 @@ class ZNCaptureController:
         self.capture_start_time = None
         self.current_kp = 0.0
         self.base_gains = {
-            "x": (
-                self.pid.Kp_x,
-                self.pid.Ki_x,
-                self.pid.Kd_x,
-            ),
-            "y": (
-                self.pid.Kp_y,
-                self.pid.Ki_y,
-                self.pid.Kd_y,
-            ),
+            "x": (kp_x, ki_x, kd_x),
+            "y": (kp_y, ki_y, kd_y),
         }
 
         self.running = False
@@ -192,7 +193,7 @@ class ZNCaptureController:
     def _build_gui(self) -> None:
         self.root = tk.Tk()
         self.root.title("ZN Ku/Tu Capture")
-        self.root.geometry("420x320")
+        self.root.geometry("520x520")
 
         # Create tkinter variables after root window exists
         self.axis_choice = tk.StringVar(value="x")
@@ -732,7 +733,10 @@ class ZNCaptureController:
     # Live plot helpers
     # ------------------------------------------------------------------ #
     def _init_live_plot(self, parent) -> None:
-        self.live_plot_fig = plt.Figure(figsize=(4.6, 2.6), dpi=100)
+        if Figure is not None:
+            self.live_plot_fig = Figure(figsize=(4.6, 2.6), dpi=100)
+        else:
+            self.live_plot_fig = plt.Figure(figsize=(4.6, 2.6), dpi=100)
         self.live_plot_ax = self.live_plot_fig.add_subplot(111)
         self.live_plot_ax.set_xlabel("Time (s)")
         self.live_plot_ax.set_ylabel("Position (m)")
