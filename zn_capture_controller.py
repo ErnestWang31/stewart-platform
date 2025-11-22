@@ -788,9 +788,7 @@ class ZNCaptureController:
         self.live_plot_ax.set_ylabel("Position (m)")
         self.live_plot_ax.grid(True, alpha=0.3)
         self.live_plot_line, = self.live_plot_ax.plot([], [], color="#1f77b4", linewidth=1.5)
-        self.live_plot_setpoint_line = self.live_plot_ax.axhline(
-            0.0, color="#ff6666", linestyle="--", linewidth=1
-        )
+        self.live_plot_setpoint_line, = self.live_plot_ax.plot([], [], color="#ff6666", linestyle="--", linewidth=1)
         self.live_plot_canvas = FigureCanvasTkAgg(self.live_plot_fig, master=parent)
         self.live_plot_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
@@ -810,11 +808,16 @@ class ZNCaptureController:
 
         with self.log_lock:
             times = np.array(self.time_log, dtype=float)
-            values = (
-                np.array(self.position_x_log, dtype=float)
-                if self.target_axis == "x"
-                else np.array(self.position_y_log, dtype=float)
-            )
+            if self.target_axis == "x":
+                values = np.array(self.position_x_log, dtype=float)
+                setpoint_value = self.pid.setpoint_x
+            elif self.target_axis == "y":
+                values = np.array(self.position_y_log, dtype=float)
+                setpoint_value = self.pid.setpoint_y
+            else:
+                # No target axis selected yet, use x as default
+                values = np.array(self.position_x_log, dtype=float) if self.position_x_log else np.array([], dtype=float)
+                setpoint_value = self.pid.setpoint_x
 
         if times.size == 0:
             return
@@ -822,13 +825,16 @@ class ZNCaptureController:
         window_start = max(0.0, times[-1] - self.live_plot_window_sec)
         mask = times >= window_start
         times_window = times[mask]
-        values_window = values[mask]
+        values_window = values[mask] if values.size > 0 else np.array([], dtype=float)
 
         if times_window.size < 2:
             return
 
         self.live_plot_line.set_data(times_window, values_window)
-        self.live_plot_setpoint_line.set_ydata(0.0)
+        
+        # Update setpoint line - get the actual setpoint value for the target axis
+        setpoint_y = np.full_like(times_window, setpoint_value)
+        self.live_plot_setpoint_line.set_data(times_window, setpoint_y)
 
         x_min = max(0.0, times_window[-1] - self.live_plot_window_sec)
         x_max = times_window[-1]
