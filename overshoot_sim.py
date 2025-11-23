@@ -133,37 +133,26 @@ def main():
     # Scenario 1: Config Defaults (High Stiffness)
     # Gains taken from config_stewart.json
     t1, x1, v1, u1 = run_experiment(
-        Kp=0.6, Ki=0.1, Kd=0.4, 
+        Kp=0.9, Ki=0.1, Kd=0.3, 
         delay_frames=3, 
         label="Config Defaults"
     )
 
     # Scenario 2: Tuned for Stability (Critical Damping)
     # Lower P to account for error scaling, Tuned D for damping
-    # t2, x2, v2, u2 = run_experiment(
-    #     Kp=0.65, Ki=0.0, Kd=0.4, 
-    #     delay_frames=3, 
-    #     label="Tuned Gains"
-    # )
     t2, x2, v2, u2 = run_experiment(
-        Kp=2, Ki=0.1, Kd=0.75, 
+        Kp=0.8, Ki=0.1, Kd=0.46, 
         delay_frames=3, 
         label="Tuned Gains"
     )
 
-    t3, x3, v3, u3 = run_experiment(
-        Kp=1, Ki=0.1, Kd=0.49, 
-        delay_frames=3, 
-        label="High Latency"
-    )
-
     # Scenario 3: High Latency Stress Test
     # Same tuned gains, but with increased sensor delay
-    # t3, x3, v3, u3 = run_experiment(
-    #     Kp=0.25, Ki=0.0, Kd=0.45, 
-    #     delay_frames=8, 
-    #     label="High Latency"
-    # )
+    t3, x3, v3, u3 = run_experiment(
+        Kp=0.8, Ki=0.1, Kd=0.46, 
+        delay_frames=8, 
+        label="High Latency"
+    )
 
     # Setup Plots
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -216,7 +205,7 @@ def main():
         "   Without a smoothing filter, sensor noise propagates\n"
         "   to the servo output (see bottom-left plot).\n\n"
         "3. Tuning Results:\n"
-        "   Lowering Kp to 0.25 (Green) combined with Kd=0.45\n"
+        "   Lowering Kp to 0.8 (Green) combined with Kd=0.46\n"
         "   achieves critical damping and eliminates overshoot."
     )
     ax_txt.text(0.05, 0.5, txt, fontsize=11, va='center',
@@ -225,7 +214,7 @@ def main():
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     
     # Save Plot
-    output_dir = "overshoot_plots"
+    output_dir = "overshoot_data"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         print(f"Created directory: {output_dir}")
@@ -294,7 +283,7 @@ def run_interactive_tuner():
 
     def save_values():
         val_str = f"Kp={kp_var.get():.3f}, Ki={ki_var.get():.3f}, Kd={kd_var.get():.3f}, Delay={delay_var.get()}\n"
-        with open("overshoot_plots/good_values.txt", "a") as f:
+        with open("overshoot_data/good_values.txt", "a") as f:
             f.write(val_str)
         print(f"Values saved: {val_str.strip()}")
 
@@ -346,8 +335,8 @@ def run_interactive_tuner():
 if __name__ == "__main__":
     # === SELECT MODE HERE ===
     
-    # MODE 1: Run the original comparative report (generates overshoot_plots/ image)
-    # main()
+    # MODE 1: Run the original comparative report (generates overshoot_data/ image)
+    main()
     
     # MODE 2: Run the interactive GUI tuner
-    run_interactive_tuner()
+    # run_interactive_tuner()
