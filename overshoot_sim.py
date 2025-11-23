@@ -1,8 +1,30 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from collections import deque
 import os
+import tkinter as tk
+from tkinter import ttk
 from pid_controller_2d import PIDController2D
+
+# --- IMPORT HANDLING ---
+GUI_AVAILABLE = False
+try:
+    import tkinter as tk
+    from tkinter import ttk
+    import matplotlib
+    # CRITICAL: Force Matplotlib to use the Tkinter backend
+    matplotlib.use('TkAgg') 
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    from matplotlib.figure import Figure # Import Figure explicitly for embedding
+    import matplotlib.pyplot as plt
+    GUI_AVAILABLE = True
+except ImportError as e:
+    print(f"[WARNING] GUI libraries missing ({e}). Switching to Headless Mode.")
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    GUI_AVAILABLE = False
 
 # --- 1. THE PLANT (Physics Engine) ---
 class BallBeamPhysics:
@@ -105,7 +127,7 @@ def run_experiment(Kp, Ki, Kd, delay_frames, label):
     return t_data, x_data, v_data, u_data
 
 # --- 4. MAIN EXECUTION & PLOTTING ---
-if __name__ == "__main__":
+def main():
     print("Running Stewart Platform Simulation...")
     
     # Scenario 1: Config Defaults (High Stiffness)
@@ -118,19 +140,30 @@ if __name__ == "__main__":
 
     # Scenario 2: Tuned for Stability (Critical Damping)
     # Lower P to account for error scaling, Tuned D for damping
+    # t2, x2, v2, u2 = run_experiment(
+    #     Kp=0.65, Ki=0.0, Kd=0.4, 
+    #     delay_frames=3, 
+    #     label="Tuned Gains"
+    # )
     t2, x2, v2, u2 = run_experiment(
-        Kp=0.25, Ki=0.0, Kd=0.45, 
+        Kp=2, Ki=0.1, Kd=0.75, 
         delay_frames=3, 
         label="Tuned Gains"
     )
 
-    # Scenario 3: High Latency Stress Test
-    # Same tuned gains, but with increased sensor delay
     t3, x3, v3, u3 = run_experiment(
-        Kp=0.25, Ki=0.0, Kd=0.45, 
-        delay_frames=8, 
+        Kp=1, Ki=0.1, Kd=0.49, 
+        delay_frames=3, 
         label="High Latency"
     )
+
+    # Scenario 3: High Latency Stress Test
+    # Same tuned gains, but with increased sensor delay
+    # t3, x3, v3, u3 = run_experiment(
+    #     Kp=0.25, Ki=0.0, Kd=0.45, 
+    #     delay_frames=8, 
+    #     label="High Latency"
+    # )
 
     # Setup Plots
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -202,3 +235,119 @@ if __name__ == "__main__":
     print(f"Plot saved to: {save_path}")
     
     plt.show()
+
+# --- 5. MODE B: INTERACTIVE GUI ---
+def run_interactive_tuner():
+    if not GUI_AVAILABLE:
+        print("[ERROR] Tkinter not found. Running headless main() instead.")
+        main()
+        return
+
+    print("Launching Interactive Tuner GUI...")
+    
+    # 1. Setup Main Window
+    root = tk.Tk()
+    root.title("PID Simulation Tuner")
+    root.geometry("1000x850") # Increased height for text boxes
+
+    # 2. Setup Variables
+    kp_var = tk.DoubleVar(value=2.0)
+    ki_var = tk.DoubleVar(value=0.1)
+    kd_var = tk.DoubleVar(value=0.75)
+    delay_var = tk.IntVar(value=3)
+
+    # 3. Setup Matplotlib Figure
+    fig = Figure(figsize=(8, 5), dpi=100)
+    ax = fig.add_subplot(111)
+
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas_widget = canvas.get_tk_widget()
+    canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+    def update_simulation(*args):
+        # Read sliders
+        try:
+            kp = float(kp_var.get())
+            ki = float(ki_var.get())
+            kd = float(kd_var.get())
+            delay = int(delay_var.get())
+        except ValueError:
+            return # Don't update on partial typing
+
+        # Run logic
+        t, x, _, _ = run_experiment(kp, ki, kd, delay, "Live")
+        
+        # Clear and redraw plot using ax object
+        ax.clear()
+        ax.plot(t, x, 'b-', linewidth=2, label=f'Kp={kp:.2f}, Ki={ki:.2f}, Kd={kd:.2f}')
+        ax.axhline(0, color='k', linestyle=':', alpha=0.5)
+        ax.axhspan(-0.02, 0.02, color='yellow', alpha=0.1, label='Integral Window')
+        ax.set_ylim(-0.12, 0.05)
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Position (m)')
+        ax.set_title(f'Step Response (Delay: {delay} frames)')
+        ax.grid(True)
+        ax.legend(loc='upper right')
+        
+        # Refresh the canvas
+        canvas.draw()
+
+    def save_values():
+        val_str = f"Kp={kp_var.get():.3f}, Ki={ki_var.get():.3f}, Kd={kd_var.get():.3f}, Delay={delay_var.get()}\n"
+        with open("overshoot_plots/good_values.txt", "a") as f:
+            f.write(val_str)
+        print(f"Values saved: {val_str.strip()}")
+
+    # 4. Create Controls Area
+    ctrl_frame = ttk.LabelFrame(root, text="Tuning Parameters")
+    ctrl_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=20, pady=20)
+
+    # Slider + Textbox Factory
+    def make_input_row(parent, label, var, r_min, r_max, step):
+        container = ttk.Frame(parent)
+        container.pack(side=tk.TOP, padx=10, pady=5, fill=tk.X)
+        
+        # Label
+        ttk.Label(container, text=f"{label}:", width=15).pack(side=tk.LEFT)
+        
+        # Text Entry (Direct Value)
+        entry = ttk.Entry(container, textvariable=var, width=8)
+        entry.pack(side=tk.LEFT, padx=5)
+        # Trigger update on Enter key
+        entry.bind('<Return>', lambda event: update_simulation())
+        
+        # Slider
+        scale = ttk.Scale(
+            container, from_=r_min, to=r_max, variable=var, 
+            orient=tk.HORIZONTAL, 
+            command=lambda v: update_simulation()
+        )
+        scale.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+
+    # Add Controls
+    make_input_row(ctrl_frame, "Kp (Proportional)", kp_var, 0.0, 5.0, 0.01)
+    make_input_row(ctrl_frame, "Ki (Integral)", ki_var, 0.0, 2.0, 0.01)
+    make_input_row(ctrl_frame, "Kd (Derivative)", kd_var, 0.0, 2.0, 0.01)
+    make_input_row(ctrl_frame, "Delay (Frames)", delay_var, 0, 15, 1)
+
+    # Button Bar
+    btn_frame = ttk.Frame(root)
+    btn_frame.pack(side=tk.BOTTOM, pady=10)
+    
+    ttk.Button(btn_frame, text="Update Plot (Enter)", command=update_simulation).pack(side=tk.LEFT, padx=10)
+    ttk.Button(btn_frame, text="Save Values to File", command=save_values).pack(side=tk.LEFT, padx=10)
+
+    # Initial Draw
+    update_simulation()
+    
+    # Start Loop
+    root.mainloop()
+
+if __name__ == "__main__":
+    # === SELECT MODE HERE ===
+    
+    # MODE 1: Run the original comparative report (generates overshoot_plots/ image)
+    # main()
+    
+    # MODE 2: Run the interactive GUI tuner
+    run_interactive_tuner()
