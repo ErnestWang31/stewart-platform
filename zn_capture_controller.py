@@ -60,6 +60,7 @@ class ZNCaptureController:
 
     def __init__(self, config_file: str = "config_stewart.json") -> None:
         self.config_file = config_file
+        self.root = None
         self._run_calibration_step()
         self.config = self._load_config(config_file)
 
@@ -166,6 +167,7 @@ class ZNCaptureController:
         self.result_ku = None
         self.result_tu = None
         self.results_path = "zn_capture_results.json"
+        self.ui_task_queue = queue.Queue()
 
     # ------------------------------------------------------------------ #
     # Public entry point
@@ -265,6 +267,7 @@ class ZNCaptureController:
         plot_frame = ttk.LabelFrame(self.root, text="Live Position Trace", padding=5)
         plot_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 10))
         self._init_live_plot(plot_frame)
+        self._drain_ui_queue()
 
     def _update_status(self, message: str) -> None:
         if not self.status_text:
@@ -338,11 +341,11 @@ class ZNCaptureController:
             self.current_kp += self.kp_step
             self._apply_axis_gains(self.target_axis, self.current_kp, 0.0, 0.0)
             print(f"[ZN-CAPTURE] Axis={self.target_axis.upper()} Kp={self.current_kp:.3f}")
-            self._update_gain_display()
-            self._update_status(
+            self._run_in_ui(self._update_gain_display)
+            self._run_in_ui(
+                self._update_status,
                 f"{self._axis_label(self.target_axis)} | "
-                f"Kp={self.current_kp:.3f}, Ki=0, Kd=0\n"
-                "Settling current gain..."
+                f"Kp={self.current_kp:.3f}, Ki=0, Kd=0\nSettling current gain...",
             )
 
             dwell_start = time.time()
@@ -361,9 +364,10 @@ class ZNCaptureController:
                 if not self.running or not self.capture_enabled or self.ku_found:
                     break
 
-                self._update_status(
+                self._run_in_ui(
+                    self._update_status,
                     f"{self._axis_label(self.target_axis)} | Kp={self.current_kp:.3f}\n"
-                    f"Analyzing response ({window_idx + 1}/{self.windows_per_gain})"
+                    f"Analyzing response ({window_idx + 1}/{self.windows_per_gain})",
                 )
 
                 window_start = time.time()
@@ -382,16 +386,20 @@ class ZNCaptureController:
                     self.result_ku = round(self.current_kp, 4)
                     self.result_tu = round(self.latest_period, 4)
                     self.ku_found = True
-                    self._update_status(
+                    self._run_in_ui(
+                        self._update_status,
                         f"Ku found: {self.result_ku:.4f}\n"
-                        f"Tu: {self.result_tu:.4f} s\nSaving results..."
+                        f"Tu: {self.result_tu:.4f} s\nSaving results...",
                     )
-                    self._finalize_capture(success=True)
+                    self._run_in_ui(self._finalize_capture, True)
                     return
 
         if not self.ku_found:
-            self._update_status("Capture ended without finding sustained oscillations.")
-            self._finalize_capture(success=False)
+            self._run_in_ui(
+                self._update_status,
+                "Capture ended without finding sustained oscillations.",
+            )
+            self._run_in_ui(self._finalize_capture, False)
 
     def _apply_axis_gains(self, axis: str, kp: float, ki: float, kd: float) -> None:
         if axis == "x":
@@ -575,7 +583,7 @@ class ZNCaptureController:
             vis_frame, _, _, _ = self.detector.draw_detection(frame, show_info=True)
             cv2.imshow("ZN Capture - Ball Tracking", vis_frame)
             if cv2.waitKey(1) & 0xFF == 27:
-                self._stop()
+                self._run_in_ui(self._stop)
                 break
 
         cam.release()
@@ -774,6 +782,25 @@ class ZNCaptureController:
             print("[MOTOR] Neutral pose command sent.")
         except Exception as exc:
             print(f"[MOTOR] Failed to send neutral pose: {exc}")
+
+    # ------------------------------------------------------------------ #
+    # UI thread helpers
+    # ------------------------------------------------------------------ #
+    def _run_in_ui(self, func, *args, **kwargs):
+        if self.root and self.root.winfo_exists():
+            self.root.after(0, func, *args, **kwargs)
+        else:
+            self.ui_task_queue.put((func, args, kwargs))
+
+    def _drain_ui_queue(self):
+        while not self.ui_task_queue.empty():
+            func, args, kwargs = self.ui_task_queue.get()
+            try:
+                func(*args, **kwargs)
+            except Exception as exc:
+                print(f"[UI] Error executing scheduled task: {exc}")
+        if self.root and self.root.winfo_exists():
+            self.root.after(50, self._drain_ui_queue)
 
     # ------------------------------------------------------------------ #
     # Live plot helpers
