@@ -424,7 +424,7 @@ class RelayAutotuneController:
             if self.capture_enabled:
                 if self.capture_start_time is None:
                     self.capture_start_time = time.time()
-                axis_position = position_x if self.target_axis == "x" else position_y
+                axis_position = platform_x if self.target_axis == "x" else platform_y
                 setpoint = 0.0
                 error = setpoint - axis_position
 
