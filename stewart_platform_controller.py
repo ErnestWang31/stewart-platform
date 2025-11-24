@@ -96,6 +96,18 @@ class StewartPlatformController:
         # Thread-safe queue for most recent ball position measurement
         self.position_queue = queue.Queue(maxsize=1)
         self.running = False    # Main run flag for clean shutdown
+        
+        # Square pattern state machine
+        self.square_pattern_enabled = False
+        self.square_pattern_index = 0
+        # Default square pattern (can be overridden by user input)
+        self.square_setpoints = [(0.0, 0.0), (0.05, 0.05), (0.05, -0.05), (-0.05, -0.05), (-0.05, 0.05)]
+        self.settle_tolerance = 0.01  # position tolerance in meters (default)
+        self.settle_duration = 2.0  # time in seconds ball must be within tolerance (default)
+        self.settle_start_time = None  # timestamp when ball entered tolerance zone
+        self.settled = False  # current settle status
+        # Custom setpoint input storage (up to 10 points)
+        self.custom_setpoint_entries = []  # Will store entry widgets
     
     def _get_default_config(self):
         """Return default configuration dictionary."""
@@ -329,6 +341,21 @@ class StewartPlatformController:
                 # Wait for latest ball position from camera
                 position_x, position_y = self.position_queue.get(timeout=0.1)
                 
+                # Handle square pattern if enabled
+                if self.square_pattern_enabled:
+                    # Check if ball has settled at current setpoint
+                    if self._check_settled(position_x, position_y):
+                        # Advance to next setpoint in sequence
+                        self.square_pattern_index = (self.square_pattern_index + 1) % len(self.square_setpoints)
+                        sp_x, sp_y = self.square_setpoints[self.square_pattern_index]
+                        self.setpoint_x = sp_x
+                        self.setpoint_y = sp_y
+                        self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+                        # Reset settle tracking for new setpoint
+                        self.settle_start_time = None
+                        self.settled = False
+                        print(f"[PATTERN] Advanced to setpoint {self.square_pattern_index + 1}/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
+                
                 # Compute control output using 2D PID
                 control_output_x, control_output_y = self.pid.update(position_x, position_y)
                 
@@ -361,11 +388,48 @@ class StewartPlatformController:
         if self.servo_serial:
             self.servo_serial.close()
     
+    def _check_settled(self, position_x, position_y):
+        """Check if ball has settled at current setpoint.
+        
+        Args:
+            position_x: Current X position (meters)
+            position_y: Current Y position (meters)
+            
+        Returns:
+            bool: True if ball has been within tolerance for settle_duration seconds
+        """
+        # Calculate distance from setpoint
+        error_x = abs(self.setpoint_x - position_x)
+        error_y = abs(self.setpoint_y - position_y)
+        
+        # Check if within tolerance
+        within_tolerance = (error_x <= self.settle_tolerance and 
+                          error_y <= self.settle_tolerance)
+        
+        current_time = time.time()
+        
+        if within_tolerance:
+            # If we just entered tolerance zone, start timer
+            if self.settle_start_time is None:
+                self.settle_start_time = current_time
+                self.settled = False
+            # Check if we've been in tolerance long enough
+            elif current_time - self.settle_start_time >= self.settle_duration:
+                self.settled = True
+            else:
+                self.settled = False
+        else:
+            # Outside tolerance, reset timer
+            self.settle_start_time = None
+            self.settled = False
+        
+        return self.settled
+    
     def create_gui(self):
         """Build Tkinter GUI with large sliders and labeled controls."""
         self.root = tk.Tk()
         self.root.title("Stewart Platform PID Controller")
-        self.root.geometry("600x700")
+        self.root.geometry("600x950")
         
         # Title label
         ttk.Label(self.root, text="Stewart Platform Control", font=("Arial", 18, "bold")).pack(pady=10)
@@ -466,6 +530,70 @@ class StewartPlatformController:
         self.kd_y_label = ttk.Label(self.root, text=f"Kd_y: {self.pid.Kd_y:.1f}", font=("Arial", 9))
         self.kd_y_label.pack()
         
+        # Square Pattern controls
+        ttk.Label(self.root, text="Custom Pattern (up to 10 setpoints)", font=("Arial", 12, "bold")).pack(pady=5)
+        
+        # Setpoint input section
+        setpoints_frame = ttk.LabelFrame(self.root, text="Setpoints", padding=5)
+        setpoints_frame.pack(pady=5, padx=10, fill=tk.BOTH, expand=True)
+        
+        # Header row
+        header_frame = ttk.Frame(setpoints_frame)
+        header_frame.pack(fill=tk.X, pady=2)
+        ttk.Label(header_frame, text="#", font=("Arial", 9, "bold"), width=3).pack(side=tk.LEFT, padx=2)
+        ttk.Label(header_frame, text="X (m)", font=("Arial", 9, "bold"), width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Label(header_frame, text="Y (m)", font=("Arial", 9, "bold"), width=10).pack(side=tk.LEFT, padx=2)
+        
+        # Create entry fields for up to 10 setpoints
+        self.custom_setpoint_entries = []
+        for i in range(10):
+            row_frame = ttk.Frame(setpoints_frame)
+            row_frame.pack(fill=tk.X, pady=1)
+            ttk.Label(row_frame, text=f"{i+1}", font=("Arial", 9), width=3).pack(side=tk.LEFT, padx=2)
+            x_entry = ttk.Entry(row_frame, width=10)
+            x_entry.pack(side=tk.LEFT, padx=2)
+            y_entry = ttk.Entry(row_frame, width=10)
+            y_entry.pack(side=tk.LEFT, padx=2)
+            self.custom_setpoint_entries.append((x_entry, y_entry))
+        
+        # Initialize with default square pattern
+        default_setpoints = [(0.0, 0.0), (0.05, 0.05), (0.05, -0.05), (-0.05, -0.05), (-0.05, 0.05)]
+        for i, (x, y) in enumerate(default_setpoints):
+            if i < len(self.custom_setpoint_entries):
+                self.custom_setpoint_entries[i][0].insert(0, f"{x:.4f}")
+                self.custom_setpoint_entries[i][1].insert(0, f"{y:.4f}")
+        
+        # Pattern control buttons
+        pattern_control_frame = ttk.Frame(self.root)
+        pattern_control_frame.pack(pady=5)
+        ttk.Button(pattern_control_frame, text="Update Pattern",
+                  command=self.update_pattern_from_entries).pack(side=tk.LEFT, padx=5)
+        ttk.Button(pattern_control_frame, text="Clear All",
+                  command=self.clear_all_setpoints).pack(side=tk.LEFT, padx=5)
+        ttk.Button(pattern_control_frame, text="Generate Circle (10cm)",
+                  command=self.generate_circle_pattern).pack(side=tk.LEFT, padx=5)
+        self.square_pattern_button = ttk.Button(pattern_control_frame, text="Start Pattern",
+                                                command=self.toggle_square_pattern)
+        self.square_pattern_button.pack(side=tk.LEFT, padx=5)
+        
+        # Settle parameters
+        settle_params_frame = ttk.Frame(self.root)
+        settle_params_frame.pack(pady=2)
+        ttk.Label(settle_params_frame, text="Settle Tolerance (m):", font=("Arial", 9)).pack(side=tk.LEFT, padx=2)
+        self.settle_tolerance_entry = ttk.Entry(settle_params_frame, width=8)
+        self.settle_tolerance_entry.insert(0, f"{self.settle_tolerance:.4f}")
+        self.settle_tolerance_entry.pack(side=tk.LEFT, padx=2)
+        self.settle_tolerance_entry.bind('<Return>', lambda e: self._update_settle_tolerance())
+        
+        ttk.Label(settle_params_frame, text="Settle Duration (s):", font=("Arial", 9)).pack(side=tk.LEFT, padx=2)
+        self.settle_duration_entry = ttk.Entry(settle_params_frame, width=8)
+        self.settle_duration_entry.insert(0, f"{self.settle_duration:.2f}")
+        self.settle_duration_entry.pack(side=tk.LEFT, padx=2)
+        self.settle_duration_entry.bind('<Return>', lambda e: self._update_settle_duration())
+        
+        self.pattern_status_label = ttk.Label(self.root, text="Pattern: Stopped (0 setpoints)", font=("Arial", 9))
+        self.pattern_status_label.pack(pady=2)
+        
         # Setpoint controls
         ttk.Label(self.root, text="Setpoint", font=("Arial", 12)).pack(pady=5)
         
@@ -475,10 +603,10 @@ class StewartPlatformController:
         setpoint_x_frame = ttk.Frame(self.root)
         setpoint_x_frame.pack(pady=2)
         self.setpoint_x_var = tk.DoubleVar(value=self.setpoint_x)
-        setpoint_x_slider = ttk.Scale(setpoint_x_frame, from_=-pos_range, to=pos_range,
+        self.setpoint_x_slider = ttk.Scale(setpoint_x_frame, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_x_var,
                                      orient=tk.HORIZONTAL, length=450)
-        setpoint_x_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.setpoint_x_slider.pack(side=tk.LEFT, padx=(0, 5))
         self.setpoint_x_entry = ttk.Entry(setpoint_x_frame, width=10)
         self.setpoint_x_entry.insert(0, f"{self.setpoint_x:.4f}")
         self.setpoint_x_entry.pack(side=tk.LEFT)
@@ -491,10 +619,10 @@ class StewartPlatformController:
         setpoint_y_frame = ttk.Frame(self.root)
         setpoint_y_frame.pack(pady=2)
         self.setpoint_y_var = tk.DoubleVar(value=self.setpoint_y)
-        setpoint_y_slider = ttk.Scale(setpoint_y_frame, from_=-pos_range, to=pos_range,
+        self.setpoint_y_slider = ttk.Scale(setpoint_y_frame, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_y_var,
                                      orient=tk.HORIZONTAL, length=450)
-        setpoint_y_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.setpoint_y_slider.pack(side=tk.LEFT, padx=(0, 5))
         self.setpoint_y_entry = ttk.Entry(setpoint_y_frame, width=10)
         self.setpoint_y_entry.insert(0, f"{self.setpoint_y:.4f}")
         self.setpoint_y_entry.pack(side=tk.LEFT)
@@ -545,10 +673,20 @@ class StewartPlatformController:
             # PID parameters for Y axis
             self.pid.set_gains_y(self.kp_y_var.get(), self.ki_y_var.get(), self.kd_y_var.get())
             
-            # Setpoints
-            self.setpoint_x = self.setpoint_x_var.get()
-            self.setpoint_y = self.setpoint_y_var.get()
-            self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+            # Setpoints (only update from GUI if pattern is not enabled)
+            if not self.square_pattern_enabled:
+                self.setpoint_x = self.setpoint_x_var.get()
+                self.setpoint_y = self.setpoint_y_var.get()
+                self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+            else:
+                # Update GUI to reflect pattern setpoint
+                self.setpoint_x_var.set(self.setpoint_x)
+                self.setpoint_y_var.set(self.setpoint_y)
+                # Update pattern status
+                if len(self.square_setpoints) > 0:
+                    self.pattern_status_label.config(
+                        text=f"Pattern: Running - Setpoint {self.square_pattern_index + 1}/{len(self.square_setpoints)}: "
+                        f"({self.setpoint_x:.3f}, {self.setpoint_y:.3f})")
             
             # Update displayed values
             self.kp_x_label.config(text=f"Kp_x: {self.pid.Kp_x:.1f}")
@@ -586,6 +724,184 @@ class StewartPlatformController:
     def reset_integral(self):
         """Clear integral error in PID (button handler)."""
         self.pid.reset_integral()
+    
+    def toggle_square_pattern(self):
+        """Toggle square pattern on/off."""
+        if self.square_pattern_enabled:
+            self.stop_square_pattern()
+        else:
+            self.start_square_pattern()
+    
+    def update_pattern_from_entries(self):
+        """Update pattern setpoints from entry fields."""
+        new_setpoints = []
+        for x_entry, y_entry in self.custom_setpoint_entries:
+            x_str = x_entry.get().strip()
+            y_str = y_entry.get().strip()
+            if x_str and y_str:
+                try:
+                    x_val = float(x_str)
+                    y_val = float(y_str)
+                    new_setpoints.append((x_val, y_val))
+                except ValueError:
+                    print(f"[PATTERN] Invalid setpoint entry: ({x_str}, {y_str})")
+        
+        if len(new_setpoints) == 0:
+            print("[PATTERN] No valid setpoints entered. Pattern must have at least 1 setpoint.")
+            self.pattern_status_label.config(text="Pattern: No valid setpoints (need at least 1)")
+            return
+        
+        self.square_setpoints = new_setpoints
+        self.square_pattern_index = 0  # Reset to first setpoint
+        
+        print(f"[PATTERN] Updated pattern with {len(new_setpoints)} setpoints: {new_setpoints}")
+        
+        # If pattern is running, update to new first setpoint
+        if self.square_pattern_enabled:
+            sp_x, sp_y = self.square_setpoints[0]
+            self.setpoint_x = sp_x
+            self.setpoint_y = sp_y
+            self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+            self.settle_start_time = None
+            self.settled = False
+            self.pattern_status_label.config(
+                text=f"Pattern: Running - Setpoint 1/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
+        else:
+            self.pattern_status_label.config(text=f"Pattern: Ready ({len(new_setpoints)} setpoints)")
+    
+    def clear_all_setpoints(self):
+        """Clear all setpoint entry fields."""
+        for x_entry, y_entry in self.custom_setpoint_entries:
+            x_entry.delete(0, tk.END)
+            y_entry.delete(0, tk.END)
+        print("[PATTERN] Cleared all setpoint entries")
+        self.pattern_status_label.config(text="Pattern: Stopped (0 setpoints)")
+    
+    def generate_circle_pattern(self):
+        """Generate setpoints for a circle with 10 cm radius."""
+        import math
+        
+        radius = 0.10  # 10 cm in meters
+        num_points = 16  # Number of points around the circle
+        center_x = 0.0
+        center_y = 0.0
+        
+        # Clear all entries first
+        for x_entry, y_entry in self.custom_setpoint_entries:
+            x_entry.delete(0, tk.END)
+            y_entry.delete(0, tk.END)
+        
+        # Generate circular setpoints
+        circle_setpoints = []
+        for i in range(num_points):
+            angle = 2 * math.pi * i / num_points
+            x = center_x + radius * math.cos(angle)
+            y = center_y + radius * math.sin(angle)
+            circle_setpoints.append((x, y))
+            
+            # Fill in entry fields
+            if i < len(self.custom_setpoint_entries):
+                self.custom_setpoint_entries[i][0].insert(0, f"{x:.4f}")
+                self.custom_setpoint_entries[i][1].insert(0, f"{y:.4f}")
+        
+        # Automatically update the pattern
+        self.square_setpoints = circle_setpoints
+        self.square_pattern_index = 0
+        
+        # If pattern is running, update to new first setpoint
+        if self.square_pattern_enabled:
+            sp_x, sp_y = self.square_setpoints[0]
+            self.setpoint_x = sp_x
+            self.setpoint_y = sp_y
+            self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+            self.settle_start_time = None
+            self.settled = False
+            self.pattern_status_label.config(
+                text=f"Pattern: Running - Setpoint 1/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
+        else:
+            self.pattern_status_label.config(text=f"Pattern: Ready ({len(circle_setpoints)} setpoints - Circle 10cm)")
+        
+        print(f"[PATTERN] Generated circle pattern with {num_points} points, radius {radius*100:.1f} cm")
+    
+    def start_square_pattern(self):
+        """Start square pattern sequence."""
+        # Make sure we have valid setpoints
+        if len(self.square_setpoints) == 0:
+            print("[PATTERN] No setpoints configured. Please enter setpoints and click 'Update Pattern' first.")
+            self.pattern_status_label.config(text="Pattern: Error - No setpoints configured")
+            return
+        
+        self.square_pattern_enabled = True
+        self.square_pattern_index = 0
+        sp_x, sp_y = self.square_setpoints[self.square_pattern_index]
+        self.setpoint_x = sp_x
+        self.setpoint_y = sp_y
+        self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+        self.settle_start_time = None
+        self.settled = False
+        
+        # Update GUI
+        self.square_pattern_button.config(text="Stop Pattern")
+        self.pattern_status_label.config(text=f"Pattern: Running - Setpoint 1/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
+        
+        # Disable setpoint sliders when pattern is active
+        if hasattr(self, 'setpoint_x_slider'):
+            self.setpoint_x_slider.config(state='disabled')
+        if hasattr(self, 'setpoint_y_slider'):
+            self.setpoint_y_slider.config(state='disabled')
+        
+        print(f"[PATTERN] Started pattern with {len(self.square_setpoints)} setpoints, starting at ({sp_x:.3f}, {sp_y:.3f})")
+    
+    def stop_square_pattern(self):
+        """Stop square pattern sequence."""
+        self.square_pattern_enabled = False
+        self.settle_start_time = None
+        self.settled = False
+        
+        # Update GUI
+        self.square_pattern_button.config(text="Start Pattern")
+        num_setpoints = len(self.square_setpoints)
+        self.pattern_status_label.config(text=f"Pattern: Stopped ({num_setpoints} setpoints)")
+        
+        # Re-enable setpoint sliders
+        if hasattr(self, 'setpoint_x_slider'):
+            self.setpoint_x_slider.config(state='normal')
+        if hasattr(self, 'setpoint_y_slider'):
+            self.setpoint_y_slider.config(state='normal')
+        
+        print("[PATTERN] Stopped pattern")
+    
+    def _update_settle_tolerance(self):
+        """Update settle tolerance from entry box."""
+        try:
+            value = float(self.settle_tolerance_entry.get())
+            if value > 0:
+                self.settle_tolerance = value
+                print(f"[PATTERN] Settle tolerance updated to {value:.4f}m")
+            else:
+                # Reset to current value if invalid
+                self.settle_tolerance_entry.delete(0, tk.END)
+                self.settle_tolerance_entry.insert(0, f"{self.settle_tolerance:.4f}")
+        except ValueError:
+            # Reset to current value if invalid
+            self.settle_tolerance_entry.delete(0, tk.END)
+            self.settle_tolerance_entry.insert(0, f"{self.settle_tolerance:.4f}")
+    
+    def _update_settle_duration(self):
+        """Update settle duration from entry box."""
+        try:
+            value = float(self.settle_duration_entry.get())
+            if value > 0:
+                self.settle_duration = value
+                print(f"[PATTERN] Settle duration updated to {value:.2f}s")
+            else:
+                # Reset to current value if invalid
+                self.settle_duration_entry.delete(0, tk.END)
+                self.settle_duration_entry.insert(0, f"{self.settle_duration:.2f}")
+        except ValueError:
+            # Reset to current value if invalid
+            self.settle_duration_entry.delete(0, tk.END)
+            self.settle_duration_entry.insert(0, f"{self.settle_duration:.2f}")
     
     def plot_results(self):
         """Show matplotlib plots of position and control logs."""
