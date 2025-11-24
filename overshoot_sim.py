@@ -49,7 +49,7 @@ class BallBeamPhysics:
         
         # Simulate Actuator Dynamics (Servo Lag)
         # Modeled as a Low Pass Filter: Servos move towards target over time
-        servo_speed = 0.15
+        servo_speed = 0.18
         self.angle = self.angle * (1 - servo_speed) + target_angle_rad * servo_speed
         
         # Calculate Acceleration
@@ -133,7 +133,7 @@ def main():
     # Scenario 1: Config Defaults (High Stiffness)
     # Gains taken from config_stewart.json
     t1, x1, v1, u1 = run_experiment(
-        Kp=0.9, Ki=0.1, Kd=0.3, 
+        Kp=0.8, Ki=0.1, Kd=0.3, 
         delay_frames=3, 
         label="Config Defaults"
     )
@@ -141,17 +141,9 @@ def main():
     # Scenario 2: Tuned for Stability (Critical Damping)
     # Lower P to account for error scaling, Tuned D for damping
     t2, x2, v2, u2 = run_experiment(
-        Kp=0.8, Ki=0.1, Kd=0.46, 
+        Kp=0.6, Ki=0.1, Kd=0.4, 
         delay_frames=3, 
         label="Tuned Gains"
-    )
-
-    # Scenario 3: High Latency Stress Test
-    # Same tuned gains, but with increased sensor delay
-    t3, x3, v3, u3 = run_experiment(
-        Kp=0.8, Ki=0.1, Kd=0.46, 
-        delay_frames=8, 
-        label="High Latency"
     )
 
     # Setup Plots
@@ -162,7 +154,6 @@ def main():
     ax_pos = axes[0, 0]
     ax_pos.plot(t1, x1, 'r-', label='Baseline (Config Gains)')
     ax_pos.plot(t2, x2, 'g-', linewidth=2, label='Tuned (Lower P, High D)')
-    ax_pos.plot(t3, x3, 'b--', label='High Latency')
     ax_pos.axhline(0, color='k', linestyle=':', alpha=0.5)
     ax_pos.set_title('Step Response: Position vs Time')
     ax_pos.set_ylabel('Position (m)')
@@ -174,7 +165,6 @@ def main():
     ax_phase = axes[0, 1]
     ax_phase.plot(x1, v1, 'r-', alpha=0.6)
     ax_phase.plot(x2, v2, 'g-', linewidth=2)
-    ax_phase.plot(x3, v3, 'b--', alpha=0.6)
     ax_phase.set_title('Phase Plane (Velocity vs Position)')
     ax_phase.set_xlabel('Position (m)')
     ax_phase.set_ylabel('Velocity (m/s)')
@@ -239,11 +229,16 @@ def run_interactive_tuner():
     root.title("PID Simulation Tuner")
     root.geometry("1000x850") # Increased height for text boxes
 
-    # 2. Setup Variables
-    kp_var = tk.DoubleVar(value=0.6)
-    ki_var = tk.DoubleVar(value=0.1)
-    kd_var = tk.DoubleVar(value=0.4)
-    delay_var = tk.IntVar(value=3)
+    # 2. Setup Variables with default values
+    DEFAULT_KP = 0.6
+    DEFAULT_KI = 0.1
+    DEFAULT_KD = 0.4
+    DEFAULT_DELAY = 3
+    
+    kp_var = tk.DoubleVar(value=DEFAULT_KP)
+    ki_var = tk.DoubleVar(value=DEFAULT_KI)
+    kd_var = tk.DoubleVar(value=DEFAULT_KD)
+    delay_var = tk.IntVar(value=DEFAULT_DELAY)
 
     # 3. Setup Matplotlib Figure
     fig = Figure(figsize=(8, 5), dpi=100)
@@ -286,6 +281,30 @@ def run_interactive_tuner():
         with open("overshoot_data/good_values.txt", "a") as f:
             f.write(val_str)
         print(f"Values saved: {val_str.strip()}")
+    
+    def reset_values():
+        kp_var.set(DEFAULT_KP)
+        ki_var.set(DEFAULT_KI)
+        kd_var.set(DEFAULT_KD)
+        delay_var.set(DEFAULT_DELAY)
+        update_simulation()
+        print(f"Reset to defaults: Kp={DEFAULT_KP}, Ki={DEFAULT_KI}, Kd={DEFAULT_KD}, Delay={DEFAULT_DELAY}")
+    
+    def save_image():
+        output_dir = "overshoot_data"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        # Generate filename with current parameters
+        kp = kp_var.get()
+        ki = ki_var.get()
+        kd = kd_var.get()
+        delay = delay_var.get()
+        filename = f"simulated_position_Kp{kp:.2f}_Ki{ki:.2f}_Kd{kd:.2f}_D{delay}.png"
+        save_path = os.path.join(output_dir, filename)
+        
+        fig.savefig(save_path, dpi=150, bbox_inches='tight')
+        print(f"Image saved to: {save_path}")
 
     # 4. Create Controls Area
     ctrl_frame = ttk.LabelFrame(root, text="Tuning Parameters")
@@ -325,6 +344,8 @@ def run_interactive_tuner():
     
     ttk.Button(btn_frame, text="Update Plot (Enter)", command=update_simulation).pack(side=tk.LEFT, padx=10)
     ttk.Button(btn_frame, text="Save Values to File", command=save_values).pack(side=tk.LEFT, padx=10)
+    ttk.Button(btn_frame, text="Save Image", command=save_image).pack(side=tk.LEFT, padx=10)
+    ttk.Button(btn_frame, text="Reset to Defaults", command=reset_values).pack(side=tk.LEFT, padx=10)
 
     # Initial Draw
     update_simulation()
