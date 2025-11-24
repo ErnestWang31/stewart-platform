@@ -49,7 +49,7 @@ class BallBeamPhysics:
         
         # Simulate Actuator Dynamics (Servo Lag)
         # Modeled as a Low Pass Filter: Servos move towards target over time
-        servo_speed = 0.2 
+        servo_speed = 0.15
         self.angle = self.angle * (1 - servo_speed) + target_angle_rad * servo_speed
         
         # Calculate Acceleration
@@ -91,8 +91,8 @@ class NoisySensor:
 
 # --- 3. EXPERIMENT RUNNER ---
 def run_experiment(Kp, Ki, Kd, delay_frames, label):
-    dt = 0.01 # 100 Hz simulation loop
-    total_time = 4.0
+    dt = 0.033 # 30 Hz simulation loop
+    total_time = 10.0
     steps = int(total_time / dt)
     
     # Initialize Plant (starting at -10cm) and Sensor
@@ -240,9 +240,9 @@ def run_interactive_tuner():
     root.geometry("1000x850") # Increased height for text boxes
 
     # 2. Setup Variables
-    kp_var = tk.DoubleVar(value=2.0)
+    kp_var = tk.DoubleVar(value=0.6)
     ki_var = tk.DoubleVar(value=0.1)
-    kd_var = tk.DoubleVar(value=0.75)
+    kd_var = tk.DoubleVar(value=0.4)
     delay_var = tk.IntVar(value=3)
 
     # 3. Setup Matplotlib Figure
@@ -270,7 +270,7 @@ def run_interactive_tuner():
         ax.clear()
         ax.plot(t, x, 'b-', linewidth=2, label=f'Kp={kp:.2f}, Ki={ki:.2f}, Kd={kd:.2f}')
         ax.axhline(0, color='k', linestyle=':', alpha=0.5)
-        ax.axhspan(-0.02, 0.02, color='yellow', alpha=0.1, label='Integral Window')
+        ax.axhspan(-0.02, 0.02, color='yellow', alpha=0.1, label='Target Window')
         ax.set_ylim(-0.12, 0.05)
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('Position (m)')
@@ -336,7 +336,7 @@ if __name__ == "__main__":
     # === SELECT MODE HERE ===
     
     # MODE 1: Run the original comparative report (generates overshoot_data/ image)
-    main()
+    # main()
     
     # MODE 2: Run the interactive GUI tuner
-    # run_interactive_tuner()
+    run_interactive_tuner()

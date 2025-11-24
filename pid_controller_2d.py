@@ -10,15 +10,13 @@ class PIDController2D:
     
     def __init__(self, Kp_x=10.0, Ki_x=0.0, Kd_x=0.0,
                  Kp_y=10.0, Ki_y=0.0, Kd_y=0.0,
-                 output_limit_x=15.0, output_limit_y=15.0,
-                 integral_zone=0.02):
+                 output_limit_x=15.0, output_limit_y=15.0):
         """Initialize 2D PID controller.
         
         Args:
             Kp_x, Ki_x, Kd_x: PID gains for X axis (roll)
             Kp_y, Ki_y, Kd_y: PID gains for Y axis (pitch)
             output_limit_x, output_limit_y: Maximum output values (degrees)
-            integral_zone: Distance from center (meters) within which integral is active (default: 0.02m = 2cm)
         """
         # X-axis PID gains
         self.Kp_x = Kp_x
@@ -33,9 +31,6 @@ class PIDController2D:
         # Output limits
         self.output_limit_x = output_limit_x
         self.output_limit_y = output_limit_y
-        
-        # Integral windup prevention
-        self.integral_zone = integral_zone  # Distance threshold for integral activation
         
         # X-axis controller state
         self.setpoint_x = 0.0
@@ -78,13 +73,8 @@ class PIDController2D:
         # Proportional term
         P_x = self.Kp_x * error_x
         
-        # Integral term with windup prevention
-        # Only accumulate integral if within threshold zone, otherwise reset
-        distance_from_center_x = abs(position_x - self.setpoint_x)
-        if distance_from_center_x <= self.integral_zone:
-            self.integral_x += error_x * dt
-        else:
-            self.integral_x = 0.0
+        # Integral term
+        self.integral_x += error_x * dt
         I_x = self.Ki_x * self.integral_x
         
         # Derivative term
@@ -109,13 +99,8 @@ class PIDController2D:
         # Proportional term
         P_y = self.Kp_y * error_y
         
-        # Integral term with windup prevention
-        # Only accumulate integral if within threshold zone, otherwise reset
-        distance_from_center_y = abs(position_y - self.setpoint_y)
-        if distance_from_center_y <= self.integral_zone:
-            self.integral_y += error_y * dt
-        else:
-            self.integral_y = 0.0
+        # Integral term
+        self.integral_y += error_y * dt
         I_y = self.Ki_y * self.integral_y
         
         # Derivative term
