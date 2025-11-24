@@ -627,4 +627,3 @@ if __name__ == "__main__":
     """Run calibration when script is executed directly."""
     calibrator = StewartPlatformCalibrator()
     calibrator.run()
-

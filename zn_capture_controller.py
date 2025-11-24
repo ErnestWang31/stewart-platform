@@ -580,7 +580,9 @@ class ZNCaptureController:
                 except queue.Full:
                     pass
 
-            vis_frame, _, _, _ = self.detector.draw_detection(frame, show_info=True)
+            vis_frame, _, _, _ = self.detector.draw_detection(
+                frame, show_info=True, axis_overlay=self.target_axis if self.capture_enabled else None
+            )
             cv2.imshow("ZN Capture - Ball Tracking", vis_frame)
             if cv2.waitKey(1) & 0xFF == 27:
                 self._run_in_ui(self._stop)

@@ -129,7 +129,7 @@ class BallDetector2D:
         
         return True, (int(x), int(y)), radius, position_x_m, position_y_m
 
-    def draw_detection(self, frame, show_info=True):
+    def draw_detection(self, frame, show_info=True, axis_overlay=None):
         """Detect ball and draw detection overlay on frame.
         
         Args:
@@ -154,6 +154,7 @@ class BallDetector2D:
         center_y = height // 2
         
         # Check if config has platform center (for circular platform calibration)
+        axis_dir = axis_overlay
         if self.config and self.config.get('platform_center_pixels'):
             platform_center = self.config.get('platform_center_pixels')
             if platform_center and len(platform_center) == 2:
@@ -162,11 +163,34 @@ class BallDetector2D:
                 if self.config.get('platform_radius_pixels'):
                     radius = int(self.config.get('platform_radius_pixels'))
                     cv2.circle(overlay, (center_x, center_y), radius, (200, 200, 200), 1)
+        radius_pixels = int(self.config.get('platform_radius_pixels', min(height, width) // 3))
         
         cv2.line(overlay, (center_x - 20, center_y), (center_x + 20, center_y), (255, 255, 255), 1)
         cv2.line(overlay, (center_x, center_y - 20), (center_x, center_y + 20), (255, 255, 255), 1)
         cv2.putText(overlay, "Center", (center_x + 5, center_y - 5),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+        # Draw selected axis overlay if requested
+        if axis_dir in ("x", "roll", "horizontal"):
+            cv2.line(
+                overlay,
+                (center_x - radius_pixels, center_y),
+                (center_x + radius_pixels, center_y),
+                (0, 0, 255),
+                2,
+            )
+            cv2.putText(overlay, "Roll Axis", (center_x + 10, center_y - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+        elif axis_dir in ("y", "pitch", "vertical"):
+            cv2.line(
+                overlay,
+                (center_x, center_y - radius_pixels),
+                (center_x, center_y + radius_pixels),
+                (255, 0, 0),
+                2,
+            )
+            cv2.putText(overlay, "Pitch Axis", (center_x + 10, center_y - radius_pixels + 20),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
         
         if found:
             # Draw circle around detected ball

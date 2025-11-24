@@ -384,7 +384,10 @@ class RelayAutotuneController:
                 except queue.Full:
                     pass
 
-            vis_frame, _, _, _ = self.detector.draw_detection(frame, show_info=True)
+            axis_vis = self.target_axis if self.capture_enabled else None
+            vis_frame, _, _, _ = self.detector.draw_detection(
+                frame, show_info=True, axis_overlay=axis_vis
+            )
             cv2.imshow("Relay Autotune - Ball Tracking", vis_frame)
             if cv2.waitKey(1) & 0xFF == 27:
                 self._run_in_ui(self._stop)
