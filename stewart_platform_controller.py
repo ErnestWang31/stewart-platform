@@ -5,6 +5,7 @@
 import cv2
 import numpy as np
 import json
+import math
 import serial
 import time
 import tkinter as tk
@@ -77,6 +78,16 @@ class StewartPlatformController:
         self.setpoint_x = 0.0
         self.setpoint_y = 0.0
         
+        # Platform orientation (camera frame -> platform frame)
+        axis_rotation_value = self.config.get('axis_rotation_deg')
+        if isinstance(axis_rotation_value, (int, float)):
+            self.axis_rotation_deg = float(axis_rotation_value)
+        else:
+            self.axis_rotation_deg = 0.0
+        self.axis_rotation_rad = math.radians(self.axis_rotation_deg)
+        self._cam_to_platform_cos = math.cos(-self.axis_rotation_rad)
+        self._cam_to_platform_sin = math.sin(-self.axis_rotation_rad)
+        
         # Data logs for plotting results
         self.time_log = []
         self.position_x_log = []
@@ -85,8 +96,14 @@ class StewartPlatformController:
         self.setpoint_y_log = []
         self.control_x_log = []
         self.control_y_log = []
+        self.position_x_log_platform = []
+        self.position_y_log_platform = []
+        self.setpoint_x_log_platform = []
+        self.setpoint_y_log_platform = []
         self.start_time = None
         self.latest_position = (0.0, 0.0)
+        self.latest_position_platform = (0.0, 0.0)
+        self.latest_setpoint_platform = (0.0, 0.0)
         self.latest_error = (0.0, 0.0)
         self.telemetry_window = None
         self.telemetry_canvas = None
@@ -279,6 +296,14 @@ class StewartPlatformController:
         
         return motor1_angle, motor2_angle, motor3_angle
     
+    def _camera_to_platform_frame(self, x_value, y_value):
+        """Rotate camera-frame coordinates into the platform frame for visualization."""
+        cos_theta = self._cam_to_platform_cos
+        sin_theta = self._cam_to_platform_sin
+        platform_x = x_value * cos_theta - y_value * sin_theta
+        platform_y = x_value * sin_theta + y_value * cos_theta
+        return platform_x, platform_y
+    
     def camera_thread(self):
         """Dedicated thread for video capture and ball detection."""
         camera_index = self.config['camera']['index']
@@ -329,6 +354,10 @@ class StewartPlatformController:
                 # Wait for latest ball position from camera
                 position_x, position_y = self.position_queue.get(timeout=0.1)
                 
+                # Rotate measurements/setpoints into platform frame for visualization/logging
+                platform_pos_x, platform_pos_y = self._camera_to_platform_frame(position_x, position_y)
+                platform_setpoint_x, platform_setpoint_y = self._camera_to_platform_frame(self.setpoint_x, self.setpoint_y)
+                
                 # Compute control output using 2D PID
                 control_output_x, control_output_y = self.pid.update(position_x, position_y)
                 
@@ -342,12 +371,18 @@ class StewartPlatformController:
                 self.position_y_log.append(position_y)
                 self.setpoint_x_log.append(self.setpoint_x)
                 self.setpoint_y_log.append(self.setpoint_y)
+                self.position_x_log_platform.append(platform_pos_x)
+                self.position_y_log_platform.append(platform_pos_y)
+                self.setpoint_x_log_platform.append(platform_setpoint_x)
+                self.setpoint_y_log_platform.append(platform_setpoint_y)
                 self.control_x_log.append(control_output_x)
                 self.control_y_log.append(control_output_y)
                 
                 print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
                       f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
                 self.latest_position = (position_x, position_y)
+                self.latest_position_platform = (platform_pos_x, platform_pos_y)
+                self.latest_setpoint_platform = (platform_setpoint_x, platform_setpoint_y)
                 self.latest_error = (self.setpoint_x - position_x, self.setpoint_y - position_y)
                 
             except queue.Empty:
@@ -483,6 +518,7 @@ class StewartPlatformController:
             self.setpoint_x = self.setpoint_x_var.get()
             self.setpoint_y = self.setpoint_y_var.get()
             self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+            self.latest_setpoint_platform = self._camera_to_platform_frame(self.setpoint_x, self.setpoint_y)
             
             # Update displayed values
             self.kp_x_label.config(text=f"Kp_x: {self.pid.Kp_x:.1f}")
@@ -517,21 +553,27 @@ class StewartPlatformController:
         ax_pitch = fig.add_subplot(gs[1, 1])
         ax_plane = fig.add_subplot(gs[2, :])
         
+        # Choose data frame for visualization (platform-aligned if available)
+        x_log_vis = self.position_x_log_platform if self.position_x_log_platform else self.position_x_log
+        y_log_vis = self.position_y_log_platform if self.position_y_log_platform else self.position_y_log
+        spx_log_vis = self.setpoint_x_log_platform if self.setpoint_x_log_platform else self.setpoint_x_log
+        spy_log_vis = self.setpoint_y_log_platform if self.setpoint_y_log_platform else self.setpoint_y_log
+        
         # X position trace
-        ax_x.plot(self.time_log, self.position_x_log, label="Ball X Position", linewidth=2)
-        ax_x.plot(self.time_log, self.setpoint_x_log, label="Setpoint X",
+        ax_x.plot(self.time_log, x_log_vis, label="Ball X Position", linewidth=2)
+        ax_x.plot(self.time_log, spx_log_vis, label="Setpoint X",
                   linestyle="--", linewidth=2)
-        ax_x.set_ylabel("Position X (m)")
-        ax_x.set_title("X-Axis (Roll) Control")
+        ax_x.set_ylabel("Platform X (m)")
+        ax_x.set_title("Platform X-Axis (Roll) Control")
         ax_x.legend()
         ax_x.grid(True, alpha=0.3)
         
         # Y position trace
-        ax_y.plot(self.time_log, self.position_y_log, label="Ball Y Position", linewidth=2, color='green')
-        ax_y.plot(self.time_log, self.setpoint_y_log, label="Setpoint Y",
+        ax_y.plot(self.time_log, y_log_vis, label="Ball Y Position", linewidth=2, color='green')
+        ax_y.plot(self.time_log, spy_log_vis, label="Setpoint Y",
                   linestyle="--", linewidth=2)
-        ax_y.set_ylabel("Position Y (m)")
-        ax_y.set_title("Y-Axis (Pitch) Control")
+        ax_y.set_ylabel("Platform Y (m)")
+        ax_y.set_title("Platform Y-Axis (Pitch) Control")
         ax_y.legend()
         ax_y.grid(True, alpha=0.3)
         
@@ -556,11 +598,11 @@ class StewartPlatformController:
         theta = np.linspace(0, 2 * np.pi, 400)
         ax_plane.plot(radius * np.cos(theta), radius * np.sin(theta),
                       color="#888888", linestyle="--", label="Plate Boundary")
-        ax_plane.plot(self.position_x_log, self.position_y_log,
+        ax_plane.plot(x_log_vis, y_log_vis,
                       label="Ball Path", linewidth=2, color="#1f77b4")
-        ax_plane.scatter(self.setpoint_x_log[-1], self.setpoint_y_log[-1],
+        ax_plane.scatter(spx_log_vis[-1], spy_log_vis[-1],
                          marker="x", color="red", s=80, label="Target")
-        ax_plane.scatter(self.position_x_log[-1], self.position_y_log[-1],
+        ax_plane.scatter(x_log_vis[-1], y_log_vis[-1],
                          marker="o", color="green", s=50, label="Last Position")
         ax_plane.set_xlabel("X (m)")
         ax_plane.set_ylabel("Y (m)")
@@ -677,6 +719,8 @@ class StewartPlatformController:
             return
         
         x, y = self.latest_position
+        x_pf, y_pf = self.latest_position_platform
+        sp_pf_x, sp_pf_y = self.latest_setpoint_platform
         err_x, err_y = self.latest_error
         
         self.telemetry_actual_label.config(text=f"Ball:     X={x:+0.4f} m  |  Y={y:+0.4f} m")
@@ -705,9 +749,9 @@ class StewartPlatformController:
             cy = center - py * scale
             return cx, cy
         
-        # Draw setpoint and actual positions
-        spx, spy = to_canvas(self.setpoint_x, self.setpoint_y)
-        bx, by = to_canvas(x, y)
+        # Draw setpoint and actual positions (platform frame)
+        spx, spy = to_canvas(sp_pf_x, sp_pf_y)
+        bx, by = to_canvas(x_pf, y_pf)
         canvas.create_oval(spx - 6, spy - 6, spx + 6, spy + 6,
                            outline="#ff5555", width=2)
         canvas.create_oval(bx - 6, by - 6, bx + 6, by + 6,
@@ -729,6 +773,7 @@ class StewartPlatformController:
                     motor_x_px, motor_y_px = motor_pos_px[0], motor_pos_px[1]
                     motor_x_m = (motor_x_px - center_x_px) * pixel_to_meter_ratio
                     motor_y_m = (motor_y_px - center_y_px) * pixel_to_meter_ratio
+                    motor_x_m, motor_y_m = self._camera_to_platform_frame(motor_x_m, motor_y_m)
                     
                     # Convert to canvas coordinates
                     mx, my = to_canvas(motor_x_m, motor_y_m)
