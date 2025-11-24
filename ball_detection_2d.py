@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import json
 import os
+import math
 
 class BallDetector2D:
     """Computer vision ball detector using HSV color space filtering for 2D position tracking."""
@@ -22,6 +23,8 @@ class BallDetector2D:
         self.scale_factor_x = 1.0  # Conversion factor from normalized x-coords to meters
         self.scale_factor_y = 1.0  # Conversion factor from normalized y-coords to meters
         self.config = None  # Store config for platform center access
+        self.axis_rotation_deg = 0.0
+        self.axis_rotation_rad = 0.0
         
         # Load configuration from file if it exists
         if os.path.exists(config_file):
@@ -52,6 +55,10 @@ class BallDetector2D:
                         ratio = config['calibration']['pixel_to_meter_ratio']
                         self.scale_factor_x = ratio * (frame_width / 2)
                         self.scale_factor_y = ratio * (frame_height / 2)
+                axis_rotation_value = config.get('axis_rotation_deg')
+                if isinstance(axis_rotation_value, (int, float)):
+                    self.axis_rotation_deg = float(axis_rotation_value)
+                    self.axis_rotation_rad = math.radians(self.axis_rotation_deg)
                 
                 print(f"[BALL_DETECT_2D] Loaded HSV bounds: {self.lower_hsv} to {self.upper_hsv}")
                 print(f"[BALL_DETECT_2D] Scale factors: X={self.scale_factor_x:.6f}, Y={self.scale_factor_y:.6f} m/normalized_unit")
@@ -129,7 +136,7 @@ class BallDetector2D:
         
         return True, (int(x), int(y)), radius, position_x_m, position_y_m
 
-    def draw_detection(self, frame, show_info=True):
+    def draw_detection(self, frame, show_info=True, rotate_display=False):
         """Detect ball and draw detection overlay on frame.
         
         Args:
@@ -205,7 +212,16 @@ class BallDetector2D:
                            (center[0] - 40, center[1] - 10),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
         
+        if rotate_display and abs(self.axis_rotation_deg) > 1e-3:
+            overlay = self._rotate_frame(overlay, -self.axis_rotation_deg)
+
         return overlay, found, position_x_m, position_y_m
+
+    def _rotate_frame(self, frame, angle_deg):
+        height, width = frame.shape[:2]
+        center = (width // 2, height // 2)
+        rotation_matrix = cv2.getRotationMatrix2D(center, angle_deg, 1.0)
+        return cv2.warpAffine(frame, rotation_matrix, (width, height), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
 # Legacy function for backward compatibility (returns normalized coordinates)
 def detect_ball_xy(frame):

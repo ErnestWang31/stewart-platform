@@ -395,7 +395,7 @@ class RelayAutotuneController:
                     pass
 
             vis_frame, _, _, _ = self.detector.draw_detection(
-                frame, show_info=True
+                frame, show_info=True, rotate_display=True
             )
             cv2.imshow("Relay Autotune - Ball Tracking", vis_frame)
             if cv2.waitKey(1) & 0xFF == 27:
@@ -482,55 +482,144 @@ class RelayAutotuneController:
             self.servo_serial = None
             return False
 
-    def send_platform_tilt(self, roll_angle: float, pitch_angle: float) -> None:
-        roll_angle = float(np.clip(roll_angle, -15, 15))
-        pitch_angle = float(np.clip(pitch_angle, -15, 15))
-
-        if self.roll_direction_invert:
-            roll_angle = -roll_angle
-
+    def send_platform_tilt(self, roll_angle, pitch_angle):
+        """Send tilt angles to platform motors using inverse kinematics.
+        
+        For a circular Stewart platform with 3 motors arranged at 120° intervals,
+        we convert roll and pitch angles to motor commands using inverse kinematics.
+        
+        Args:
+            roll_angle: Desired roll angle in degrees (rotation around X axis, positive = tilt right)
+            pitch_angle: Desired pitch angle in degrees (rotation around Y axis, positive = tilt forward)
+        """
+        # Clip angles to safe range
+        roll_angle = np.clip(roll_angle, -15, 15)
+        pitch_angle = np.clip(pitch_angle, -15, 15)
+        
         if self.use_inverse_kinematics:
+            # Use inverse kinematics to calculate motor angles
             try:
+                # Get motor joint angles from IK solver
                 theta_11, theta_21, theta_31 = self.ik_solver.get_motor_angles(roll_angle, pitch_angle)
-                angle_scale = self.config.get("platform", {}).get("ik_angle_scale", 1.0)
-                angle_offset = self.config.get("platform", {}).get("ik_angle_offset", 0.0)
-                dirs = [-1.0 if flag else 1.0 for flag in self.motor_direction_invert]
-                motor_angles = [
-                    self.neutral_angles[i] + (theta * angle_scale + angle_offset) * dirs[i]
-                    for i, theta in enumerate((theta_11, theta_21, theta_31))
-                ]
-            except Exception as exc:
-                print(f"[IK] Error {exc}, using simplified mapping.")
-                motor_angles = self._simplified_motor_mapping(roll_angle, pitch_angle)
+                
+                # Convert joint angles to servo angles
+                # The IK solver returns angles in degrees, we need to map them to servo range (0-30)
+                # This mapping depends on your physical setup - adjust as needed
+                
+                # Option 1: Use theta_11, theta_21, theta_31 directly (if they're already in servo range)
+                # Option 2: Map from joint angle range to servo range
+                # For now, we'll use a simple offset and scaling
+                
+                # Get angle range from config or use defaults
+                angle_scale = self.config.get('platform', {}).get('ik_angle_scale', 1.0)
+                angle_offset = self.config.get('platform', {}).get('ik_angle_offset', 0.0)
+                
+                # Map IK angles to servo angles
+                # Adjust these formulas based on your physical setup
+                # Apply direction inversion if configured
+                motor1_dir = -1.0 if self.motor_direction_invert[0] else 1.0
+                motor2_dir = -1.0 if self.motor_direction_invert[1] else 1.0
+                motor3_dir = -1.0 if self.motor_direction_invert[2] else 1.0
+                
+                motor1_angle = self.neutral_angles[0] + (theta_11 * angle_scale + angle_offset) * motor1_dir
+                motor2_angle = self.neutral_angles[1] + (theta_21 * angle_scale + angle_offset) * motor2_dir
+                motor3_angle = self.neutral_angles[2] + (theta_31 * angle_scale + angle_offset) * motor3_dir
+                
+            except Exception as e:
+                print(f"[IK] Error in inverse kinematics: {e}, falling back to simplified method")
+                # Fall back to simplified method on error
+                motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle)
         else:
-            motor_angles = self._simplified_motor_mapping(roll_angle, pitch_angle)
-
-        motor_packet = bytes(int(np.clip(angle, 0, 30)) for angle in motor_angles)
-
+            # Use simplified trigonometric mapping (fallback)
+            motor1_angle, motor2_angle, motor3_angle = self._simplified_motor_mapping(roll_angle, pitch_angle)
+        
+        # Clip to servo range (0-30 degrees as per Arduino code)
+        motor1_angle = int(np.clip(motor1_angle, 0, 30))
+        motor2_angle = int(np.clip(motor2_angle, 0, 30))
+        motor3_angle = int(np.clip(motor3_angle, 0, 30))
+        
+        # DEBUG: Print motor angles being sent
+        print(f"[MOTOR] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
+              f"M1={motor1_angle}°, M2={motor2_angle}°, M3={motor3_angle}°")
+        
+        # Send all 3 servo commands to Arduino as 3 bytes
+        # Arduino expects: byte1 (servo1), byte2 (servo2), byte3 (servo3)
         if self.servo_serial:
             try:
-                if self.servo_serial.in_waiting > 50:
-                    self.servo_serial.reset_input_buffer()
-                self.servo_serial.write(motor_packet)
-            except Exception as exc:
-                print(f"[ARDUINO] Send failed: {exc}")
-
-    def _simplified_motor_mapping(self, roll_angle: float, pitch_angle: float):
-        motor_angles_deg = self.config.get("motor_angles_deg")
-        if motor_angles_deg and len(motor_angles_deg) == 3:
-            base_angles = [motor_angles_deg[i] - 180 for i in range(3)]
+                self.servo_serial.write(bytes([motor1_angle, motor2_angle, motor3_angle]))
+                self.servo_serial.flush()  # Ensure data is sent immediately
+            except serial.SerialTimeoutException:
+                print("[ARDUINO] Send timed out - Arduino likely busy printing serial logs. "
+                      "Disable firmware debugging or raise baud rate.")
+            except serial.SerialException as e:
+                print(f"[ARDUINO] Serial error: {e}")
+            except Exception as e:
+                print(f"[ARDUINO] Send failed: {e}")
         else:
-            base_angles = [-90, -210, -330]
+            print(f"[MOTOR] WARNING: No servo connection, not sending commands")
+    
+    def _simplified_motor_mapping(self, roll_angle, pitch_angle):
+        """Simplified trigonometric mapping (fallback method).
+        
+        Uses calibrated motor angles from 3-point calibration if available,
+        otherwise falls back to default angles.
+        
+        Args:
+            roll_angle: Roll angle in degrees
+            pitch_angle: Pitch angle in degrees
+            
+        Returns:
+            tuple: (motor1_angle, motor2_angle, motor3_angle) in degrees
+        """
+        # Get motor angles from calibration if available
+        motor_angles_deg = self.config.get('motor_angles_deg', None)
+        
+        if motor_angles_deg and len(motor_angles_deg) == 3:
+            # Use calibrated motor angles (absolute angles from 3-point calibration)
+            # These angles are already calculated relative to the platform center
+            motor1_angle_deg = motor_angles_deg[0]-180
+            motor2_angle_deg = motor_angles_deg[1]-180
+            motor3_angle_deg = motor_angles_deg[2]-180
+        else:
+            # Fallback to default angles (120° spacing, starting at -90°)
+            motor1_angle_deg = -90
+            motor2_angle_deg = -210
+            motor3_angle_deg = -330
+        
+        # Convert to radians
+        motor1_angle_rad = np.radians(motor1_angle_deg)
+        motor2_angle_rad = np.radians(motor2_angle_deg)
+        motor3_angle_rad = np.radians(motor3_angle_deg)
+        
+        # Calculate height changes for each motor
+        # Negative signs are needed for correct platform tilt direction
+        motor1_height = -roll_angle * np.cos(motor1_angle_rad) - pitch_angle * np.sin(motor1_angle_rad)
+        motor2_height = -roll_angle * np.cos(motor2_angle_rad) - pitch_angle * np.sin(motor2_angle_rad)
+        motor3_height = -roll_angle * np.cos(motor3_angle_rad) - pitch_angle * np.sin(motor3_angle_rad)
+        
+        # Convert height changes to motor angles
+        # Scale factor: platform tilt degrees -> servo angle change
+        scale_factor = self.config.get('platform', {}).get('motor_scale_factor', 1.0)
+        
+        # Apply direction inversion if configured (multiply by -1 if inverted)
+        motor1_dir = -1.0 if self.motor_direction_invert[0] else 1.0
+        motor2_dir = -1.0 if self.motor_direction_invert[1] else 1.0
+        motor3_dir = -1.0 if self.motor_direction_invert[2] else 1.0
+        
+        motor1_angle = self.neutral_angles[0] + motor1_height * scale_factor * motor1_dir
+        motor2_angle = self.neutral_angles[1] + motor2_height * scale_factor * motor2_dir
+        motor3_angle = self.neutral_angles[2] + motor3_height * scale_factor * motor3_dir
+        
+        # DEBUG to show intermediate calculations
+        if abs(roll_angle) > 0.1 or abs(pitch_angle) > 0.1:
+            print(f"[MAPPING] Roll={roll_angle:.1f}°, Pitch={pitch_angle:.1f}° -> "
+                  f"Heights: M1={motor1_height:.2f}, M2={motor2_height:.2f}, M3={motor3_height:.2f} -> "
+                  f"Angles: M1={motor1_angle:.1f}°, M2={motor2_angle:.1f}°, M3={motor3_angle:.1f}°")
+        
+        return motor1_angle, motor2_angle, motor3_angle
+    
 
-        base_rads = [np.radians(angle) for angle in base_angles]
-        heights = [
-            -roll_angle * np.cos(rad) - pitch_angle * np.sin(rad)
-            for rad in base_rads
-        ]
 
-        scale_factor = self.config.get("platform", {}).get("motor_scale_factor", 1.0)
-        dirs = [-1.0 if flag else 1.0 for flag in self.motor_direction_invert]
-        return [self.neutral_angles[i] + heights[i] * scale_factor * dirs[i] for i in range(3)]
 
     def _send_neutral_pose(self) -> None:
         if not self.servo_serial:
