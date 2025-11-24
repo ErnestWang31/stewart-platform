@@ -386,7 +386,7 @@ class RelayAutotuneController:
 
             axis_vis = self.target_axis if self.capture_enabled else None
             vis_frame, _, _, _ = self.detector.draw_detection(
-                frame, show_info=True, axis_overlay=axis_vis
+                frame, show_info=True
             )
             cv2.imshow("Relay Autotune - Ball Tracking", vis_frame)
             if cv2.waitKey(1) & 0xFF == 27:
