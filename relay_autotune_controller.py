@@ -88,6 +88,15 @@ class RelayAutotuneController:
 
         self.position_limit_m = self._compute_position_limit()
 
+        axis_rotation_value = self.config.get("axis_rotation_deg")
+        if isinstance(axis_rotation_value, (int, float)):
+            self.axis_rotation_deg = float(axis_rotation_value)
+        else:
+            self.axis_rotation_deg = 0.0
+        self.axis_rotation_rad = math.radians(self.axis_rotation_deg)
+        self._cam_to_platform_cos = math.cos(-self.axis_rotation_rad)
+        self._cam_to_platform_sin = math.sin(-self.axis_rotation_rad)
+
         # State
         self.axis_choice = None
         self.amplitude_var = None
@@ -377,14 +386,14 @@ class RelayAutotuneController:
             )
             found, _, _, pos_x, pos_y = self.detector.detect_ball(frame)
             if found:
+                platform_x, platform_y = self._camera_to_platform_frame(pos_x, pos_y)
                 try:
                     if self.position_queue.full():
                         self.position_queue.get_nowait()
-                    self.position_queue.put_nowait((pos_x, pos_y))
+                    self.position_queue.put_nowait((platform_x, platform_y))
                 except queue.Full:
                     pass
 
-            axis_vis = self.target_axis if self.capture_enabled else None
             vis_frame, _, _, _ = self.detector.draw_detection(
                 frame, show_info=True
             )
@@ -403,9 +412,12 @@ class RelayAutotuneController:
             self._send_neutral_pose()
             print("[INFO] Platform set to neutral pose. Place ball near center.")
 
+        self.send_platform_tilt(0, 0)
+        time.sleep(1)
+
         while self.running:
             try:
-                position_x, position_y = self.position_queue.get(timeout=0.1)
+                platform_x, platform_y = self.position_queue.get(timeout=0.1)
             except queue.Empty:
                 continue
 
@@ -426,6 +438,10 @@ class RelayAutotuneController:
 
                 roll_cmd = self.relay_amplitude_deg * self.relay_state if self.target_axis == "x" else 0.0
                 pitch_cmd = self.relay_amplitude_deg * self.relay_state if self.target_axis == "y" else 0.0
+
+                roll_cmd = self.relay_amplitude_deg * self.relay_state
+                pitch_cmd = self.relay_amplitude_deg * self.relay_state
+
                 self.send_platform_tilt(roll_cmd, pitch_cmd)
 
                 relay_output = roll_cmd if self.target_axis == "x" else pitch_cmd
@@ -438,6 +454,11 @@ class RelayAutotuneController:
                     self.control_log.append(relay_output)
             else:
                 time.sleep(0.02)
+
+            # x_error = platform_x - 0.0
+            # y_error = platform_y - 0.0
+
+            
 
         self.send_platform_tilt(0.0, 0.0)
 
@@ -524,6 +545,13 @@ class RelayAutotuneController:
     # ------------------------------------------------------------------ #
     # Utility helpers
     # ------------------------------------------------------------------ #
+    def _camera_to_platform_frame(self, x_value: float, y_value: float) -> tuple[float, float]:
+        cos_theta = self._cam_to_platform_cos
+        sin_theta = self._cam_to_platform_sin
+        platform_x = x_value * cos_theta - y_value * sin_theta
+        platform_y = x_value * sin_theta + y_value * cos_theta
+        return platform_x, platform_y
+
     @staticmethod
     def _axis_label(axis: str) -> str:
         return "Roll / X-Axis" if axis == "x" else "Pitch / Y-Axis"
