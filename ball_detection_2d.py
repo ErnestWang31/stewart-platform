@@ -6,7 +6,6 @@ import cv2
 import numpy as np
 import json
 import os
-import math
 
 class BallDetector2D:
     """Computer vision ball detector using HSV color space filtering for 2D position tracking."""
@@ -23,8 +22,6 @@ class BallDetector2D:
         self.scale_factor_x = 1.0  # Conversion factor from normalized x-coords to meters
         self.scale_factor_y = 1.0  # Conversion factor from normalized y-coords to meters
         self.config = None  # Store config for platform center access
-        self.axis_rotation_deg = 0.0
-        self.axis_rotation_rad = 0.0
         
         # Load configuration from file if it exists
         if os.path.exists(config_file):
@@ -56,21 +53,15 @@ class BallDetector2D:
                         self.scale_factor_x = ratio * (frame_width / 2)
                         self.scale_factor_y = ratio * (frame_height / 2)
                 
-                if config.get("axis_rotation_deg") is not None:
-                    self.axis_rotation_deg = float(config["axis_rotation_deg"])
-                    self.axis_rotation_rad = math.radians(self.axis_rotation_deg)
-
                 print(f"[BALL_DETECT_2D] Loaded HSV bounds: {self.lower_hsv} to {self.upper_hsv}")
                 print(f"[BALL_DETECT_2D] Scale factors: X={self.scale_factor_x:.6f}, Y={self.scale_factor_y:.6f} m/normalized_unit")
-                if self.axis_rotation_deg:
-                    print(f"[BALL_DETECT_2D] Axis rotation: {self.axis_rotation_deg:.2f}°")
                 
             except Exception as e:
                 print(f"[BALL_DETECT_2D] Config load error: {e}, using defaults")
         else:
             print("[BALL_DETECT_2D] No config file found, using default HSV bounds")
 
-    def detect_ball(self, frame, rotate_axis=False):
+    def detect_ball(self, frame):
         """Detect ball in frame and return detection results.
         
         Args:
@@ -136,16 +127,9 @@ class BallDetector2D:
             position_x_m = normalized_x * self.scale_factor_x
             position_y_m = normalized_y * self.scale_factor_y
         
-        if rotate_axis and self.axis_rotation_rad:
-            cos_r = math.cos(self.axis_rotation_rad)
-            sin_r = math.sin(self.axis_rotation_rad)
-            rotated_x = position_x_m * cos_r + position_y_m * sin_r
-            rotated_y = -position_x_m * sin_r + position_y_m * cos_r
-            position_x_m, position_y_m = rotated_x, rotated_y
-
         return True, (int(x), int(y)), radius, position_x_m, position_y_m
 
-    def draw_detection(self, frame, show_info=True, axis_overlay=None):
+    def draw_detection(self, frame, show_info=True):
         """Detect ball and draw detection overlay on frame.
         
         Args:
@@ -170,45 +154,36 @@ class BallDetector2D:
         center_y = height // 2
         
         # Check if config has platform center (for circular platform calibration)
-        axis_dir = axis_overlay
-        platform_radius_pixels = None
         if self.config and self.config.get('platform_center_pixels'):
             platform_center = self.config.get('platform_center_pixels')
             if platform_center and len(platform_center) == 2:
                 center_x, center_y = int(platform_center[0]), int(platform_center[1])
                 # Also draw platform circle if radius is available
                 if self.config.get('platform_radius_pixels'):
-                    platform_radius_pixels = int(self.config.get('platform_radius_pixels'))
-                    cv2.circle(overlay, (center_x, center_y), platform_radius_pixels, (200, 200, 200), 1)
-        radius_pixels = platform_radius_pixels or int(min(height, width) // 3)
+                    radius = int(self.config.get('platform_radius_pixels'))
+                    cv2.circle(overlay, (center_x, center_y), radius, (200, 200, 200), 1)
+        radius_pixels = int(self.config.get('platform_radius_pixels', min(height, width) // 3))
         
         cv2.line(overlay, (center_x - 20, center_y), (center_x + 20, center_y), (255, 255, 255), 1)
         cv2.line(overlay, (center_x, center_y - 20), (center_x, center_y + 20), (255, 255, 255), 1)
         cv2.putText(overlay, "Center", (center_x + 5, center_y - 5),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-        # Draw selected axis overlay if requested
-        if axis_dir in ("x", "roll", "horizontal", "y", "pitch", "vertical"):
-            roll_angle_rad = -self.axis_rotation_rad
-            pitch_angle_rad = roll_angle_rad + math.pi / 2.0
-
-            def draw_axis(angle_rad, color, label_text):
-                dx = math.cos(angle_rad)
-                dy = math.sin(angle_rad)
-                x1 = int(center_x - dx * radius_pixels)
-                y1 = int(center_y - dy * radius_pixels)
-                x2 = int(center_x + dx * radius_pixels)
-                y2 = int(center_y + dy * radius_pixels)
-                cv2.line(overlay, (x1, y1), (x2, y2), color, 2)
-                label_pos = (int(center_x + dx * (radius_pixels * 0.5)),
-                             int(center_y + dy * (radius_pixels * 0.5)))
-                cv2.putText(overlay, label_text, label_pos,
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-
-            if axis_dir in ("x", "roll", "horizontal"):
-                draw_axis(roll_angle_rad, (0, 0, 255), "Roll Axis")
-            else:
-                draw_axis(pitch_angle_rad, (255, 0, 0), "Pitch Axis")
+        # Draw permanent diameter lines in camera X and Y directions
+        cv2.line(
+            overlay,
+            (center_x - radius_pixels, center_y),
+            (center_x + radius_pixels, center_y),
+            (200, 0, 0),
+            1,
+        )
+        cv2.line(
+            overlay,
+            (center_x, center_y - radius_pixels),
+            (center_x, center_y + radius_pixels),
+            (0, 0, 200),
+            1,
+        )
         
         if found:
             # Draw circle around detected ball

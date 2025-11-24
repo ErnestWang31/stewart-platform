@@ -571,9 +571,7 @@ class ZNCaptureController:
                     self.camera_settings.get("frame_height", 480),
                 ),
             )
-            found, _, _, pos_x, pos_y = self.detector.detect_ball(
-                frame, rotate_axis=True
-            )
+            found, _, _, pos_x, pos_y = self.detector.detect_ball(frame)
             if found:
                 try:
                     if self.position_queue.full():
