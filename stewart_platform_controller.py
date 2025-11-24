@@ -15,6 +15,7 @@ import queue
 from ball_detection_2d import BallDetector2D
 from pid_controller_2d import PIDController2D
 from inverse_kinematics import StewartPlatformIK
+from pid_autotune import PIDAutotuner
 
 class StewartPlatformController:
     """Main controller for Stewart platform ball balancing system."""
@@ -96,6 +97,20 @@ class StewartPlatformController:
         # Thread-safe queue for most recent ball position measurement
         self.position_queue = queue.Queue(maxsize=1)
         self.running = False    # Main run flag for clean shutdown
+        
+        # Autotuning state
+        self.autotuner = PIDAutotuner(
+            output_limit=max(self.config.get('platform', {}).get('max_roll_angle', 15.0),
+                           self.config.get('platform', {}).get('max_pitch_angle', 15.0)),
+            sample_time=0.033
+        )
+        self.autotuning_active = False
+        self.autotuning_axis = None  # 'x', 'y', or 'both'
+        self.autotuning_method = None  # 'relay', 'ziegler', 'step'
+        self.autotuning_thread = None
+        self.autotuning_results = None
+        self.config_file = config_file
+        self.autotuning_control_queue = queue.Queue(maxsize=1)  # Queue for autotuning control commands
     
     def _get_default_config(self):
         """Return default configuration dictionary."""
@@ -329,11 +344,25 @@ class StewartPlatformController:
                 # Wait for latest ball position from camera
                 position_x, position_y = self.position_queue.get(timeout=0.1)
                 
-                # Compute control output using 2D PID
-                control_output_x, control_output_y = self.pid.update(position_x, position_y)
-                
-                # Send control command to platform (real or simulated)
-                self.send_platform_tilt(control_output_x, control_output_y)
+                # Check if autotuning is active
+                if self.autotuning_active:
+                    try:
+                        # Get control command from autotuner (blocking with timeout)
+                        control_output_x, control_output_y = self.autotuning_control_queue.get(timeout=0.05)
+                        # Send autotuning control command
+                        self.send_platform_tilt(control_output_x, control_output_y)
+                    except queue.Empty:
+                        # No autotuning command yet, skip this iteration
+                        continue
+                    # Use autotuning outputs for logging
+                    control_output_x_log = control_output_x
+                    control_output_y_log = control_output_y
+                else:
+                    # Normal PID control
+                    control_output_x, control_output_y = self.pid.update(position_x, position_y)
+                    self.send_platform_tilt(control_output_x, control_output_y)
+                    control_output_x_log = control_output_x
+                    control_output_y_log = control_output_y
                 
                 # Log results for plotting
                 current_time = time.time() - self.start_time
@@ -342,8 +371,8 @@ class StewartPlatformController:
                 self.position_y_log.append(position_y)
                 self.setpoint_x_log.append(self.setpoint_x)
                 self.setpoint_y_log.append(self.setpoint_y)
-                self.control_x_log.append(control_output_x)
-                self.control_y_log.append(control_output_y)
+                self.control_x_log.append(control_output_x_log)
+                self.control_y_log.append(control_output_y_log)
                 
                 print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
                       f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
@@ -361,11 +390,221 @@ class StewartPlatformController:
         if self.servo_serial:
             self.servo_serial.close()
     
+    def start_autotuning(self, axis='x', method='relay', duration=30.0):
+        """Start autotuning process.
+        
+        Args:
+            axis: 'x', 'y', or 'both'
+            method: 'relay', 'ziegler', or 'step'
+            duration: Tuning duration in seconds
+        """
+        if self.autotuning_active:
+            print("[AUTOTUNE] Already tuning, stop current tuning first")
+            return
+        
+        self.autotuning_active = True
+        self.autotuning_axis = axis
+        self.autotuning_method = method
+        self.autotuning_results = None
+        
+        print(f"[AUTOTUNE] Starting {method} tuning for {axis} axis")
+        
+        # Disable the axis we're not tuning (if tuning single axis)
+        if axis == 'x':
+            self.pid.disable_axis('y')
+            self.pid.enable_axis('x')
+        elif axis == 'y':
+            self.pid.disable_axis('x')
+            self.pid.enable_axis('y')
+        else:
+            self.pid.enable_axis('both')
+        
+        # Start autotuning thread
+        self.autotuning_thread = Thread(target=self._autotuning_worker, 
+                                       args=(axis, method, duration), daemon=True)
+        self.autotuning_thread.start()
+    
+    def stop_autotuning(self):
+        """Stop autotuning process."""
+        if not self.autotuning_active:
+            return
+        
+        self.autotuning_active = False
+        print("[AUTOTUNE] Stopping autotuning...")
+        
+        # Re-enable all axes
+        self.pid.enable_axis('both')
+    
+    def _autotuning_worker(self, axis, method, duration):
+        """Worker thread for autotuning."""
+        try:
+            # Store original PID gains to restore if needed
+            original_Kp_x = self.pid.Kp_x
+            original_Ki_x = self.pid.Ki_x
+            original_Kd_x = self.pid.Kd_x
+            original_Kp_y = self.pid.Kp_y
+            original_Ki_y = self.pid.Ki_y
+            original_Kd_y = self.pid.Kd_y
+            
+            # Set initial gains for tuning (low values to start)
+            if axis == 'x':
+                self.pid.set_gains_x(1.0, 0.0, 0.0)
+            elif axis == 'y':
+                self.pid.set_gains_y(1.0, 0.0, 0.0)
+            else:
+                self.pid.set_gains_x(1.0, 0.0, 0.0)
+                self.pid.set_gains_y(1.0, 0.0, 0.0)
+            
+            # Helper functions for autotuner callbacks
+            def get_position():
+                """Get current position from queue or latest known position."""
+                try:
+                    pos = self.position_queue.get(timeout=0.1)
+                    # Put it back for the control loop if needed
+                    try:
+                        if not self.position_queue.full():
+                            self.position_queue.put_nowait(pos)
+                    except:
+                        pass
+                    return pos
+                except queue.Empty:
+                    return self.latest_position
+            
+            def send_control(control_x, control_y):
+                """Send control command directly to platform."""
+                if self.autotuning_active:
+                    # Queue control command for control loop to use
+                    try:
+                        if self.autotuning_control_queue.full():
+                            self.autotuning_control_queue.get_nowait()
+                        self.autotuning_control_queue.put_nowait((control_x, control_y))
+                    except Exception:
+                        pass
+                    # Also send directly to ensure it gets through
+                    self.send_platform_tilt(control_x, control_y)
+            
+            # Run appropriate tuning method
+            if method == 'relay':
+                results = self.autotuner.relay_feedback_tune(
+                    get_position, send_control, axis=axis,
+                    setpoint=self.setpoint_x if axis == 'x' else self.setpoint_y,
+                    duration=duration
+                )
+            elif method == 'step':
+                results = self.autotuner.step_response_tune(
+                    get_position, send_control, axis=axis,
+                    setpoint=self.setpoint_x if axis == 'x' else self.setpoint_y,
+                    duration=duration
+                )
+            elif method == 'ziegler':
+                # Ziegler-Nichols requires manual Ku/Tu input
+                # For now, use relay feedback to find them first
+                print("[AUTOTUNE] Ziegler-Nichols: Finding Ku and Tu via relay feedback...")
+                relay_results = self.autotuner.relay_feedback_tune(
+                    get_position, send_control, axis=axis,
+                    setpoint=self.setpoint_x if axis == 'x' else self.setpoint_y,
+                    duration=duration * 0.7
+                )
+                results = self.autotuner.ziegler_nichols_tune(
+                    relay_results['Ku'], relay_results['Tu']
+                )
+                results['Ku'] = relay_results['Ku']
+                results['Tu'] = relay_results['Tu']
+            else:
+                print(f"[AUTOTUNE] Unknown method: {method}")
+                self.autotuning_active = False
+                return
+            
+            self.autotuning_results = results
+            
+            # Apply tuned gains
+            if axis == 'x':
+                self.pid.set_gains_x(results['Kp'], results['Ki'], results['Kd'])
+                print(f"[AUTOTUNE] Applied X-axis gains: Kp={results['Kp']:.2f}, "
+                      f"Ki={results['Ki']:.2f}, Kd={results['Kd']:.2f}")
+            elif axis == 'y':
+                self.pid.set_gains_y(results['Kp'], results['Ki'], results['Kd'])
+                print(f"[AUTOTUNE] Applied Y-axis gains: Kp={results['Kp']:.2f}, "
+                      f"Ki={results['Ki']:.2f}, Kd={results['Kd']:.2f}")
+            else:
+                # For both axes, apply to both (using same gains)
+                self.pid.set_gains_x(results['Kp'], results['Ki'], results['Kd'])
+                self.pid.set_gains_y(results['Kp'], results['Ki'], results['Kd'])
+                print(f"[AUTOTUNE] Applied gains to both axes: Kp={results['Kp']:.2f}, "
+                      f"Ki={results['Ki']:.2f}, Kd={results['Kd']:.2f}")
+            
+            # Update GUI sliders if they exist
+            if hasattr(self, 'kp_x_var'):
+                if axis == 'x' or axis == 'both':
+                    self.kp_x_var.set(results['Kp'])
+                    self.ki_x_var.set(results['Ki'])
+                    self.kd_x_var.set(results['Kd'])
+                if axis == 'y' or axis == 'both':
+                    self.kp_y_var.set(results['Kp'])
+                    self.ki_y_var.set(results['Ki'])
+                    self.kd_y_var.set(results['Kd'])
+            
+            print("[AUTOTUNE] Tuning complete!")
+            
+        except Exception as e:
+            print(f"[AUTOTUNE] Error during tuning: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            self.autotuning_active = False
+            # Re-enable all axes
+            self.pid.enable_axis('both')
+    
+    def save_tuned_parameters(self):
+        """Save tuned PID parameters to config file."""
+        if not self.autotuning_results:
+            print("[AUTOTUNE] No tuning results to save")
+            return
+        
+        try:
+            # Load current config
+            with open(self.config_file, 'r') as f:
+                config = json.load(f)
+            
+            # Update PID parameters
+            if 'pid' not in config:
+                config['pid'] = {}
+            
+            if self.autotuning_axis == 'x' or self.autotuning_axis == 'both':
+                config['pid']['Kp_x'] = self.autotuning_results['Kp']
+                config['pid']['Ki_x'] = self.autotuning_results['Ki']
+                config['pid']['Kd_x'] = self.autotuning_results['Kd']
+            
+            if self.autotuning_axis == 'y' or self.autotuning_axis == 'both':
+                config['pid']['Kp_y'] = self.autotuning_results['Kp']
+                config['pid']['Ki_y'] = self.autotuning_results['Ki']
+                config['pid']['Kd_y'] = self.autotuning_results['Kd']
+            
+            # Add tuning metadata
+            if 'autotuning' not in config:
+                config['autotuning'] = {}
+            
+            config['autotuning']['last_tuning'] = {
+                'axis': self.autotuning_axis,
+                'method': self.autotuning_method,
+                'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+                'results': self.autotuning_results
+            }
+            
+            # Save config
+            with open(self.config_file, 'w') as f:
+                json.dump(config, f, indent=2)
+            
+            print(f"[AUTOTUNE] Saved tuned parameters to {self.config_file}")
+            
+        except Exception as e:
+            print(f"[AUTOTUNE] Error saving config: {e}")
+    
     def create_gui(self):
         """Build Tkinter GUI with large sliders and labeled controls."""
         self.root = tk.Tk()
         self.root.title("Stewart Platform PID Controller")
-        self.root.geometry("600x700")
+        self.root.geometry("600x900")
         
         # Title label
         ttk.Label(self.root, text="Stewart Platform Control", font=("Arial", 18, "bold")).pack(pady=10)
@@ -454,6 +693,54 @@ class StewartPlatformController:
         self.setpoint_y_label = ttk.Label(self.root, text=f"Setpoint Y: {self.setpoint_y:.4f}m", font=("Arial", 9))
         self.setpoint_y_label.pack()
         
+        # Autotuning section
+        ttk.Separator(self.root, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
+        ttk.Label(self.root, text="PID Autotuning", font=("Arial", 14, "bold")).pack(pady=5)
+        
+        # Method selection
+        method_frame = ttk.Frame(self.root)
+        method_frame.pack(pady=5)
+        ttk.Label(method_frame, text="Method:", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
+        self.autotune_method_var = tk.StringVar(value="relay")
+        method_combo = ttk.Combobox(method_frame, textvariable=self.autotune_method_var,
+                                   values=["relay", "ziegler", "step"], state="readonly", width=15)
+        method_combo.pack(side=tk.LEFT, padx=5)
+        
+        # Axis selection
+        axis_frame = ttk.Frame(self.root)
+        axis_frame.pack(pady=5)
+        ttk.Label(axis_frame, text="Axis:", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
+        self.autotune_axis_var = tk.StringVar(value="x")
+        axis_combo = ttk.Combobox(axis_frame, textvariable=self.autotune_axis_var,
+                                 values=["x", "y", "both"], state="readonly", width=15)
+        axis_combo.pack(side=tk.LEFT, padx=5)
+        
+        # Duration
+        duration_frame = ttk.Frame(self.root)
+        duration_frame.pack(pady=5)
+        ttk.Label(duration_frame, text="Duration (s):", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
+        self.autotune_duration_var = tk.DoubleVar(value=30.0)
+        duration_entry = ttk.Entry(duration_frame, textvariable=self.autotune_duration_var, width=10)
+        duration_entry.pack(side=tk.LEFT, padx=5)
+        
+        # Autotuning buttons
+        autotune_button_frame = ttk.Frame(self.root)
+        autotune_button_frame.pack(pady=5)
+        self.start_autotune_btn = ttk.Button(autotune_button_frame, text="Start Tuning",
+                                            command=self.start_autotuning_gui)
+        self.start_autotune_btn.pack(side=tk.LEFT, padx=5)
+        self.stop_autotune_btn = ttk.Button(autotune_button_frame, text="Stop Tuning",
+                                           command=self.stop_autotuning, state=tk.DISABLED)
+        self.stop_autotune_btn.pack(side=tk.LEFT, padx=5)
+        self.save_autotune_btn = ttk.Button(autotune_button_frame, text="Save to Config",
+                                           command=self.save_tuned_parameters, state=tk.DISABLED)
+        self.save_autotune_btn.pack(side=tk.LEFT, padx=5)
+        
+        # Autotuning status
+        self.autotune_status_label = ttk.Label(self.root, text="Status: Ready",
+                                               font=("Arial", 9), foreground="gray")
+        self.autotune_status_label.pack(pady=5)
+        
         # Button group for actions
         button_frame = ttk.Frame(self.root)
         button_frame.pack(pady=10)
@@ -495,8 +782,34 @@ class StewartPlatformController:
             self.setpoint_y_label.config(text=f"Setpoint Y: {self.setpoint_y:.4f}m")
             self.update_telemetry()
             
+            # Update autotuning status
+            if self.autotuning_active:
+                self.autotune_status_label.config(text="Status: Tuning...", foreground="orange")
+                self.start_autotune_btn.config(state=tk.DISABLED)
+                self.stop_autotune_btn.config(state=tk.NORMAL)
+                self.save_autotune_btn.config(state=tk.DISABLED)
+            else:
+                if self.autotuning_results:
+                    self.autotune_status_label.config(
+                        text=f"Status: Complete - Kp={self.autotuning_results['Kp']:.2f}, "
+                             f"Ki={self.autotuning_results['Ki']:.2f}, "
+                             f"Kd={self.autotuning_results['Kd']:.2f}",
+                        foreground="green")
+                    self.save_autotune_btn.config(state=tk.NORMAL)
+                else:
+                    self.autotune_status_label.config(text="Status: Ready", foreground="gray")
+                self.start_autotune_btn.config(state=tk.NORMAL)
+                self.stop_autotune_btn.config(state=tk.DISABLED)
+            
             # Call again after 50 ms
             self.root.after(50, self.update_gui)
+    
+    def start_autotuning_gui(self):
+        """Start autotuning from GUI button."""
+        method = self.autotune_method_var.get()
+        axis = self.autotune_axis_var.get()
+        duration = self.autotune_duration_var.get()
+        self.start_autotuning(axis=axis, method=method, duration=duration)
     
     def reset_integral(self):
         """Clear integral error in PID (button handler)."""

@@ -32,6 +32,10 @@ class PIDController2D:
         self.output_limit_x = output_limit_x
         self.output_limit_y = output_limit_y
         
+        # Axis enable flags (for autotuning - disable one axis while tuning the other)
+        self.enable_x = True
+        self.enable_y = True
+        
         # X-axis controller state
         self.setpoint_x = 0.0
         self.integral_x = 0.0
@@ -88,6 +92,10 @@ class PIDController2D:
         output_x = P_x + I_x + D_x
         output_x = np.clip(output_x, -self.output_limit_x, self.output_limit_x)
         
+        # Disable X-axis if needed (for autotuning)
+        if not self.enable_x:
+            output_x = 0.0
+        
         # Update X-axis state
         self.prev_error_x = error_x
         self.prev_time_x = current_time
@@ -113,6 +121,10 @@ class PIDController2D:
         # PID output
         output_y = P_y + I_y + D_y
         output_y = np.clip(output_y, -self.output_limit_y, self.output_limit_y)
+        
+        # Disable Y-axis if needed (for autotuning)
+        if not self.enable_y:
+            output_y = 0.0
         
         # Update Y-axis state
         self.prev_error_y = error_y
@@ -170,6 +182,32 @@ class PIDController2D:
         self.integral_y = 0.0
         print("[PID_2D] Y-axis integral term reset")
     
+    def enable_axis(self, axis='both'):
+        """Enable axis control.
+        
+        Args:
+            axis: 'x', 'y', or 'both'
+        """
+        if axis == 'x' or axis == 'both':
+            self.enable_x = True
+        if axis == 'y' or axis == 'both':
+            self.enable_y = True
+        print(f"[PID_2D] Enabled {axis} axis")
+    
+    def disable_axis(self, axis='both'):
+        """Disable axis control (for autotuning).
+        
+        Args:
+            axis: 'x', 'y', or 'both'
+        """
+        if axis == 'x' or axis == 'both':
+            self.enable_x = False
+            self.integral_x = 0.0  # Reset integral when disabling
+        if axis == 'y' or axis == 'both':
+            self.enable_y = False
+            self.integral_y = 0.0  # Reset integral when disabling
+        print(f"[PID_2D] Disabled {axis} axis")
+    
     def get_state(self):
         """Get current controller state.
         
@@ -187,6 +225,8 @@ class PIDController2D:
             'integral_x': self.integral_x,
             'integral_y': self.integral_y,
             'prev_error_x': self.prev_error_x,
-            'prev_error_y': self.prev_error_y
+            'prev_error_y': self.prev_error_y,
+            'enable_x': self.enable_x,
+            'enable_y': self.enable_y
         }
 
