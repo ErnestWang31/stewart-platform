@@ -11,6 +11,7 @@ import time
 import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from threading import Thread
 import queue
 from ball_detection_2d import BallDetector2D
@@ -109,6 +110,17 @@ class StewartPlatformController:
         self.telemetry_canvas = None
         self.position_display_range = self._determine_position_range()
         self.telemetry_canvas_size = 360
+        
+        # Live plot window
+        self.live_plot_window = None
+        self.live_plot_fig = None
+        self.live_plot_ax_x = None
+        self.live_plot_ax_y = None
+        self.live_plot_line_x = None
+        self.live_plot_line_y = None
+        self.live_plot_setpoint_line_x = None
+        self.live_plot_setpoint_line_y = None
+        self.live_plot_canvas = None
         
         # Thread-safe queue for most recent ball position measurement
         self.position_queue = queue.Queue(maxsize=1)
@@ -498,6 +510,10 @@ class StewartPlatformController:
                    command=self.plot_results).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Show Telemetry",
                    command=self.show_telemetry_window).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Live Plot",
+                   command=self.show_live_plot_window).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Clear Data",
+                   command=self.clear_logs).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Stop",
                    command=self.stop).pack(side=tk.LEFT, padx=5)
         
@@ -505,6 +521,8 @@ class StewartPlatformController:
         self.update_gui()
         # Launch telemetry window immediately
         self.show_telemetry_window()
+        # Launch live plot window immediately
+        self.show_live_plot_window()
     
     def update_gui(self):
         """Reflect latest values from sliders into program and update display."""
@@ -530,6 +548,7 @@ class StewartPlatformController:
             self.setpoint_x_label.config(text=f"Setpoint X: {self.setpoint_x:.4f}m")
             self.setpoint_y_label.config(text=f"Setpoint Y: {self.setpoint_y:.4f}m")
             self.update_telemetry()
+            self.update_live_plot()
             
             # Call again after 50 ms
             self.root.after(50, self.update_gui)
@@ -616,6 +635,34 @@ class StewartPlatformController:
         plt.tight_layout()
         plt.show()
     
+    def clear_logs(self):
+        """Clear all logged data for fresh start."""
+        self.time_log.clear()
+        self.position_x_log.clear()
+        self.position_y_log.clear()
+        self.setpoint_x_log.clear()
+        self.setpoint_y_log.clear()
+        self.control_x_log.clear()
+        self.control_y_log.clear()
+        self.position_x_log_platform.clear()
+        self.position_y_log_platform.clear()
+        self.setpoint_x_log_platform.clear()
+        self.setpoint_y_log_platform.clear()
+        self.start_time = time.time() if self.running else None
+        self.pid.reset_integral()
+        print("[INFO] All logs cleared and integrals reset")
+        
+        # Update live plot if it exists
+        if self.live_plot_line_x is not None:
+            self.live_plot_line_x.set_data([], [])
+        if self.live_plot_line_y is not None:
+            self.live_plot_line_y.set_data([], [])
+        if self.live_plot_setpoint_line_x is not None:
+            self.live_plot_setpoint_line_x.set_data([], [])
+        if self.live_plot_setpoint_line_y is not None:
+            self.live_plot_setpoint_line_y.set_data([], [])
+        self.update_live_plot()
+    
     def stop(self):
         """Stop everything and clean up threads and GUI."""
         self.running = False
@@ -625,6 +672,7 @@ class StewartPlatformController:
         except Exception:
             pass
         self._close_telemetry_window()
+        self._close_live_plot_window()
     
     def run(self):
         """Entry point: starts threads, launches GUI mainloop."""
@@ -789,6 +837,127 @@ class StewartPlatformController:
                     # Label motor
                     canvas.create_text(mx + 12, my + 12, text=f"M{i+1}", 
                                       fill=color, font=("Arial", 10, "bold"))
+    
+    def show_live_plot_window(self):
+        """Show or create live plot window."""
+        if self.live_plot_window is None or not self.live_plot_window.winfo_exists():
+            self.create_live_plot_window()
+        else:
+            self.live_plot_window.deiconify()
+            self.live_plot_window.lift()
+    
+    def create_live_plot_window(self):
+        """Create live plotting window with X and Y position plots."""
+        self.live_plot_window = tk.Toplevel(self.root)
+        self.live_plot_window.title("Live Position Plot - Platform Frame")
+        self.live_plot_window.geometry("800x600")
+        self.live_plot_window.protocol("WM_DELETE_WINDOW", self._close_live_plot_window)
+        
+        # Create matplotlib figure with two subplots
+        self.live_plot_fig, (self.live_plot_ax_x, self.live_plot_ax_y) = plt.subplots(2, 1, figsize=(8, 6))
+        
+        # Initialize empty plots
+        self.live_plot_line_x, = self.live_plot_ax_x.plot([], [], 'b-', linewidth=2, label='Ball X Position')
+        self.live_plot_setpoint_line_x, = self.live_plot_ax_x.plot([], [], 'r--', linewidth=2, label='Setpoint X')
+        self.live_plot_line_y, = self.live_plot_ax_y.plot([], [], 'g-', linewidth=2, label='Ball Y Position')
+        self.live_plot_setpoint_line_y, = self.live_plot_ax_y.plot([], [], 'r--', linewidth=2, label='Setpoint Y')
+        
+        # Configure X-axis plot
+        self.live_plot_ax_x.set_xlabel('Time (s)')
+        self.live_plot_ax_x.set_ylabel('X Position (m)')
+        self.live_plot_ax_x.set_title('X Position vs Time (Platform Frame)')
+        self.live_plot_ax_x.legend()
+        self.live_plot_ax_x.grid(True, alpha=0.3)
+        self.live_plot_ax_x.set_xlim(0, 10)  # Start with 10 second window
+        self.live_plot_ax_x.set_ylim(-0.2, 0.2)  # Adjust based on platform radius
+        
+        # Configure Y-axis plot
+        self.live_plot_ax_y.set_xlabel('Time (s)')
+        self.live_plot_ax_y.set_ylabel('Y Position (m)')
+        self.live_plot_ax_y.set_title('Y Position vs Time (Platform Frame)')
+        self.live_plot_ax_y.legend()
+        self.live_plot_ax_y.grid(True, alpha=0.3)
+        self.live_plot_ax_y.set_xlim(0, 10)  # Start with 10 second window
+        self.live_plot_ax_y.set_ylim(-0.2, 0.2)  # Adjust based on platform radius
+        
+        plt.tight_layout()
+        
+        # Embed matplotlib in tkinter window
+        self.live_plot_canvas = FigureCanvasTkAgg(self.live_plot_fig, self.live_plot_window)
+        self.live_plot_canvas.draw()
+        self.live_plot_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        
+        # Add clear button
+        clear_button = ttk.Button(self.live_plot_window, text="Clear Plot", command=self.clear_logs)
+        clear_button.pack(pady=5)
+    
+    def _close_live_plot_window(self):
+        """Handle live plot window close event."""
+        if self.live_plot_window is not None:
+            try:
+                self.live_plot_window.destroy()
+            except Exception:
+                pass
+        self.live_plot_window = None
+        self.live_plot_fig = None
+        self.live_plot_ax_x = None
+        self.live_plot_ax_y = None
+        self.live_plot_line_x = None
+        self.live_plot_line_y = None
+        self.live_plot_setpoint_line_x = None
+        self.live_plot_setpoint_line_y = None
+        self.live_plot_canvas = None
+    
+    def update_live_plot(self):
+        """Update live plot with latest data."""
+        if (self.live_plot_window is None or
+                self.live_plot_fig is None or
+                not self.live_plot_window.winfo_exists()):
+            return
+        
+        if not self.time_log or not self.position_x_log_platform:
+            return
+        
+        # Get platform frame data
+        time_data = np.array(self.time_log)
+        x_data = np.array(self.position_x_log_platform)
+        y_data = np.array(self.position_y_log_platform)
+        spx_data = np.array(self.setpoint_x_log_platform) if self.setpoint_x_log_platform else np.array([])
+        spy_data = np.array(self.setpoint_y_log_platform) if self.setpoint_y_log_platform else np.array([])
+        
+        # Update plot data
+        self.live_plot_line_x.set_data(time_data, x_data)
+        self.live_plot_line_y.set_data(time_data, y_data)
+        
+        if len(spx_data) > 0:
+            self.live_plot_setpoint_line_x.set_data(time_data, spx_data)
+        if len(spy_data) > 0:
+            self.live_plot_setpoint_line_y.set_data(time_data, spy_data)
+        
+        # Auto-scale axes
+        if len(time_data) > 0:
+            time_max = max(time_data[-1], 10)  # At least 10 seconds visible
+            time_min = max(0, time_max - 30)  # Show last 30 seconds
+            
+            # X-axis limits
+            if len(x_data) > 0:
+                x_min, x_max = np.min(x_data), np.max(x_data)
+                x_range = max(abs(x_min), abs(x_max), 0.05) * 1.2
+                self.live_plot_ax_x.set_xlim(time_min, time_max)
+                self.live_plot_ax_x.set_ylim(-x_range, x_range)
+            
+            # Y-axis limits
+            if len(y_data) > 0:
+                y_min, y_max = np.min(y_data), np.max(y_data)
+                y_range = max(abs(y_min), abs(y_max), 0.05) * 1.2
+                self.live_plot_ax_y.set_xlim(time_min, time_max)
+                self.live_plot_ax_y.set_ylim(-y_range, y_range)
+        
+        # Redraw canvas
+        try:
+            self.live_plot_canvas.draw_idle()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     try:
