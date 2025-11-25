@@ -187,16 +187,14 @@ def main():
     ax_txt.axis('off')
     txt = (
         "Simulation Analysis:\n\n"
-        "1. Scaling Factor Effect:\n"
-        "   The controller multiplies error by 100.\n"
-        "   Config Kp=0.6 acts like Kp=60 on raw position.\n"
-        "   High stiffness contributes to initial overshoot.\n\n"
-        "2. Sensor Noise:\n"
-        "   Without a smoothing filter, sensor noise propagates\n"
-        "   to the servo output (see bottom-left plot).\n\n"
-        "3. Tuning Results:\n"
-        "   Lowering Kp to 0.8 (Green) combined with Kd=0.46\n"
-        "   achieves critical damping and eliminates overshoot."
+        "1. Baseline Values (RED):\n"
+        "   Kp=0.8\n"
+        "   Ki=0.1\n"
+        "   Kd=0.3\n\n"
+        "2. Tuned Values (GREEN):\n"
+        "   Kp=0.6\n"
+        "   Ki=0.1\n"
+        "   Kd=0.4"
     )
     ax_txt.text(0.05, 0.5, txt, fontsize=11, va='center',
                 bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="black"))
