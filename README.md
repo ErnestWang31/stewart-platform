@@ -97,32 +97,105 @@ Separate gains can be set for X and Y axes.
 
 ## 1D PID Autotune Workflow
 
-For a quick way to obtain starting gains, you can excite only one axis with a relay test and reuse the resulting PID values on both axes:
+Three autotune methods are available:
+
+1. **Relay Test (Limit Cycle)**: Traditional Åström–Hägglund method that forces oscillations to find ultimate gain/period
+2. **Frequency Response Sweep**: Gentler method that injects small sinusoidal signals, measures Bode response, fits a plant model, and derives PID gains
+3. **PRBS + Safety Clamp**: Most robust for constrained workspaces - uses pseudo-random binary sequence excitation with automatic safety clamping to prevent ball from hitting walls
+
+For a quick way to obtain starting gains, you can excite only one axis and reuse the resulting PID values on both axes:
 
 1. **Prerequisites**
    - Run `python calibration_2d.py` so ball detection and limits are valid.
    - Place the ball on the platform center and make sure you can safely command ±5° without the ball falling off.
+   - If the mechanical neutral needs touch-up, run `python neutral_tune_gui.py` to nudge each servo angle in tiny increments and save the updated `servo.neutral_angles`.
+   - The autotune script now commands the platform to its neutral (roll=0°, pitch=0°) right after connecting to the servos; verify the plate is actually level before continuing.
    - Connect the Arduino + servos (or pass `--simulate` to capture data without moving hardware).
 
-2. **Run the autotune script**
+2. **Run the autotune script (CLI)**
+
+   **Relay Test Method:**
    ```bash
-   python pid_autotune.py --axis x --amplitude 4 --cycles 4 --display --apply-config
+   python pid_autotune.py --method relay --axis x --amplitude 4 --cycles 4 --display --apply-config
    ```
+   - `--method`: choose `relay` (default) or `freq_response`
    - `--axis`: choose `x` (roll) or `y` (pitch); X is usually sufficient.
    - `--amplitude`: relay command in degrees (increase if the ball barely moves, decrease if it flies off).
    - `--cycles`: number of oscillation periods required before stopping.
    - `--rule`: pick the tuning rule (`zn` for Ziegler–Nichols, `tyreus` for Tyreus–Luyben) depending on how aggressive you need the loop.
    - `--apply-config`: automatically write the tuned gains into `config_stewart.json` for both axes (a timestamped `.bak_*` backup is created).
 
+   **Frequency Response Method:**
+   ```bash
+   python pid_autotune.py --method freq_response --axis x --freq-min 0.1 --freq-max 5.0 --num-points 12 --amplitude 1.5 --model-type second_order --plot-bode --apply-config
+   ```
+   - `--freq-min`, `--freq-max`: Frequency sweep range in Hz (default 0.1-5.0 Hz)
+   - `--num-points`: Number of frequency points (default 12, log-spaced)
+   - `--amplitude`: Sinusoidal amplitude in degrees (default 1.5°, small to stay linear)
+   - `--cycles-per-freq`: Number of periods per frequency (default 5)
+   - `--settle-time`: Settle time before measurement (default 2.0s)
+   - `--model-type`: Plant model type: `second_order` or `first_order_delay` (default: second_order)
+   - `--plot-bode`: Generate Bode plot visualization (requires matplotlib)
+
+   **PRBS + Safety Clamp Method (Recommended for constrained workspaces):**
+   ```bash
+   python pid_autotune.py --method prbs --axis x --amplitude 0.08 --clamp-threshold 0.025 --safe-threshold 0.010 --prbs-length 1023 --sample-time 0.05 --display --apply-config
+   ```
+   - `--amplitude`: PRBS amplitude in degrees (default 0.08°, very small to prevent drift)
+   - `--clamp-threshold`: Stop PRBS when |ball position| > this (default 0.025m = 25mm)
+   - `--safe-threshold`: Resume PRBS when |ball position| < this (default 0.010m = 10mm)
+   - `--prbs-length`: PRBS sequence length (default 1023, maximum-length sequence)
+   - `--sample-time`: Sample time in seconds (default 0.05s = 20 Hz)
+   - The method automatically recenters the ball using a gentle PD controller when clamped
+   - Uses correlation-based identification on PRBS-active samples only
+   - Perfect for small workspaces with walls - ball never hits boundaries
+
+   Prefer a point-and-click workflow? Launch the GUI instead:
+   ```bash
+   python pid_autotune.py --gui
+   ```
+   The GUI supports both methods, lets you adjust all parameters live, monitors progress logs, and (optionally) pushes the resulting gains back into your config when the run finishes.
+
 3. **What the script does**
+
+   **Relay Test:**
    - Uses the existing ball detector to watch either X or Y motion while toggling the platform ±command degrees (relay test / Åström–Hägglund method).
    - Logs the measured oscillations, computes the ultimate gain/period, and derives `Kp`, `Ki`, `Kd` per the selected rule.
    - Appends each run to `pid_autotune_results.json` so you can review or average multiple attempts.
 
+   **Frequency Response:**
+   - Injects small sinusoidal tilt commands at multiple frequencies (log-spaced sweep)
+   - Measures ball position response at each frequency
+   - Computes amplitude ratio (gain in dB) and phase lag using correlation/FFT
+   - Fits a plant model (2nd order or 1st order + delay) to the Bode data
+   - Derives PID gains from the fitted model parameters using tuning rules
+   - Optionally generates Bode plots showing measured data and fitted model overlay
+   - Stores complete frequency response data in results JSON
+
+   **PRBS + Safety Clamp:**
+   - Generates pseudo-random binary sequence (PRBS) of small tilt commands
+   - Monitors ball position continuously
+   - **Safety clamp**: When ball approaches wall (|x| > clamp_threshold), automatically:
+     - Stops PRBS excitation
+     - Switches to gentle PD controller to recenter ball
+     - Resumes PRBS once ball is back in safe zone (|x| < safe_threshold)
+   - Uses correlation on PRBS-active samples to compute impulse response
+   - Fits transfer function from impulse response
+   - Derives PID gains from fitted model
+   - Tracks clamp activations and PRBS active ratio in results
+   - Ideal for constrained workspaces - ball never hits walls, data remains valid
+
 4. **Deploying the gains**
    - If you tuned only one axis, you can safely reuse the resulting gains on the other axis because the platform mechanics are symmetric.
-   - Restart `stewart_platform_controller.py` after updating the config to load the new PID gains.
+   - Inside `stewart_platform_controller.py`, use the new **Reload PID** button to pull the updated gains without restarting the entire app (restarts still work if you prefer).
+   - If your camera axes are rotated relative to the motor layout, set `platform.axis_rotation_deg` in `config_stewart.json` (positive values rotate roll→pitch counter-clockwise). The controller will remap commands so all three servos contribute to both roll and pitch after the rotation.
    - Fine‑tune live with the GUI sliders if needed; the autotune output should already be stable enough to keep the ball near the setpoint.
+
+### Method Comparison
+
+- **Relay Test**: Faster (typically 30-60 seconds), but forces aggressive oscillations that may be unsafe for delicate setups. Good for quick initial tuning.
+- **Frequency Response**: Gentler (typically 2-5 minutes), uses small sinusoidal inputs that stay in the linear region. Provides richer plant information (Bode plot) and can fit more sophisticated models. Recommended for production tuning or when you need to understand the plant dynamics.
+- **PRBS + Safety Clamp**: Most robust for constrained workspaces (typically 2-5 minutes). Uses tiny random excitations that don't accumulate drift. Automatic safety clamping prevents ball from hitting walls while maintaining valid identification data. Perfect for small platforms with walls on both sides. Uses correlation-based identification which tolerates interruptions gracefully.
 
 ## Arduino Setup
 

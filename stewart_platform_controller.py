@@ -5,7 +5,6 @@
 import cv2
 import numpy as np
 import json
-import math
 import serial
 import time
 import tkinter as tk
@@ -23,6 +22,7 @@ class StewartPlatformController:
     def __init__(self, config_file="config_stewart.json"):
         """Initialize controller, load config, set defaults and queues."""
         # Load experiment and hardware config from JSON file
+        self.config_file = config_file
         try:
             with open(config_file, 'r') as f:
                 self.config = json.load(f)
@@ -70,23 +70,16 @@ class StewartPlatformController:
         self.motor_direction_invert = servo_config.get('motor_direction_invert', [False, False, False])
         self.servo_serial = None
         
+        platform_cfg = self.config.get('platform', {})
         # Use inverse kinematics flag (can be toggled)
         # Default to False to use simplified mapping (more reliable)
-        self.use_inverse_kinematics = self.config.get('platform', {}).get('use_inverse_kinematics', False)
+        self.use_inverse_kinematics = platform_cfg.get('use_inverse_kinematics', False)
+        # Optional rotation between camera roll/pitch axes and motor frame
+        self.axis_rotation_deg = platform_cfg.get('axis_rotation_deg', 0.0)
         
         # Controller-internal state
         self.setpoint_x = 0.0
         self.setpoint_y = 0.0
-        
-        # Platform orientation (camera frame -> platform frame)
-        axis_rotation_value = self.config.get('axis_rotation_deg')
-        if isinstance(axis_rotation_value, (int, float)):
-            self.axis_rotation_deg = float(axis_rotation_value)
-        else:
-            self.axis_rotation_deg = 0.0
-        self.axis_rotation_rad = math.radians(self.axis_rotation_deg)
-        self._cam_to_platform_cos = math.cos(-self.axis_rotation_rad)
-        self._cam_to_platform_sin = math.sin(-self.axis_rotation_rad)
         
         # Data logs for plotting results
         self.time_log = []
@@ -96,14 +89,8 @@ class StewartPlatformController:
         self.setpoint_y_log = []
         self.control_x_log = []
         self.control_y_log = []
-        self.position_x_log_platform = []
-        self.position_y_log_platform = []
-        self.setpoint_x_log_platform = []
-        self.setpoint_y_log_platform = []
         self.start_time = None
         self.latest_position = (0.0, 0.0)
-        self.latest_position_platform = (0.0, 0.0)
-        self.latest_setpoint_platform = (0.0, 0.0)
         self.latest_error = (0.0, 0.0)
         self.telemetry_window = None
         self.telemetry_canvas = None
@@ -113,6 +100,18 @@ class StewartPlatformController:
         # Thread-safe queue for most recent ball position measurement
         self.position_queue = queue.Queue(maxsize=1)
         self.running = False    # Main run flag for clean shutdown
+        
+        # Square pattern state machine
+        self.square_pattern_enabled = False
+        self.square_pattern_index = 0
+        # Default square pattern (can be overridden by user input)
+        self.square_setpoints = [(0.0, 0.0), (0.05, 0.05), (0.05, -0.05), (-0.05, -0.05), (-0.05, 0.05)]
+        self.settle_tolerance = 0.01  # position tolerance in meters (default)
+        self.settle_duration = 2.0  # time in seconds ball must be within tolerance (default)
+        self.settle_start_time = None  # timestamp when ball entered tolerance zone
+        self.settled = False  # current settle status
+        # Custom setpoint input storage (up to 10 points)
+        self.custom_setpoint_entries = []  # Will store entry widgets
     
     def _get_default_config(self):
         """Return default configuration dictionary."""
@@ -173,6 +172,9 @@ class StewartPlatformController:
         # Clip angles to safe range
         roll_angle = np.clip(roll_angle, -15, 15)
         pitch_angle = np.clip(pitch_angle, -15, 15)
+
+        # Apply optional frame rotation so camera roll/pitch align with motor frame
+        roll_angle, pitch_angle = self._apply_axis_rotation(roll_angle, pitch_angle)
         
         if self.use_inverse_kinematics:
             # Use inverse kinematics to calculate motor angles
@@ -295,14 +297,17 @@ class StewartPlatformController:
                   f"Angles: M1={motor1_angle:.1f}°, M2={motor2_angle:.1f}°, M3={motor3_angle:.1f}°")
         
         return motor1_angle, motor2_angle, motor3_angle
-    
-    def _camera_to_platform_frame(self, x_value, y_value):
-        """Rotate camera-frame coordinates into the platform frame for visualization."""
-        cos_theta = self._cam_to_platform_cos
-        sin_theta = self._cam_to_platform_sin
-        platform_x = x_value * cos_theta - y_value * sin_theta
-        platform_y = x_value * sin_theta + y_value * cos_theta
-        return platform_x, platform_y
+
+    def _apply_axis_rotation(self, roll_angle, pitch_angle):
+        """Rotate desired roll/pitch into motor frame if configured."""
+        if not self.axis_rotation_deg:
+            return roll_angle, pitch_angle
+        rad = np.radians(self.axis_rotation_deg)
+        cos_a = np.cos(rad)
+        sin_a = np.sin(rad)
+        rotated_roll = roll_angle * cos_a - pitch_angle * sin_a
+        rotated_pitch = roll_angle * sin_a + pitch_angle * cos_a
+        return rotated_roll, rotated_pitch
     
     def camera_thread(self):
         """Dedicated thread for video capture and ball detection."""
@@ -354,9 +359,20 @@ class StewartPlatformController:
                 # Wait for latest ball position from camera
                 position_x, position_y = self.position_queue.get(timeout=0.1)
                 
-                # Rotate measurements/setpoints into platform frame for visualization/logging
-                platform_pos_x, platform_pos_y = self._camera_to_platform_frame(position_x, position_y)
-                platform_setpoint_x, platform_setpoint_y = self._camera_to_platform_frame(self.setpoint_x, self.setpoint_y)
+                # Handle square pattern if enabled
+                if self.square_pattern_enabled:
+                    # Check if ball has settled at current setpoint
+                    if self._check_settled(position_x, position_y):
+                        # Advance to next setpoint in sequence
+                        self.square_pattern_index = (self.square_pattern_index + 1) % len(self.square_setpoints)
+                        sp_x, sp_y = self.square_setpoints[self.square_pattern_index]
+                        self.setpoint_x = sp_x
+                        self.setpoint_y = sp_y
+                        self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+                        # Reset settle tracking for new setpoint
+                        self.settle_start_time = None
+                        self.settled = False
+                        print(f"[PATTERN] Advanced to setpoint {self.square_pattern_index + 1}/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
                 
                 # Compute control output using 2D PID
                 control_output_x, control_output_y = self.pid.update(position_x, position_y)
@@ -371,18 +387,12 @@ class StewartPlatformController:
                 self.position_y_log.append(position_y)
                 self.setpoint_x_log.append(self.setpoint_x)
                 self.setpoint_y_log.append(self.setpoint_y)
-                self.position_x_log_platform.append(platform_pos_x)
-                self.position_y_log_platform.append(platform_pos_y)
-                self.setpoint_x_log_platform.append(platform_setpoint_x)
-                self.setpoint_y_log_platform.append(platform_setpoint_y)
                 self.control_x_log.append(control_output_x)
                 self.control_y_log.append(control_output_y)
                 
                 print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
                       f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
                 self.latest_position = (position_x, position_y)
-                self.latest_position_platform = (platform_pos_x, platform_pos_y)
-                self.latest_setpoint_platform = (platform_setpoint_x, platform_setpoint_y)
                 self.latest_error = (self.setpoint_x - position_x, self.setpoint_y - position_y)
                 
             except queue.Empty:
@@ -396,11 +406,48 @@ class StewartPlatformController:
         if self.servo_serial:
             self.servo_serial.close()
     
+    def _check_settled(self, position_x, position_y):
+        """Check if ball has settled at current setpoint.
+        
+        Args:
+            position_x: Current X position (meters)
+            position_y: Current Y position (meters)
+            
+        Returns:
+            bool: True if ball has been within tolerance for settle_duration seconds
+        """
+        # Calculate distance from setpoint
+        error_x = abs(self.setpoint_x - position_x)
+        error_y = abs(self.setpoint_y - position_y)
+        
+        # Check if within tolerance
+        within_tolerance = (error_x <= self.settle_tolerance and 
+                          error_y <= self.settle_tolerance)
+        
+        current_time = time.time()
+        
+        if within_tolerance:
+            # If we just entered tolerance zone, start timer
+            if self.settle_start_time is None:
+                self.settle_start_time = current_time
+                self.settled = False
+            # Check if we've been in tolerance long enough
+            elif current_time - self.settle_start_time >= self.settle_duration:
+                self.settled = True
+            else:
+                self.settled = False
+        else:
+            # Outside tolerance, reset timer
+            self.settle_start_time = None
+            self.settled = False
+        
+        return self.settled
+    
     def create_gui(self):
         """Build Tkinter GUI with large sliders and labeled controls."""
         self.root = tk.Tk()
         self.root.title("Stewart Platform PID Controller")
-        self.root.geometry("600x700")
+        self.root.geometry("600x950")
         
         # Title label
         ttk.Label(self.root, text="Stewart Platform Control", font=("Arial", 18, "bold")).pack(pady=10)
@@ -408,84 +455,196 @@ class StewartPlatformController:
         # X-axis (Roll) controls
         ttk.Label(self.root, text="X-Axis (Roll) PID Gains", font=("Arial", 14, "bold")).pack(pady=5)
         
-        # Kp_x slider
+        # Kp_x slider with entry box
         ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 10)).pack()
+        kp_x_frame = ttk.Frame(self.root)
+        kp_x_frame.pack(pady=2)
         self.kp_x_var = tk.DoubleVar(value=self.pid.Kp_x)
-        kp_x_slider = ttk.Scale(self.root, from_=0, to=100, variable=self.kp_x_var,
-                               orient=tk.HORIZONTAL, length=550)
-        kp_x_slider.pack(pady=2)
+        kp_x_slider = ttk.Scale(kp_x_frame, from_=0, to=100, variable=self.kp_x_var,
+                               orient=tk.HORIZONTAL, length=450)
+        kp_x_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.kp_x_entry = ttk.Entry(kp_x_frame, width=10)
+        self.kp_x_entry.insert(0, f"{self.pid.Kp_x:.2f}")
+        self.kp_x_entry.pack(side=tk.LEFT)
+        self.kp_x_entry.bind('<Return>', lambda e: self._update_from_entry(self.kp_x_var, self.kp_x_entry))
         self.kp_x_label = ttk.Label(self.root, text=f"Kp_x: {self.pid.Kp_x:.1f}", font=("Arial", 9))
         self.kp_x_label.pack()
         
-        # Ki_x slider
+        # Ki_x slider with entry box
         ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 10)).pack()
+        ki_x_frame = ttk.Frame(self.root)
+        ki_x_frame.pack(pady=2)
         self.ki_x_var = tk.DoubleVar(value=self.pid.Ki_x)
-        ki_x_slider = ttk.Scale(self.root, from_=0, to=10, variable=self.ki_x_var,
-                               orient=tk.HORIZONTAL, length=550)
-        ki_x_slider.pack(pady=2)
+        ki_x_slider = ttk.Scale(ki_x_frame, from_=0, to=10, variable=self.ki_x_var,
+                               orient=tk.HORIZONTAL, length=450)
+        ki_x_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.ki_x_entry = ttk.Entry(ki_x_frame, width=10)
+        self.ki_x_entry.insert(0, f"{self.pid.Ki_x:.2f}")
+        self.ki_x_entry.pack(side=tk.LEFT)
+        self.ki_x_entry.bind('<Return>', lambda e: self._update_from_entry(self.ki_x_var, self.ki_x_entry))
         self.ki_x_label = ttk.Label(self.root, text=f"Ki_x: {self.pid.Ki_x:.1f}", font=("Arial", 9))
         self.ki_x_label.pack()
         
-        # Kd_x slider
+        # Kd_x slider with entry box
         ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 10)).pack()
+        kd_x_frame = ttk.Frame(self.root)
+        kd_x_frame.pack(pady=2)
         self.kd_x_var = tk.DoubleVar(value=self.pid.Kd_x)
-        kd_x_slider = ttk.Scale(self.root, from_=0, to=20, variable=self.kd_x_var,
-                               orient=tk.HORIZONTAL, length=550)
-        kd_x_slider.pack(pady=2)
+        kd_x_slider = ttk.Scale(kd_x_frame, from_=0, to=20, variable=self.kd_x_var,
+                               orient=tk.HORIZONTAL, length=450)
+        kd_x_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.kd_x_entry = ttk.Entry(kd_x_frame, width=10)
+        self.kd_x_entry.insert(0, f"{self.pid.Kd_x:.2f}")
+        self.kd_x_entry.pack(side=tk.LEFT)
+        self.kd_x_entry.bind('<Return>', lambda e: self._update_from_entry(self.kd_x_var, self.kd_x_entry))
         self.kd_x_label = ttk.Label(self.root, text=f"Kd_x: {self.pid.Kd_x:.1f}", font=("Arial", 9))
         self.kd_x_label.pack()
         
         # Y-axis (Pitch) controls
         ttk.Label(self.root, text="Y-Axis (Pitch) PID Gains", font=("Arial", 14, "bold")).pack(pady=5)
         
-        # Kp_y slider
+        # Kp_y slider with entry box
         ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 10)).pack()
+        kp_y_frame = ttk.Frame(self.root)
+        kp_y_frame.pack(pady=2)
         self.kp_y_var = tk.DoubleVar(value=self.pid.Kp_y)
-        kp_y_slider = ttk.Scale(self.root, from_=0, to=100, variable=self.kp_y_var,
-                               orient=tk.HORIZONTAL, length=550)
-        kp_y_slider.pack(pady=2)
+        kp_y_slider = ttk.Scale(kp_y_frame, from_=0, to=100, variable=self.kp_y_var,
+                               orient=tk.HORIZONTAL, length=450)
+        kp_y_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.kp_y_entry = ttk.Entry(kp_y_frame, width=10)
+        self.kp_y_entry.insert(0, f"{self.pid.Kp_y:.2f}")
+        self.kp_y_entry.pack(side=tk.LEFT)
+        self.kp_y_entry.bind('<Return>', lambda e: self._update_from_entry(self.kp_y_var, self.kp_y_entry))
         self.kp_y_label = ttk.Label(self.root, text=f"Kp_y: {self.pid.Kp_y:.1f}", font=("Arial", 9))
         self.kp_y_label.pack()
         
-        # Ki_y slider
+        # Ki_y slider with entry box
         ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 10)).pack()
+        ki_y_frame = ttk.Frame(self.root)
+        ki_y_frame.pack(pady=2)
         self.ki_y_var = tk.DoubleVar(value=self.pid.Ki_y)
-        ki_y_slider = ttk.Scale(self.root, from_=0, to=10, variable=self.ki_y_var,
-                               orient=tk.HORIZONTAL, length=550)
-        ki_y_slider.pack(pady=2)
+        ki_y_slider = ttk.Scale(ki_y_frame, from_=0, to=10, variable=self.ki_y_var,
+                               orient=tk.HORIZONTAL, length=450)
+        ki_y_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.ki_y_entry = ttk.Entry(ki_y_frame, width=10)
+        self.ki_y_entry.insert(0, f"{self.pid.Ki_y:.2f}")
+        self.ki_y_entry.pack(side=tk.LEFT)
+        self.ki_y_entry.bind('<Return>', lambda e: self._update_from_entry(self.ki_y_var, self.ki_y_entry))
         self.ki_y_label = ttk.Label(self.root, text=f"Ki_y: {self.pid.Ki_y:.1f}", font=("Arial", 9))
         self.ki_y_label.pack()
         
-        # Kd_y slider
+        # Kd_y slider with entry box
         ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 10)).pack()
+        kd_y_frame = ttk.Frame(self.root)
+        kd_y_frame.pack(pady=2)
         self.kd_y_var = tk.DoubleVar(value=self.pid.Kd_y)
-        kd_y_slider = ttk.Scale(self.root, from_=0, to=20, variable=self.kd_y_var,
-                               orient=tk.HORIZONTAL, length=550)
-        kd_y_slider.pack(pady=2)
+        kd_y_slider = ttk.Scale(kd_y_frame, from_=0, to=20, variable=self.kd_y_var,
+                               orient=tk.HORIZONTAL, length=450)
+        kd_y_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.kd_y_entry = ttk.Entry(kd_y_frame, width=10)
+        self.kd_y_entry.insert(0, f"{self.pid.Kd_y:.2f}")
+        self.kd_y_entry.pack(side=tk.LEFT)
+        self.kd_y_entry.bind('<Return>', lambda e: self._update_from_entry(self.kd_y_var, self.kd_y_entry))
         self.kd_y_label = ttk.Label(self.root, text=f"Kd_y: {self.pid.Kd_y:.1f}", font=("Arial", 9))
         self.kd_y_label.pack()
+        
+        # Square Pattern controls
+        ttk.Label(self.root, text="Custom Pattern (up to 10 setpoints)", font=("Arial", 12, "bold")).pack(pady=5)
+        
+        # Setpoint input section
+        setpoints_frame = ttk.LabelFrame(self.root, text="Setpoints", padding=5)
+        setpoints_frame.pack(pady=5, padx=10, fill=tk.BOTH, expand=True)
+        
+        # Header row
+        header_frame = ttk.Frame(setpoints_frame)
+        header_frame.pack(fill=tk.X, pady=2)
+        ttk.Label(header_frame, text="#", font=("Arial", 9, "bold"), width=3).pack(side=tk.LEFT, padx=2)
+        ttk.Label(header_frame, text="X (m)", font=("Arial", 9, "bold"), width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Label(header_frame, text="Y (m)", font=("Arial", 9, "bold"), width=10).pack(side=tk.LEFT, padx=2)
+        
+        # Create entry fields for up to 10 setpoints
+        self.custom_setpoint_entries = []
+        for i in range(10):
+            row_frame = ttk.Frame(setpoints_frame)
+            row_frame.pack(fill=tk.X, pady=1)
+            ttk.Label(row_frame, text=f"{i+1}", font=("Arial", 9), width=3).pack(side=tk.LEFT, padx=2)
+            x_entry = ttk.Entry(row_frame, width=10)
+            x_entry.pack(side=tk.LEFT, padx=2)
+            y_entry = ttk.Entry(row_frame, width=10)
+            y_entry.pack(side=tk.LEFT, padx=2)
+            self.custom_setpoint_entries.append((x_entry, y_entry))
+        
+        # Initialize with default square pattern
+        default_setpoints = [(0.0, 0.0), (0.05, 0.05), (0.05, -0.05), (-0.05, -0.05), (-0.05, 0.05)]
+        for i, (x, y) in enumerate(default_setpoints):
+            if i < len(self.custom_setpoint_entries):
+                self.custom_setpoint_entries[i][0].insert(0, f"{x:.4f}")
+                self.custom_setpoint_entries[i][1].insert(0, f"{y:.4f}")
+        
+        # Pattern control buttons
+        pattern_control_frame = ttk.Frame(self.root)
+        pattern_control_frame.pack(pady=5)
+        ttk.Button(pattern_control_frame, text="Update Pattern",
+                  command=self.update_pattern_from_entries).pack(side=tk.LEFT, padx=5)
+        ttk.Button(pattern_control_frame, text="Clear All",
+                  command=self.clear_all_setpoints).pack(side=tk.LEFT, padx=5)
+        ttk.Button(pattern_control_frame, text="Generate Circle (10cm)",
+                  command=self.generate_circle_pattern).pack(side=tk.LEFT, padx=5)
+        self.square_pattern_button = ttk.Button(pattern_control_frame, text="Start Pattern",
+                                                command=self.toggle_square_pattern)
+        self.square_pattern_button.pack(side=tk.LEFT, padx=5)
+        
+        # Settle parameters
+        settle_params_frame = ttk.Frame(self.root)
+        settle_params_frame.pack(pady=2)
+        ttk.Label(settle_params_frame, text="Settle Tolerance (m):", font=("Arial", 9)).pack(side=tk.LEFT, padx=2)
+        self.settle_tolerance_entry = ttk.Entry(settle_params_frame, width=8)
+        self.settle_tolerance_entry.insert(0, f"{self.settle_tolerance:.4f}")
+        self.settle_tolerance_entry.pack(side=tk.LEFT, padx=2)
+        self.settle_tolerance_entry.bind('<Return>', lambda e: self._update_settle_tolerance())
+        
+        ttk.Label(settle_params_frame, text="Settle Duration (s):", font=("Arial", 9)).pack(side=tk.LEFT, padx=2)
+        self.settle_duration_entry = ttk.Entry(settle_params_frame, width=8)
+        self.settle_duration_entry.insert(0, f"{self.settle_duration:.2f}")
+        self.settle_duration_entry.pack(side=tk.LEFT, padx=2)
+        self.settle_duration_entry.bind('<Return>', lambda e: self._update_settle_duration())
+        
+        self.pattern_status_label = ttk.Label(self.root, text="Pattern: Stopped (0 setpoints)", font=("Arial", 9))
+        self.pattern_status_label.pack(pady=2)
         
         # Setpoint controls
         ttk.Label(self.root, text="Setpoint", font=("Arial", 12)).pack(pady=5)
         
-        # Setpoint X
+        # Setpoint X with entry box
         ttk.Label(self.root, text="Setpoint X (meters)", font=("Arial", 10)).pack()
         pos_range = 0.15  # Default range (matches platform radius)
+        setpoint_x_frame = ttk.Frame(self.root)
+        setpoint_x_frame.pack(pady=2)
         self.setpoint_x_var = tk.DoubleVar(value=self.setpoint_x)
-        setpoint_x_slider = ttk.Scale(self.root, from_=-pos_range, to=pos_range,
+        self.setpoint_x_slider = ttk.Scale(setpoint_x_frame, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_x_var,
-                                     orient=tk.HORIZONTAL, length=550)
-        setpoint_x_slider.pack(pady=2)
+                                     orient=tk.HORIZONTAL, length=450)
+        self.setpoint_x_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.setpoint_x_entry = ttk.Entry(setpoint_x_frame, width=10)
+        self.setpoint_x_entry.insert(0, f"{self.setpoint_x:.4f}")
+        self.setpoint_x_entry.pack(side=tk.LEFT)
+        self.setpoint_x_entry.bind('<Return>', lambda e: self._update_from_entry(self.setpoint_x_var, self.setpoint_x_entry))
         self.setpoint_x_label = ttk.Label(self.root, text=f"Setpoint X: {self.setpoint_x:.4f}m", font=("Arial", 9))
         self.setpoint_x_label.pack()
         
-        # Setpoint Y
+        # Setpoint Y with entry box
         ttk.Label(self.root, text="Setpoint Y (meters)", font=("Arial", 10)).pack()
+        setpoint_y_frame = ttk.Frame(self.root)
+        setpoint_y_frame.pack(pady=2)
         self.setpoint_y_var = tk.DoubleVar(value=self.setpoint_y)
-        setpoint_y_slider = ttk.Scale(self.root, from_=-pos_range, to=pos_range,
+        self.setpoint_y_slider = ttk.Scale(setpoint_y_frame, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_y_var,
-                                     orient=tk.HORIZONTAL, length=550)
-        setpoint_y_slider.pack(pady=2)
+                                     orient=tk.HORIZONTAL, length=450)
+        self.setpoint_y_slider.pack(side=tk.LEFT, padx=(0, 5))
+        self.setpoint_y_entry = ttk.Entry(setpoint_y_frame, width=10)
+        self.setpoint_y_entry.insert(0, f"{self.setpoint_y:.4f}")
+        self.setpoint_y_entry.pack(side=tk.LEFT)
+        self.setpoint_y_entry.bind('<Return>', lambda e: self._update_from_entry(self.setpoint_y_var, self.setpoint_y_entry))
         self.setpoint_y_label = ttk.Label(self.root, text=f"Setpoint Y: {self.setpoint_y:.4f}m", font=("Arial", 9))
         self.setpoint_y_label.pack()
         
@@ -494,6 +653,8 @@ class StewartPlatformController:
         button_frame.pack(pady=10)
         ttk.Button(button_frame, text="Reset Integrals",
                    command=self.reset_integral).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Reload PID",
+                   command=self.reload_pid_from_config).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Plot Results",
                    command=self.plot_results).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Show Telemetry",
@@ -506,6 +667,24 @@ class StewartPlatformController:
         # Launch telemetry window immediately
         self.show_telemetry_window()
     
+    def _update_from_entry(self, var, entry):
+        """Update a variable from an entry box when Enter is pressed."""
+        try:
+            value = float(entry.get())
+            var.set(value)
+        except ValueError:
+            # If invalid input, reset entry to current var value
+            entry.delete(0, tk.END)
+            entry.insert(0, f"{var.get():.2f}")
+    
+    def _update_entry_from_var(self, entry, var, decimals=2):
+        """Update entry box text from variable value (when not focused)."""
+        current_text = entry.get()
+        new_text = f"{var.get():.{decimals}f}"
+        if current_text != new_text:
+            entry.delete(0, tk.END)
+            entry.insert(0, new_text)
+    
     def update_gui(self):
         """Reflect latest values from sliders into program and update display."""
         if self.running:
@@ -514,11 +693,20 @@ class StewartPlatformController:
             # PID parameters for Y axis
             self.pid.set_gains_y(self.kp_y_var.get(), self.ki_y_var.get(), self.kd_y_var.get())
             
-            # Setpoints
-            self.setpoint_x = self.setpoint_x_var.get()
-            self.setpoint_y = self.setpoint_y_var.get()
-            self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
-            self.latest_setpoint_platform = self._camera_to_platform_frame(self.setpoint_x, self.setpoint_y)
+            # Setpoints (only update from GUI if pattern is not enabled)
+            if not self.square_pattern_enabled:
+                self.setpoint_x = self.setpoint_x_var.get()
+                self.setpoint_y = self.setpoint_y_var.get()
+                self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+            else:
+                # Update GUI to reflect pattern setpoint
+                self.setpoint_x_var.set(self.setpoint_x)
+                self.setpoint_y_var.set(self.setpoint_y)
+                # Update pattern status
+                if len(self.square_setpoints) > 0:
+                    self.pattern_status_label.config(
+                        text=f"Pattern: Running - Setpoint {self.square_pattern_index + 1}/{len(self.square_setpoints)}: "
+                        f"({self.setpoint_x:.3f}, {self.setpoint_y:.3f})")
             
             # Update displayed values
             self.kp_x_label.config(text=f"Kp_x: {self.pid.Kp_x:.1f}")
@@ -529,6 +717,25 @@ class StewartPlatformController:
             self.kd_y_label.config(text=f"Kd_y: {self.pid.Kd_y:.1f}")
             self.setpoint_x_label.config(text=f"Setpoint X: {self.setpoint_x:.4f}m")
             self.setpoint_y_label.config(text=f"Setpoint Y: {self.setpoint_y:.4f}m")
+            
+            # Update entry boxes if they don't have focus (to avoid interfering with typing)
+            if self.root.focus_get() != self.kp_x_entry:
+                self._update_entry_from_var(self.kp_x_entry, self.kp_x_var, 2)
+            if self.root.focus_get() != self.ki_x_entry:
+                self._update_entry_from_var(self.ki_x_entry, self.ki_x_var, 2)
+            if self.root.focus_get() != self.kd_x_entry:
+                self._update_entry_from_var(self.kd_x_entry, self.kd_x_var, 2)
+            if self.root.focus_get() != self.kp_y_entry:
+                self._update_entry_from_var(self.kp_y_entry, self.kp_y_var, 2)
+            if self.root.focus_get() != self.ki_y_entry:
+                self._update_entry_from_var(self.ki_y_entry, self.ki_y_var, 2)
+            if self.root.focus_get() != self.kd_y_entry:
+                self._update_entry_from_var(self.kd_y_entry, self.kd_y_var, 2)
+            if self.root.focus_get() != self.setpoint_x_entry:
+                self._update_entry_from_var(self.setpoint_x_entry, self.setpoint_x_var, 4)
+            if self.root.focus_get() != self.setpoint_y_entry:
+                self._update_entry_from_var(self.setpoint_y_entry, self.setpoint_y_var, 4)
+            
             self.update_telemetry()
             
             # Call again after 50 ms
@@ -537,6 +744,224 @@ class StewartPlatformController:
     def reset_integral(self):
         """Clear integral error in PID (button handler)."""
         self.pid.reset_integral()
+
+    def reload_pid_from_config(self):
+        """Reload PID gains from config file and sync GUI sliders."""
+        try:
+            with open(self.config_file, 'r') as f:
+                refreshed = json.load(f)
+        except Exception as exc:
+            print(f"[PID] Failed to reload config: {exc}")
+            return
+
+        pid_cfg = refreshed.get('pid', {})
+        kp_x = pid_cfg.get('Kp_x', self.pid.Kp_x)
+        ki_x = pid_cfg.get('Ki_x', self.pid.Ki_x)
+        kd_x = pid_cfg.get('Kd_x', self.pid.Kd_x)
+        kp_y = pid_cfg.get('Kp_y', self.pid.Kp_y)
+        ki_y = pid_cfg.get('Ki_y', self.pid.Ki_y)
+        kd_y = pid_cfg.get('Kd_y', self.pid.Kd_y)
+
+        self.pid.set_gains_x(kp_x, ki_x, kd_x)
+        self.pid.set_gains_y(kp_y, ki_y, kd_y)
+
+        if hasattr(self, 'kp_x_var'):
+            self.kp_x_var.set(kp_x)
+            self.ki_x_var.set(ki_x)
+            self.kd_x_var.set(kd_x)
+            self.kp_y_var.set(kp_y)
+            self.ki_y_var.set(ki_y)
+            self.kd_y_var.set(kd_y)
+
+        # Update entries immediately so user sees refreshed values
+        if hasattr(self, 'kp_x_entry'):
+            self._update_entry_from_var(self.kp_x_entry, self.kp_x_var, 2)
+            self._update_entry_from_var(self.ki_x_entry, self.ki_x_var, 2)
+            self._update_entry_from_var(self.kd_x_entry, self.kd_x_var, 2)
+            self._update_entry_from_var(self.kp_y_entry, self.kp_y_var, 2)
+            self._update_entry_from_var(self.ki_y_entry, self.ki_y_var, 2)
+            self._update_entry_from_var(self.kd_y_entry, self.kd_y_var, 2)
+
+        self.config = refreshed
+        print(f"[PID] Reloaded gains from {self.config_file}")
+    
+    def toggle_square_pattern(self):
+        """Toggle square pattern on/off."""
+        if self.square_pattern_enabled:
+            self.stop_square_pattern()
+        else:
+            self.start_square_pattern()
+    
+    def update_pattern_from_entries(self):
+        """Update pattern setpoints from entry fields."""
+        new_setpoints = []
+        for x_entry, y_entry in self.custom_setpoint_entries:
+            x_str = x_entry.get().strip()
+            y_str = y_entry.get().strip()
+            if x_str and y_str:
+                try:
+                    x_val = float(x_str)
+                    y_val = float(y_str)
+                    new_setpoints.append((x_val, y_val))
+                except ValueError:
+                    print(f"[PATTERN] Invalid setpoint entry: ({x_str}, {y_str})")
+        
+        if len(new_setpoints) == 0:
+            print("[PATTERN] No valid setpoints entered. Pattern must have at least 1 setpoint.")
+            self.pattern_status_label.config(text="Pattern: No valid setpoints (need at least 1)")
+            return
+        
+        self.square_setpoints = new_setpoints
+        self.square_pattern_index = 0  # Reset to first setpoint
+        
+        print(f"[PATTERN] Updated pattern with {len(new_setpoints)} setpoints: {new_setpoints}")
+        
+        # If pattern is running, update to new first setpoint
+        if self.square_pattern_enabled:
+            sp_x, sp_y = self.square_setpoints[0]
+            self.setpoint_x = sp_x
+            self.setpoint_y = sp_y
+            self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+            self.settle_start_time = None
+            self.settled = False
+            self.pattern_status_label.config(
+                text=f"Pattern: Running - Setpoint 1/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
+        else:
+            self.pattern_status_label.config(text=f"Pattern: Ready ({len(new_setpoints)} setpoints)")
+    
+    def clear_all_setpoints(self):
+        """Clear all setpoint entry fields."""
+        for x_entry, y_entry in self.custom_setpoint_entries:
+            x_entry.delete(0, tk.END)
+            y_entry.delete(0, tk.END)
+        print("[PATTERN] Cleared all setpoint entries")
+        self.pattern_status_label.config(text="Pattern: Stopped (0 setpoints)")
+    
+    def generate_circle_pattern(self):
+        """Generate setpoints for a circle with 10 cm radius."""
+        import math
+        
+        radius = 0.10  # 10 cm in meters
+        num_points = 16  # Number of points around the circle
+        center_x = 0.0
+        center_y = 0.0
+        
+        # Clear all entries first
+        for x_entry, y_entry in self.custom_setpoint_entries:
+            x_entry.delete(0, tk.END)
+            y_entry.delete(0, tk.END)
+        
+        # Generate circular setpoints
+        circle_setpoints = []
+        for i in range(num_points):
+            angle = 2 * math.pi * i / num_points
+            x = center_x + radius * math.cos(angle)
+            y = center_y + radius * math.sin(angle)
+            circle_setpoints.append((x, y))
+            
+            # Fill in entry fields
+            if i < len(self.custom_setpoint_entries):
+                self.custom_setpoint_entries[i][0].insert(0, f"{x:.4f}")
+                self.custom_setpoint_entries[i][1].insert(0, f"{y:.4f}")
+        
+        # Automatically update the pattern
+        self.square_setpoints = circle_setpoints
+        self.square_pattern_index = 0
+        
+        # If pattern is running, update to new first setpoint
+        if self.square_pattern_enabled:
+            sp_x, sp_y = self.square_setpoints[0]
+            self.setpoint_x = sp_x
+            self.setpoint_y = sp_y
+            self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+            self.settle_start_time = None
+            self.settled = False
+            self.pattern_status_label.config(
+                text=f"Pattern: Running - Setpoint 1/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
+        else:
+            self.pattern_status_label.config(text=f"Pattern: Ready ({len(circle_setpoints)} setpoints - Circle 10cm)")
+        
+        print(f"[PATTERN] Generated circle pattern with {num_points} points, radius {radius*100:.1f} cm")
+    
+    def start_square_pattern(self):
+        """Start square pattern sequence."""
+        # Make sure we have valid setpoints
+        if len(self.square_setpoints) == 0:
+            print("[PATTERN] No setpoints configured. Please enter setpoints and click 'Update Pattern' first.")
+            self.pattern_status_label.config(text="Pattern: Error - No setpoints configured")
+            return
+        
+        self.square_pattern_enabled = True
+        self.square_pattern_index = 0
+        sp_x, sp_y = self.square_setpoints[self.square_pattern_index]
+        self.setpoint_x = sp_x
+        self.setpoint_y = sp_y
+        self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+        self.settle_start_time = None
+        self.settled = False
+        
+        # Update GUI
+        self.square_pattern_button.config(text="Stop Pattern")
+        self.pattern_status_label.config(text=f"Pattern: Running - Setpoint 1/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
+        
+        # Disable setpoint sliders when pattern is active
+        if hasattr(self, 'setpoint_x_slider'):
+            self.setpoint_x_slider.config(state='disabled')
+        if hasattr(self, 'setpoint_y_slider'):
+            self.setpoint_y_slider.config(state='disabled')
+        
+        print(f"[PATTERN] Started pattern with {len(self.square_setpoints)} setpoints, starting at ({sp_x:.3f}, {sp_y:.3f})")
+    
+    def stop_square_pattern(self):
+        """Stop square pattern sequence."""
+        self.square_pattern_enabled = False
+        self.settle_start_time = None
+        self.settled = False
+        
+        # Update GUI
+        self.square_pattern_button.config(text="Start Pattern")
+        num_setpoints = len(self.square_setpoints)
+        self.pattern_status_label.config(text=f"Pattern: Stopped ({num_setpoints} setpoints)")
+        
+        # Re-enable setpoint sliders
+        if hasattr(self, 'setpoint_x_slider'):
+            self.setpoint_x_slider.config(state='normal')
+        if hasattr(self, 'setpoint_y_slider'):
+            self.setpoint_y_slider.config(state='normal')
+        
+        print("[PATTERN] Stopped pattern")
+    
+    def _update_settle_tolerance(self):
+        """Update settle tolerance from entry box."""
+        try:
+            value = float(self.settle_tolerance_entry.get())
+            if value > 0:
+                self.settle_tolerance = value
+                print(f"[PATTERN] Settle tolerance updated to {value:.4f}m")
+            else:
+                # Reset to current value if invalid
+                self.settle_tolerance_entry.delete(0, tk.END)
+                self.settle_tolerance_entry.insert(0, f"{self.settle_tolerance:.4f}")
+        except ValueError:
+            # Reset to current value if invalid
+            self.settle_tolerance_entry.delete(0, tk.END)
+            self.settle_tolerance_entry.insert(0, f"{self.settle_tolerance:.4f}")
+    
+    def _update_settle_duration(self):
+        """Update settle duration from entry box."""
+        try:
+            value = float(self.settle_duration_entry.get())
+            if value > 0:
+                self.settle_duration = value
+                print(f"[PATTERN] Settle duration updated to {value:.2f}s")
+            else:
+                # Reset to current value if invalid
+                self.settle_duration_entry.delete(0, tk.END)
+                self.settle_duration_entry.insert(0, f"{self.settle_duration:.2f}")
+        except ValueError:
+            # Reset to current value if invalid
+            self.settle_duration_entry.delete(0, tk.END)
+            self.settle_duration_entry.insert(0, f"{self.settle_duration:.2f}")
     
     def plot_results(self):
         """Show matplotlib plots of position and control logs."""
@@ -553,27 +978,21 @@ class StewartPlatformController:
         ax_pitch = fig.add_subplot(gs[1, 1])
         ax_plane = fig.add_subplot(gs[2, :])
         
-        # Choose data frame for visualization (platform-aligned if available)
-        x_log_vis = self.position_x_log_platform if self.position_x_log_platform else self.position_x_log
-        y_log_vis = self.position_y_log_platform if self.position_y_log_platform else self.position_y_log
-        spx_log_vis = self.setpoint_x_log_platform if self.setpoint_x_log_platform else self.setpoint_x_log
-        spy_log_vis = self.setpoint_y_log_platform if self.setpoint_y_log_platform else self.setpoint_y_log
-        
         # X position trace
-        ax_x.plot(self.time_log, x_log_vis, label="Ball X Position", linewidth=2)
-        ax_x.plot(self.time_log, spx_log_vis, label="Setpoint X",
+        ax_x.plot(self.time_log, self.position_x_log, label="Ball X Position", linewidth=2)
+        ax_x.plot(self.time_log, self.setpoint_x_log, label="Setpoint X",
                   linestyle="--", linewidth=2)
-        ax_x.set_ylabel("Platform X (m)")
-        ax_x.set_title("Platform X-Axis (Roll) Control")
+        ax_x.set_ylabel("Position X (m)")
+        ax_x.set_title("X-Axis (Roll) Control")
         ax_x.legend()
         ax_x.grid(True, alpha=0.3)
         
         # Y position trace
-        ax_y.plot(self.time_log, y_log_vis, label="Ball Y Position", linewidth=2, color='green')
-        ax_y.plot(self.time_log, spy_log_vis, label="Setpoint Y",
+        ax_y.plot(self.time_log, self.position_y_log, label="Ball Y Position", linewidth=2, color='green')
+        ax_y.plot(self.time_log, self.setpoint_y_log, label="Setpoint Y",
                   linestyle="--", linewidth=2)
-        ax_y.set_ylabel("Platform Y (m)")
-        ax_y.set_title("Platform Y-Axis (Pitch) Control")
+        ax_y.set_ylabel("Position Y (m)")
+        ax_y.set_title("Y-Axis (Pitch) Control")
         ax_y.legend()
         ax_y.grid(True, alpha=0.3)
         
@@ -598,11 +1017,11 @@ class StewartPlatformController:
         theta = np.linspace(0, 2 * np.pi, 400)
         ax_plane.plot(radius * np.cos(theta), radius * np.sin(theta),
                       color="#888888", linestyle="--", label="Plate Boundary")
-        ax_plane.plot(x_log_vis, y_log_vis,
+        ax_plane.plot(self.position_x_log, self.position_y_log,
                       label="Ball Path", linewidth=2, color="#1f77b4")
-        ax_plane.scatter(spx_log_vis[-1], spy_log_vis[-1],
+        ax_plane.scatter(self.setpoint_x_log[-1], self.setpoint_y_log[-1],
                          marker="x", color="red", s=80, label="Target")
-        ax_plane.scatter(x_log_vis[-1], y_log_vis[-1],
+        ax_plane.scatter(self.position_x_log[-1], self.position_y_log[-1],
                          marker="o", color="green", s=50, label="Last Position")
         ax_plane.set_xlabel("X (m)")
         ax_plane.set_ylabel("Y (m)")
@@ -719,8 +1138,6 @@ class StewartPlatformController:
             return
         
         x, y = self.latest_position
-        x_pf, y_pf = self.latest_position_platform
-        sp_pf_x, sp_pf_y = self.latest_setpoint_platform
         err_x, err_y = self.latest_error
         
         self.telemetry_actual_label.config(text=f"Ball:     X={x:+0.4f} m  |  Y={y:+0.4f} m")
@@ -749,9 +1166,9 @@ class StewartPlatformController:
             cy = center - py * scale
             return cx, cy
         
-        # Draw setpoint and actual positions (platform frame)
-        spx, spy = to_canvas(sp_pf_x, sp_pf_y)
-        bx, by = to_canvas(x_pf, y_pf)
+        # Draw setpoint and actual positions
+        spx, spy = to_canvas(self.setpoint_x, self.setpoint_y)
+        bx, by = to_canvas(x, y)
         canvas.create_oval(spx - 6, spy - 6, spx + 6, spy + 6,
                            outline="#ff5555", width=2)
         canvas.create_oval(bx - 6, by - 6, bx + 6, by + 6,
@@ -773,7 +1190,6 @@ class StewartPlatformController:
                     motor_x_px, motor_y_px = motor_pos_px[0], motor_pos_px[1]
                     motor_x_m = (motor_x_px - center_x_px) * pixel_to_meter_ratio
                     motor_y_m = (motor_y_px - center_y_px) * pixel_to_meter_ratio
-                    motor_x_m, motor_y_m = self._camera_to_platform_frame(motor_x_m, motor_y_m)
                     
                     # Convert to canvas coordinates
                     mx, my = to_canvas(motor_x_m, motor_y_m)
