@@ -85,6 +85,12 @@ class StewartPlatformController:
         self.setpoint_y_log = []
         self.control_x_log = []
         self.control_y_log = []
+        self.error_x_log = []  # Error = setpoint - position
+        self.error_y_log = []
+        self.tilt_x_log = []  # Actual tilt angle (same as control for now)
+        self.tilt_y_log = []
+        self.saturation_x_log = []  # Saturation flags
+        self.saturation_y_log = []
         self.start_time = None
         self.latest_position = (0.0, 0.0)
         self.latest_error = (0.0, 0.0)
@@ -357,12 +363,16 @@ class StewartPlatformController:
                         print(f"[PATTERN] Advanced to setpoint {self.square_pattern_index + 1}/{len(self.square_setpoints)}: ({sp_x:.3f}, {sp_y:.3f})")
                 
                 # Compute control output using 2D PID
-                control_output_x, control_output_y = self.pid.update(position_x, position_y)
+                control_output_x, control_output_y, saturated_x, saturated_y = self.pid.update(position_x, position_y)
                 
                 # Send control command to platform (real or simulated)
                 self.send_platform_tilt(control_output_x, control_output_y)
                 
-                # Log results for plotting
+                # Calculate errors
+                error_x = self.setpoint_x - position_x
+                error_y = self.setpoint_y - position_y
+                
+                # Log results for plotting and metrics
                 current_time = time.time() - self.start_time
                 self.time_log.append(current_time)
                 self.position_x_log.append(position_x)
@@ -371,11 +381,17 @@ class StewartPlatformController:
                 self.setpoint_y_log.append(self.setpoint_y)
                 self.control_x_log.append(control_output_x)
                 self.control_y_log.append(control_output_y)
+                self.error_x_log.append(error_x)
+                self.error_y_log.append(error_y)
+                self.tilt_x_log.append(control_output_x)  # Tilt angle = control output
+                self.tilt_y_log.append(control_output_y)
+                self.saturation_x_log.append(saturated_x)
+                self.saturation_y_log.append(saturated_y)
                 
                 print(f"Pos: X={position_x:.3f}m, Y={position_y:.3f}m | "
                       f"PID Output: Roll={control_output_x:.1f}°, Pitch={control_output_y:.1f}°")
                 self.latest_position = (position_x, position_y)
-                self.latest_error = (self.setpoint_x - position_x, self.setpoint_y - position_y)
+                self.latest_error = (error_x, error_y)
                 
             except queue.Empty:
                 continue

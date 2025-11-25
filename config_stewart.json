@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-11-24T16:08:43.430027",
+  "timestamp": "2025-11-25T15:58:49.722446",
   "platform_type": "circular",
   "platform_radius_m": 0.15,
   "platform_center_pixels": [
-    265,
-    244
+    295,
+    257
   ],
-  "platform_radius_pixels": 166.99678393197826,
+  "platform_radius_pixels": 169.73941098584064,
   "camera": {
     "index": 1,
     "frame_width": 640,
@@ -14,41 +14,41 @@
   },
   "ball_detection": {
     "lower_hsv": [
-      12.0,
-      160.7,
-      147.0
+      10.0,
+      151.5,
+      128.5
     ],
     "upper_hsv": [
-      25.0,
+      26.0,
       255.0,
-      208.0
+      219.5
     ]
   },
   "calibration": {
-    "pixel_to_meter_ratio": 0.0008982208906555862,
-    "pixel_to_meter_ratio_x": 0.0008982208906555862,
-    "pixel_to_meter_ratio_y": 0.0008982208906555862
+    "pixel_to_meter_ratio": 0.0008837075557691945,
+    "pixel_to_meter_ratio_x": 0.0008837075557691945,
+    "pixel_to_meter_ratio_y": 0.0008837075557691945
   },
   "motor_positions_pixels": [
     [
-      334,
-      397
+      405,
+      387
     ],
     [
-      378,
-      121
+      369,
+      104
     ],
     [
-      103,
-      207
+      126,
+      259
     ]
   ],
   "motor_angles_deg": [
-    65.86144185055095,
-    312.2543344066844,
-    193.01389136067107
+    49.927380438786024,
+    295.57347517099583,
+    179.36216950143051
   ],
-  "axis_rotation_deg": 65.86144185055095,
+  "axis_rotation_deg": 49.927380438786024,
   "servo": {
     "ports": [
       "COM3",

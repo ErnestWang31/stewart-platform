@@ -85,8 +85,9 @@ class PIDController2D:
         D_x = self.Kd_x * derivative_x
         
         # PID output
-        output_x = P_x + I_x + D_x
-        output_x = np.clip(output_x, -self.output_limit_x, self.output_limit_x)
+        output_x_unclipped = P_x + I_x + D_x
+        output_x = np.clip(output_x_unclipped, -self.output_limit_x, self.output_limit_x)
+        saturated_x = 1 if abs(output_x_unclipped) > self.output_limit_x else 0
         
         # Update X-axis state
         self.prev_error_x = error_x
@@ -111,14 +112,15 @@ class PIDController2D:
         D_y = self.Kd_y * derivative_y
         
         # PID output
-        output_y = P_y + I_y + D_y
-        output_y = np.clip(output_y, -self.output_limit_y, self.output_limit_y)
+        output_y_unclipped = P_y + I_y + D_y
+        output_y = np.clip(output_y_unclipped, -self.output_limit_y, self.output_limit_y)
+        saturated_y = 1 if abs(output_y_unclipped) > self.output_limit_y else 0
         
         # Update Y-axis state
         self.prev_error_y = error_y
         self.prev_time_y = current_time
         
-        return output_x, output_y
+        return output_x, output_y, saturated_x, saturated_y
     
     def set_setpoint(self, setpoint_x, setpoint_y):
         """Set target position for both axes.
