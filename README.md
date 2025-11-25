@@ -95,6 +95,35 @@ The GUI provides real-time PID tuning with sliders:
 
 Separate gains can be set for X and Y axes.
 
+## 1D PID Autotune Workflow
+
+For a quick way to obtain starting gains, you can excite only one axis with a relay test and reuse the resulting PID values on both axes:
+
+1. **Prerequisites**
+   - Run `python calibration_2d.py` so ball detection and limits are valid.
+   - Place the ball on the platform center and make sure you can safely command ±5° without the ball falling off.
+   - Connect the Arduino + servos (or pass `--simulate` to capture data without moving hardware).
+
+2. **Run the autotune script**
+   ```bash
+   python pid_autotune.py --axis x --amplitude 4 --cycles 4 --display --apply-config
+   ```
+   - `--axis`: choose `x` (roll) or `y` (pitch); X is usually sufficient.
+   - `--amplitude`: relay command in degrees (increase if the ball barely moves, decrease if it flies off).
+   - `--cycles`: number of oscillation periods required before stopping.
+   - `--rule`: pick the tuning rule (`zn` for Ziegler–Nichols, `tyreus` for Tyreus–Luyben) depending on how aggressive you need the loop.
+   - `--apply-config`: automatically write the tuned gains into `config_stewart.json` for both axes (a timestamped `.bak_*` backup is created).
+
+3. **What the script does**
+   - Uses the existing ball detector to watch either X or Y motion while toggling the platform ±command degrees (relay test / Åström–Hägglund method).
+   - Logs the measured oscillations, computes the ultimate gain/period, and derives `Kp`, `Ki`, `Kd` per the selected rule.
+   - Appends each run to `pid_autotune_results.json` so you can review or average multiple attempts.
+
+4. **Deploying the gains**
+   - If you tuned only one axis, you can safely reuse the resulting gains on the other axis because the platform mechanics are symmetric.
+   - Restart `stewart_platform_controller.py` after updating the config to load the new PID gains.
+   - Fine‑tune live with the GUI sliders if needed; the autotune output should already be stable enough to keep the ball near the setpoint.
+
 ## Arduino Setup
 
 The system uses a single Arduino with an **Adafruit PWM Servo Driver** shield to control all 3 servos via I2C.
