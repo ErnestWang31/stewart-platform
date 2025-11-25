@@ -55,7 +55,7 @@ class TrajectoryUpdater:
         # Check if it's time to update
         elapsed_since_update = current_time - self.last_update_time
         if elapsed_since_update >= self.update_period:
-            # Regenerate trajectory from current position
+            # Regenerate trajectory from current position to target
             self.trajectory_start_time = current_time
             self.trajectory_start_position = current_position
             self.current_trajectory = generate_trajectory(
@@ -66,6 +66,8 @@ class TrajectoryUpdater:
                 order=self.order
             )
             self.last_update_time = current_time
+            # Debug output (can be commented out if too verbose)
+            # print(f"[TRAJ_UPDATE] t={current_time:.2f}s: Regenerated trajectory from {current_position*100:.2f}cm → {self.target_position*100:.2f}cm")
             return True
         
         return False

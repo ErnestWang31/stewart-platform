@@ -45,9 +45,10 @@ class SimulatedBallTracker:
         # Convert tilt angle to radians
         tilt_rad = np.radians(tilt_angle_deg)
         
-        # Simple ball dynamics: x_dot = -g * sin(θ) - damping * velocity
+        # Simple ball dynamics: x_dot = g * sin(θ) - damping * velocity
+        # When platform tilts right (positive angle), ball rolls right (positive acceleration)
         # For small angles: sin(θ) ≈ θ, but we'll use full sin for accuracy
-        acceleration = -self.g * np.sin(tilt_rad) - self.damping * self.velocity
+        acceleration = self.g * np.sin(tilt_rad) - self.damping * self.velocity
         
         # Update velocity using Euler integration
         self.velocity += acceleration * dt

@@ -16,7 +16,7 @@ from metrics import compute_all_metrics
 # Experiment parameters
 INITIAL_POSITION = 0.10  # 10 cm in meters
 TARGET_POSITION = 0.00   # 0 cm in meters
-EXPERIMENT_DURATION = 6.0  # seconds
+EXPERIMENT_DURATION = 50.0  # seconds (increased for better observation)
 CONTROL_LIMIT = 15.0  # degrees
 DT = 0.01  # Control loop time step (100 Hz)
 
@@ -241,11 +241,11 @@ def run_trajectory_update_experiment():
         # Get current ball position
         position = ball_tracker.get_position()
         
-        # Update trajectory if needed
+        # Update trajectory if needed (for planning, but setpoint is always target)
         trajectory_updater.update(position, current_time)
         
-        # Get setpoint from current trajectory
-        setpoint = trajectory_updater.get_setpoint(current_time)
+        # Setpoint is always the target (0cm), trajectory is just for planning
+        setpoint = TARGET_POSITION
         pid.set_setpoint(setpoint)
         
         # Update PID controller

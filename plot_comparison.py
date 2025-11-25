@@ -8,8 +8,11 @@ import glob
 from data_logger import DataLogger
 from metrics import compute_smoothness
 
-def find_latest_experiment_files():
+def find_latest_experiment_files(use_hardware=False):
     """Find the most recent experiment CSV files.
+    
+    Args:
+        use_hardware (bool): If True, look for hardware files; if False, look for simulation files
     
     Returns:
         tuple: (step_pid_file, oneshot_file, update_file) or None if not found
@@ -19,9 +22,19 @@ def find_latest_experiment_files():
         return None, None, None
     
     # Find files matching experiment patterns
-    step_pid_files = glob.glob(os.path.join(results_dir, "experiment1_step_pid_*.csv"))
-    oneshot_files = glob.glob(os.path.join(results_dir, "experiment2_trajectory_oneshot_*.csv"))
-    update_files = glob.glob(os.path.join(results_dir, "experiment3_trajectory_update_*.csv"))
+    if use_hardware:
+        step_pid_files = glob.glob(os.path.join(results_dir, "experiment1_step_pid_hardware_*.csv"))
+        oneshot_files = glob.glob(os.path.join(results_dir, "experiment2_trajectory_oneshot_hardware_*.csv"))
+        update_files = glob.glob(os.path.join(results_dir, "experiment3_trajectory_update_hardware_*.csv"))
+    else:
+        # Get all files, then filter out hardware ones
+        all_step_pid = glob.glob(os.path.join(results_dir, "experiment1_step_pid_*.csv"))
+        all_oneshot = glob.glob(os.path.join(results_dir, "experiment2_trajectory_oneshot_*.csv"))
+        all_update = glob.glob(os.path.join(results_dir, "experiment3_trajectory_update_*.csv"))
+        
+        step_pid_files = [f for f in all_step_pid if 'hardware' not in f]
+        oneshot_files = [f for f in all_oneshot if 'hardware' not in f]
+        update_files = [f for f in all_update if 'hardware' not in f]
     
     # Get most recent files
     step_pid_file = max(step_pid_files, key=os.path.getmtime) if step_pid_files else None
@@ -356,17 +369,18 @@ def compute_velocity_over_time(x_data, t_data):
     return {'time': t_vel, 'velocity': velocity}
 
 
-def generate_all_plots(step_pid_file=None, oneshot_file=None, update_file=None):
+def generate_all_plots(step_pid_file=None, oneshot_file=None, update_file=None, use_hardware=False):
     """Generate all comparison plots.
     
     Args:
         step_pid_file (str, optional): Path to Step PID CSV file
         oneshot_file (str, optional): Path to One-shot Trajectory CSV file
         update_file (str, optional): Path to Trajectory Update CSV file
+        use_hardware (bool): If True, look for hardware files
     """
     # Find files if not provided
     if step_pid_file is None or oneshot_file is None or update_file is None:
-        found_files = find_latest_experiment_files()
+        found_files = find_latest_experiment_files(use_hardware=use_hardware)
         if step_pid_file is None:
             step_pid_file = found_files[0]
         if oneshot_file is None:
@@ -418,11 +432,17 @@ def generate_all_plots(step_pid_file=None, oneshot_file=None, update_file=None):
 
 def main():
     """Main function to generate all plots."""
+    import sys
+    
+    use_hardware = '--hardware' in sys.argv or '-h' in sys.argv
+    
     print("\n" + "="*60)
     print("GENERATING COMPARISON PLOTS")
+    if use_hardware:
+        print("(HARDWARE DATA)")
     print("="*60)
     
-    generate_all_plots()
+    generate_all_plots(use_hardware=use_hardware)
 
 
 if __name__ == "__main__":
