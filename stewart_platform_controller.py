@@ -11,6 +11,7 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from threading import Thread
+import threading
 import queue
 from ball_detection_2d import BallDetector2D
 from pid_controller_2d import PIDController2D
@@ -96,6 +97,10 @@ class StewartPlatformController:
         # Thread-safe queue for most recent ball position measurement
         self.position_queue = queue.Queue(maxsize=1)
         self.running = False    # Main run flag for clean shutdown
+        
+        # For click-to-set-setpoint feature
+        self.current_frame = None
+        self.frame_lock = threading.Lock()
         
         # Square pattern state machine
         self.square_pattern_enabled = False
@@ -291,6 +296,62 @@ class StewartPlatformController:
         
         return motor1_angle, motor2_angle, motor3_angle
     
+    def _mouse_callback(self, event, x, y, flags, param):
+        """Handle mouse clicks on camera feed to set setpoint."""
+        if event == cv2.EVENT_LBUTTONDOWN:
+            # Get current frame dimensions
+            with self.frame_lock:
+                if self.current_frame is None:
+                    return
+                frame = self.current_frame.copy()
+            
+            frame_height, frame_width = frame.shape[:2]
+            
+            # Get platform center from config or use frame center
+            center_x = frame_width // 2
+            center_y = frame_height // 2
+            
+            if hasattr(self.detector, 'config') and self.detector.config:
+                platform_center = self.detector.config.get('platform_center_pixels')
+                if platform_center and len(platform_center) == 2:
+                    center_x, center_y = platform_center[0], platform_center[1]
+            
+            # Calculate pixel offset from platform center
+            pixel_offset_x = x - center_x
+            pixel_offset_y = y - center_y
+            
+            # Convert pixel coordinates to meters using same method as ball detection
+            # Get scale factor from detector
+            scale_factor_x = self.detector.scale_factor_x
+            scale_factor_y = self.detector.scale_factor_y
+            
+            # For circular platform, use uniform scale factor
+            if abs(scale_factor_x - scale_factor_y) < 1e-6:
+                # Uniform scale (circular platform)
+                scale = scale_factor_x
+                position_x_m = pixel_offset_x * scale
+                position_y_m = pixel_offset_y * scale
+            else:
+                # Non-uniform scale (rectangular platform)
+                normalized_x = pixel_offset_x / (frame_width // 2) if frame_width // 2 > 0 else 0
+                normalized_y = pixel_offset_y / (frame_height // 2) if frame_height // 2 > 0 else 0
+                position_x_m = normalized_x * scale_factor_x
+                position_y_m = normalized_y * scale_factor_y
+            
+            # Set the setpoint (only if pattern is not running)
+            if not self.square_pattern_enabled:
+                self.setpoint_x = position_x_m
+                self.setpoint_y = position_y_m
+                self.pid.set_setpoint(self.setpoint_x, self.setpoint_y)
+                # Update GUI variables so sliders reflect the change
+                if hasattr(self, 'setpoint_x_var'):
+                    self.setpoint_x_var.set(self.setpoint_x)
+                if hasattr(self, 'setpoint_y_var'):
+                    self.setpoint_y_var.set(self.setpoint_y)
+                print(f"[CLICK] Set setpoint to ({position_x_m:.4f}, {position_y_m:.4f}) meters")
+            else:
+                print(f"[CLICK] Pattern is running - setpoint change ignored. Click at ({position_x_m:.4f}, {position_y_m:.4f}) meters")
+    
     def camera_thread(self):
         """Dedicated thread for video capture and ball detection."""
         camera_index = self.config['camera']['index']
@@ -300,11 +361,20 @@ class StewartPlatformController:
         frame_width = self.config['camera']['frame_width']
         frame_height = self.config['camera']['frame_height']
         
+        # Set up mouse callback for click-to-set-setpoint
+        window_name = "Stewart Platform - Ball Tracking"
+        cv2.namedWindow(window_name)
+        cv2.setMouseCallback(window_name, self._mouse_callback)
+        
         while self.running:
             ret, frame = cap.read()
             if not ret:
                 continue
             frame = cv2.resize(frame, (frame_width, frame_height))
+            
+            # Store current frame for mouse callback
+            with self.frame_lock:
+                self.current_frame = frame.copy()
             
             # Detect ball position in frame (2D)
             found, center, radius, position_x_m, position_y_m = self.detector.detect_ball(frame)
@@ -320,7 +390,12 @@ class StewartPlatformController:
             
             # Show processed video with overlays
             vis_frame, _, _, _ = self.detector.draw_detection(frame)
-            cv2.imshow("Stewart Platform - Ball Tracking", vis_frame)
+            
+            # Add instruction text
+            cv2.putText(vis_frame, "Click on platform to set target", (10, 30),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+            
+            cv2.imshow(window_name, vis_frame)
             if cv2.waitKey(1) & 0xFF == 27:  # ESC exits
                 self.running = False
                 break
@@ -426,134 +501,134 @@ class StewartPlatformController:
         return self.settled
     
     def create_gui(self):
-        """Build Tkinter GUI with large sliders and labeled controls."""
+        """Build Tkinter GUI with compact sliders and labeled controls."""
         self.root = tk.Tk()
         self.root.title("Stewart Platform PID Controller")
-        self.root.geometry("600x950")
+        self.root.geometry("500x800")
         
         # Title label
-        ttk.Label(self.root, text="Stewart Platform Control", font=("Arial", 18, "bold")).pack(pady=10)
+        ttk.Label(self.root, text="Stewart Platform Control", font=("Arial", 12, "bold")).pack(pady=3)
         
         # X-axis (Roll) controls
-        ttk.Label(self.root, text="X-Axis (Roll) PID Gains", font=("Arial", 14, "bold")).pack(pady=5)
+        ttk.Label(self.root, text="X-Axis (Roll) PID Gains", font=("Arial", 10, "bold")).pack(pady=2)
         
         # Kp_x slider with entry box
-        ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 10)).pack()
+        ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 8)).pack()
         kp_x_frame = ttk.Frame(self.root)
-        kp_x_frame.pack(pady=2)
+        kp_x_frame.pack(pady=1)
         self.kp_x_var = tk.DoubleVar(value=self.pid.Kp_x)
         kp_x_slider = ttk.Scale(kp_x_frame, from_=0, to=100, variable=self.kp_x_var,
-                               orient=tk.HORIZONTAL, length=450)
-        kp_x_slider.pack(side=tk.LEFT, padx=(0, 5))
-        self.kp_x_entry = ttk.Entry(kp_x_frame, width=10)
+                               orient=tk.HORIZONTAL, length=350)
+        kp_x_slider.pack(side=tk.LEFT, padx=(0, 3))
+        self.kp_x_entry = ttk.Entry(kp_x_frame, width=8)
         self.kp_x_entry.insert(0, f"{self.pid.Kp_x:.2f}")
         self.kp_x_entry.pack(side=tk.LEFT)
         self.kp_x_entry.bind('<Return>', lambda e: self._update_from_entry(self.kp_x_var, self.kp_x_entry))
-        self.kp_x_label = ttk.Label(self.root, text=f"Kp_x: {self.pid.Kp_x:.1f}", font=("Arial", 9))
+        self.kp_x_label = ttk.Label(self.root, text=f"Kp_x: {self.pid.Kp_x:.1f}", font=("Arial", 8))
         self.kp_x_label.pack()
         
         # Ki_x slider with entry box
-        ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 10)).pack()
+        ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 8)).pack()
         ki_x_frame = ttk.Frame(self.root)
-        ki_x_frame.pack(pady=2)
+        ki_x_frame.pack(pady=1)
         self.ki_x_var = tk.DoubleVar(value=self.pid.Ki_x)
         ki_x_slider = ttk.Scale(ki_x_frame, from_=0, to=10, variable=self.ki_x_var,
-                               orient=tk.HORIZONTAL, length=450)
-        ki_x_slider.pack(side=tk.LEFT, padx=(0, 5))
-        self.ki_x_entry = ttk.Entry(ki_x_frame, width=10)
+                               orient=tk.HORIZONTAL, length=350)
+        ki_x_slider.pack(side=tk.LEFT, padx=(0, 3))
+        self.ki_x_entry = ttk.Entry(ki_x_frame, width=8)
         self.ki_x_entry.insert(0, f"{self.pid.Ki_x:.2f}")
         self.ki_x_entry.pack(side=tk.LEFT)
         self.ki_x_entry.bind('<Return>', lambda e: self._update_from_entry(self.ki_x_var, self.ki_x_entry))
-        self.ki_x_label = ttk.Label(self.root, text=f"Ki_x: {self.pid.Ki_x:.1f}", font=("Arial", 9))
+        self.ki_x_label = ttk.Label(self.root, text=f"Ki_x: {self.pid.Ki_x:.1f}", font=("Arial", 8))
         self.ki_x_label.pack()
         
         # Kd_x slider with entry box
-        ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 10)).pack()
+        ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 8)).pack()
         kd_x_frame = ttk.Frame(self.root)
-        kd_x_frame.pack(pady=2)
+        kd_x_frame.pack(pady=1)
         self.kd_x_var = tk.DoubleVar(value=self.pid.Kd_x)
         kd_x_slider = ttk.Scale(kd_x_frame, from_=0, to=20, variable=self.kd_x_var,
-                               orient=tk.HORIZONTAL, length=450)
-        kd_x_slider.pack(side=tk.LEFT, padx=(0, 5))
-        self.kd_x_entry = ttk.Entry(kd_x_frame, width=10)
+                               orient=tk.HORIZONTAL, length=350)
+        kd_x_slider.pack(side=tk.LEFT, padx=(0, 3))
+        self.kd_x_entry = ttk.Entry(kd_x_frame, width=8)
         self.kd_x_entry.insert(0, f"{self.pid.Kd_x:.2f}")
         self.kd_x_entry.pack(side=tk.LEFT)
         self.kd_x_entry.bind('<Return>', lambda e: self._update_from_entry(self.kd_x_var, self.kd_x_entry))
-        self.kd_x_label = ttk.Label(self.root, text=f"Kd_x: {self.pid.Kd_x:.1f}", font=("Arial", 9))
+        self.kd_x_label = ttk.Label(self.root, text=f"Kd_x: {self.pid.Kd_x:.1f}", font=("Arial", 8))
         self.kd_x_label.pack()
         
         # Y-axis (Pitch) controls
-        ttk.Label(self.root, text="Y-Axis (Pitch) PID Gains", font=("Arial", 14, "bold")).pack(pady=5)
+        ttk.Label(self.root, text="Y-Axis (Pitch) PID Gains", font=("Arial", 10, "bold")).pack(pady=2)
         
         # Kp_y slider with entry box
-        ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 10)).pack()
+        ttk.Label(self.root, text="Kp (Proportional)", font=("Arial", 8)).pack()
         kp_y_frame = ttk.Frame(self.root)
-        kp_y_frame.pack(pady=2)
+        kp_y_frame.pack(pady=1)
         self.kp_y_var = tk.DoubleVar(value=self.pid.Kp_y)
         kp_y_slider = ttk.Scale(kp_y_frame, from_=0, to=100, variable=self.kp_y_var,
-                               orient=tk.HORIZONTAL, length=450)
-        kp_y_slider.pack(side=tk.LEFT, padx=(0, 5))
-        self.kp_y_entry = ttk.Entry(kp_y_frame, width=10)
+                               orient=tk.HORIZONTAL, length=350)
+        kp_y_slider.pack(side=tk.LEFT, padx=(0, 3))
+        self.kp_y_entry = ttk.Entry(kp_y_frame, width=8)
         self.kp_y_entry.insert(0, f"{self.pid.Kp_y:.2f}")
         self.kp_y_entry.pack(side=tk.LEFT)
         self.kp_y_entry.bind('<Return>', lambda e: self._update_from_entry(self.kp_y_var, self.kp_y_entry))
-        self.kp_y_label = ttk.Label(self.root, text=f"Kp_y: {self.pid.Kp_y:.1f}", font=("Arial", 9))
+        self.kp_y_label = ttk.Label(self.root, text=f"Kp_y: {self.pid.Kp_y:.1f}", font=("Arial", 8))
         self.kp_y_label.pack()
         
         # Ki_y slider with entry box
-        ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 10)).pack()
+        ttk.Label(self.root, text="Ki (Integral)", font=("Arial", 8)).pack()
         ki_y_frame = ttk.Frame(self.root)
-        ki_y_frame.pack(pady=2)
+        ki_y_frame.pack(pady=1)
         self.ki_y_var = tk.DoubleVar(value=self.pid.Ki_y)
         ki_y_slider = ttk.Scale(ki_y_frame, from_=0, to=10, variable=self.ki_y_var,
-                               orient=tk.HORIZONTAL, length=450)
-        ki_y_slider.pack(side=tk.LEFT, padx=(0, 5))
-        self.ki_y_entry = ttk.Entry(ki_y_frame, width=10)
+                               orient=tk.HORIZONTAL, length=350)
+        ki_y_slider.pack(side=tk.LEFT, padx=(0, 3))
+        self.ki_y_entry = ttk.Entry(ki_y_frame, width=8)
         self.ki_y_entry.insert(0, f"{self.pid.Ki_y:.2f}")
         self.ki_y_entry.pack(side=tk.LEFT)
         self.ki_y_entry.bind('<Return>', lambda e: self._update_from_entry(self.ki_y_var, self.ki_y_entry))
-        self.ki_y_label = ttk.Label(self.root, text=f"Ki_y: {self.pid.Ki_y:.1f}", font=("Arial", 9))
+        self.ki_y_label = ttk.Label(self.root, text=f"Ki_y: {self.pid.Ki_y:.1f}", font=("Arial", 8))
         self.ki_y_label.pack()
         
         # Kd_y slider with entry box
-        ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 10)).pack()
+        ttk.Label(self.root, text="Kd (Derivative)", font=("Arial", 8)).pack()
         kd_y_frame = ttk.Frame(self.root)
-        kd_y_frame.pack(pady=2)
+        kd_y_frame.pack(pady=1)
         self.kd_y_var = tk.DoubleVar(value=self.pid.Kd_y)
         kd_y_slider = ttk.Scale(kd_y_frame, from_=0, to=20, variable=self.kd_y_var,
-                               orient=tk.HORIZONTAL, length=450)
-        kd_y_slider.pack(side=tk.LEFT, padx=(0, 5))
-        self.kd_y_entry = ttk.Entry(kd_y_frame, width=10)
+                               orient=tk.HORIZONTAL, length=350)
+        kd_y_slider.pack(side=tk.LEFT, padx=(0, 3))
+        self.kd_y_entry = ttk.Entry(kd_y_frame, width=8)
         self.kd_y_entry.insert(0, f"{self.pid.Kd_y:.2f}")
         self.kd_y_entry.pack(side=tk.LEFT)
         self.kd_y_entry.bind('<Return>', lambda e: self._update_from_entry(self.kd_y_var, self.kd_y_entry))
-        self.kd_y_label = ttk.Label(self.root, text=f"Kd_y: {self.pid.Kd_y:.1f}", font=("Arial", 9))
+        self.kd_y_label = ttk.Label(self.root, text=f"Kd_y: {self.pid.Kd_y:.1f}", font=("Arial", 8))
         self.kd_y_label.pack()
         
         # Square Pattern controls
-        ttk.Label(self.root, text="Custom Pattern (up to 10 setpoints)", font=("Arial", 12, "bold")).pack(pady=5)
+        ttk.Label(self.root, text="Custom Pattern (up to 10 setpoints)", font=("Arial", 9, "bold")).pack(pady=2)
         
         # Setpoint input section
-        setpoints_frame = ttk.LabelFrame(self.root, text="Setpoints", padding=5)
-        setpoints_frame.pack(pady=5, padx=10, fill=tk.BOTH, expand=True)
+        setpoints_frame = ttk.LabelFrame(self.root, text="Setpoints", padding=3)
+        setpoints_frame.pack(pady=2, padx=5, fill=tk.BOTH, expand=True)
         
         # Header row
         header_frame = ttk.Frame(setpoints_frame)
-        header_frame.pack(fill=tk.X, pady=2)
-        ttk.Label(header_frame, text="#", font=("Arial", 9, "bold"), width=3).pack(side=tk.LEFT, padx=2)
-        ttk.Label(header_frame, text="X (m)", font=("Arial", 9, "bold"), width=10).pack(side=tk.LEFT, padx=2)
-        ttk.Label(header_frame, text="Y (m)", font=("Arial", 9, "bold"), width=10).pack(side=tk.LEFT, padx=2)
+        header_frame.pack(fill=tk.X, pady=1)
+        ttk.Label(header_frame, text="#", font=("Arial", 7, "bold"), width=2).pack(side=tk.LEFT, padx=1)
+        ttk.Label(header_frame, text="X (m)", font=("Arial", 7, "bold"), width=8).pack(side=tk.LEFT, padx=1)
+        ttk.Label(header_frame, text="Y (m)", font=("Arial", 7, "bold"), width=8).pack(side=tk.LEFT, padx=1)
         
         # Create entry fields for up to 10 setpoints
         self.custom_setpoint_entries = []
         for i in range(10):
             row_frame = ttk.Frame(setpoints_frame)
-            row_frame.pack(fill=tk.X, pady=1)
-            ttk.Label(row_frame, text=f"{i+1}", font=("Arial", 9), width=3).pack(side=tk.LEFT, padx=2)
-            x_entry = ttk.Entry(row_frame, width=10)
-            x_entry.pack(side=tk.LEFT, padx=2)
-            y_entry = ttk.Entry(row_frame, width=10)
-            y_entry.pack(side=tk.LEFT, padx=2)
+            row_frame.pack(fill=tk.X, pady=0)
+            ttk.Label(row_frame, text=f"{i+1}", font=("Arial", 7), width=2).pack(side=tk.LEFT, padx=1)
+            x_entry = ttk.Entry(row_frame, width=8)
+            x_entry.pack(side=tk.LEFT, padx=1)
+            y_entry = ttk.Entry(row_frame, width=8)
+            y_entry.pack(side=tk.LEFT, padx=1)
             self.custom_setpoint_entries.append((x_entry, y_entry))
         
         # Initialize with default square pattern
@@ -565,82 +640,82 @@ class StewartPlatformController:
         
         # Pattern control buttons
         pattern_control_frame = ttk.Frame(self.root)
-        pattern_control_frame.pack(pady=5)
+        pattern_control_frame.pack(pady=2)
         ttk.Button(pattern_control_frame, text="Update Pattern",
-                  command=self.update_pattern_from_entries).pack(side=tk.LEFT, padx=5)
+                  command=self.update_pattern_from_entries).pack(side=tk.LEFT, padx=2)
         ttk.Button(pattern_control_frame, text="Clear All",
-                  command=self.clear_all_setpoints).pack(side=tk.LEFT, padx=5)
-        ttk.Button(pattern_control_frame, text="Generate Circle (10cm)",
-                  command=self.generate_circle_pattern).pack(side=tk.LEFT, padx=5)
+                  command=self.clear_all_setpoints).pack(side=tk.LEFT, padx=2)
+        ttk.Button(pattern_control_frame, text="Circle",
+                  command=self.generate_circle_pattern).pack(side=tk.LEFT, padx=2)
         self.square_pattern_button = ttk.Button(pattern_control_frame, text="Start Pattern",
                                                 command=self.toggle_square_pattern)
-        self.square_pattern_button.pack(side=tk.LEFT, padx=5)
+        self.square_pattern_button.pack(side=tk.LEFT, padx=2)
         
         # Settle parameters
         settle_params_frame = ttk.Frame(self.root)
-        settle_params_frame.pack(pady=2)
-        ttk.Label(settle_params_frame, text="Settle Tolerance (m):", font=("Arial", 9)).pack(side=tk.LEFT, padx=2)
-        self.settle_tolerance_entry = ttk.Entry(settle_params_frame, width=8)
+        settle_params_frame.pack(pady=1)
+        ttk.Label(settle_params_frame, text="Tolerance (m):", font=("Arial", 7)).pack(side=tk.LEFT, padx=1)
+        self.settle_tolerance_entry = ttk.Entry(settle_params_frame, width=6)
         self.settle_tolerance_entry.insert(0, f"{self.settle_tolerance:.4f}")
-        self.settle_tolerance_entry.pack(side=tk.LEFT, padx=2)
+        self.settle_tolerance_entry.pack(side=tk.LEFT, padx=1)
         self.settle_tolerance_entry.bind('<Return>', lambda e: self._update_settle_tolerance())
         
-        ttk.Label(settle_params_frame, text="Settle Duration (s):", font=("Arial", 9)).pack(side=tk.LEFT, padx=2)
-        self.settle_duration_entry = ttk.Entry(settle_params_frame, width=8)
+        ttk.Label(settle_params_frame, text="Duration (s):", font=("Arial", 7)).pack(side=tk.LEFT, padx=1)
+        self.settle_duration_entry = ttk.Entry(settle_params_frame, width=6)
         self.settle_duration_entry.insert(0, f"{self.settle_duration:.2f}")
-        self.settle_duration_entry.pack(side=tk.LEFT, padx=2)
+        self.settle_duration_entry.pack(side=tk.LEFT, padx=1)
         self.settle_duration_entry.bind('<Return>', lambda e: self._update_settle_duration())
         
-        self.pattern_status_label = ttk.Label(self.root, text="Pattern: Stopped (0 setpoints)", font=("Arial", 9))
-        self.pattern_status_label.pack(pady=2)
+        self.pattern_status_label = ttk.Label(self.root, text="Pattern: Stopped (0 setpoints)", font=("Arial", 7))
+        self.pattern_status_label.pack(pady=1)
         
         # Setpoint controls
-        ttk.Label(self.root, text="Setpoint", font=("Arial", 12)).pack(pady=5)
+        ttk.Label(self.root, text="Setpoint", font=("Arial", 9)).pack(pady=2)
         
         # Setpoint X with entry box
-        ttk.Label(self.root, text="Setpoint X (meters)", font=("Arial", 10)).pack()
+        ttk.Label(self.root, text="Setpoint X (meters)", font=("Arial", 8)).pack()
         pos_range = 0.15  # Default range (matches platform radius)
         setpoint_x_frame = ttk.Frame(self.root)
-        setpoint_x_frame.pack(pady=2)
+        setpoint_x_frame.pack(pady=1)
         self.setpoint_x_var = tk.DoubleVar(value=self.setpoint_x)
         self.setpoint_x_slider = ttk.Scale(setpoint_x_frame, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_x_var,
-                                     orient=tk.HORIZONTAL, length=450)
-        self.setpoint_x_slider.pack(side=tk.LEFT, padx=(0, 5))
-        self.setpoint_x_entry = ttk.Entry(setpoint_x_frame, width=10)
+                                     orient=tk.HORIZONTAL, length=350)
+        self.setpoint_x_slider.pack(side=tk.LEFT, padx=(0, 3))
+        self.setpoint_x_entry = ttk.Entry(setpoint_x_frame, width=8)
         self.setpoint_x_entry.insert(0, f"{self.setpoint_x:.4f}")
         self.setpoint_x_entry.pack(side=tk.LEFT)
         self.setpoint_x_entry.bind('<Return>', lambda e: self._update_from_entry(self.setpoint_x_var, self.setpoint_x_entry))
-        self.setpoint_x_label = ttk.Label(self.root, text=f"Setpoint X: {self.setpoint_x:.4f}m", font=("Arial", 9))
+        self.setpoint_x_label = ttk.Label(self.root, text=f"Setpoint X: {self.setpoint_x:.4f}m", font=("Arial", 8))
         self.setpoint_x_label.pack()
         
         # Setpoint Y with entry box
-        ttk.Label(self.root, text="Setpoint Y (meters)", font=("Arial", 10)).pack()
+        ttk.Label(self.root, text="Setpoint Y (meters)", font=("Arial", 8)).pack()
         setpoint_y_frame = ttk.Frame(self.root)
-        setpoint_y_frame.pack(pady=2)
+        setpoint_y_frame.pack(pady=1)
         self.setpoint_y_var = tk.DoubleVar(value=self.setpoint_y)
         self.setpoint_y_slider = ttk.Scale(setpoint_y_frame, from_=-pos_range, to=pos_range,
                                      variable=self.setpoint_y_var,
-                                     orient=tk.HORIZONTAL, length=450)
-        self.setpoint_y_slider.pack(side=tk.LEFT, padx=(0, 5))
-        self.setpoint_y_entry = ttk.Entry(setpoint_y_frame, width=10)
+                                     orient=tk.HORIZONTAL, length=350)
+        self.setpoint_y_slider.pack(side=tk.LEFT, padx=(0, 3))
+        self.setpoint_y_entry = ttk.Entry(setpoint_y_frame, width=8)
         self.setpoint_y_entry.insert(0, f"{self.setpoint_y:.4f}")
         self.setpoint_y_entry.pack(side=tk.LEFT)
         self.setpoint_y_entry.bind('<Return>', lambda e: self._update_from_entry(self.setpoint_y_var, self.setpoint_y_entry))
-        self.setpoint_y_label = ttk.Label(self.root, text=f"Setpoint Y: {self.setpoint_y:.4f}m", font=("Arial", 9))
+        self.setpoint_y_label = ttk.Label(self.root, text=f"Setpoint Y: {self.setpoint_y:.4f}m", font=("Arial", 8))
         self.setpoint_y_label.pack()
         
         # Button group for actions
         button_frame = ttk.Frame(self.root)
-        button_frame.pack(pady=10)
+        button_frame.pack(pady=5)
         ttk.Button(button_frame, text="Reset Integrals",
-                   command=self.reset_integral).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Plot Results",
-                   command=self.plot_results).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Show Telemetry",
-                   command=self.show_telemetry_window).pack(side=tk.LEFT, padx=5)
+                   command=self.reset_integral).pack(side=tk.LEFT, padx=2)
+        ttk.Button(button_frame, text="Plot",
+                   command=self.plot_results).pack(side=tk.LEFT, padx=2)
+        ttk.Button(button_frame, text="Telemetry",
+                   command=self.show_telemetry_window).pack(side=tk.LEFT, padx=2)
         ttk.Button(button_frame, text="Stop",
-                   command=self.stop).pack(side=tk.LEFT, padx=5)
+                   command=self.stop).pack(side=tk.LEFT, padx=2)
         
         # Schedule periodic GUI update
         self.update_gui()
