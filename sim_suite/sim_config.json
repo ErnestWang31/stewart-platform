@@ -1,9 +1,11 @@
 {
   "simulation": {
     "ball_mass": 0.1,
-    "friction_coefficient": 0.05,
+    "friction_coefficient": 0.1,
+    "use_simple_motor_model": false,
+    "servo_speed": 0.15,
     "motor_time_constant": 0.1,
-    "motor_max_rate_deg_per_s": 352.9,
+    "motor_max_rate_deg_per_s": 180.0,
     "sensor_noise_std": 0.002,
     "sensor_delay_seconds": 0.1,
     "sensor_rate_hz": 30.0,

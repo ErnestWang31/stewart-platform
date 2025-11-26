@@ -32,7 +32,12 @@ class StewartPlatformPhysics:
         self.platform_radius = config.get('platform_radius_m', 0.15)  # m
         
         # Motor actuation parameters
-        self.motor_time_constant = sim_config.get('motor_time_constant', 0.1)  # s (first-order lag)
+        # Use simpler servo_speed model (like overshoot_sim.py) or time constant model
+        self.use_simple_motor_model = sim_config.get('use_simple_motor_model', True)  # Use fixed-speed model
+        if self.use_simple_motor_model:
+            self.servo_speed = sim_config.get('servo_speed', 0.15)  # Fixed low-pass filter coefficient (like overshoot_sim)
+        else:
+            self.motor_time_constant = sim_config.get('motor_time_constant', 0.1)  # s (first-order lag)
         self.motor_max_rate = np.deg2rad(sim_config.get('motor_max_rate_deg_per_s', 180.0))  # rad/s
         # Max tilt is 30° because with 3 motors, one can be +15° while others are -15°, giving net 30° tilt
         self.tilt_max = np.deg2rad(30.0)  # rad (actual platform limit, not individual motor limit)
@@ -99,33 +104,30 @@ class StewartPlatformPhysics:
         self.theta_cmd_x = theta_cmd_x
         self.theta_cmd_y = theta_cmd_y
         
-        # Motor dynamics: Low-pass filter approach (matching overshoot_sim.py)
-        # Modeled as: angle_new = angle_old * (1 - servo_speed) + target * servo_speed
-        # This matches the overshoot_sim.py approach which shows good PID behavior
-        # servo_speed = 0.15 means 15% of the way to target each step
-        # Since we run physics at 500 Hz (dt=0.002) vs overshoot_sim at 30 Hz (dt=0.033),
-        # we need to scale servo_speed to maintain the same time constant
-        # Time constant tau ≈ dt / servo_speed
-        # At 30 Hz: tau ≈ 0.033 / 0.15 ≈ 0.22s
-        # At 500 Hz with same tau: servo_speed ≈ dt / tau ≈ 0.002 / 0.22 ≈ 0.009
-        servo_speed_base = 0.15  # For 30 Hz (dt=0.033)
-        control_dt = 1.0 / 30.0  # Control rate timestep
-        # Scale to maintain same time constant
-        servo_speed = servo_speed_base * (dt / control_dt)
-        servo_speed = min(servo_speed, 1.0)  # Don't exceed 100%
-        
-        # Calculate desired change
-        dtheta_x = (theta_cmd_x - self.theta_x) * servo_speed
-        dtheta_y = (theta_cmd_y - self.theta_y) * servo_speed
-        
-        # Apply rate limiting
-        max_dtheta = self.motor_max_rate * dt
-        dtheta_x = np.clip(dtheta_x, -max_dtheta, max_dtheta)
-        dtheta_y = np.clip(dtheta_y, -max_dtheta, max_dtheta)
-        
-        # Update angles
-        self.theta_x += dtheta_x
-        self.theta_y += dtheta_y
+        if self.use_simple_motor_model:
+            # Simple low-pass filter model (matches overshoot_sim.py)
+            # Servos move towards target over time: angle = angle * (1 - speed) + target * speed
+            # This is equivalent to a first-order low-pass filter with fixed coefficient
+            self.theta_x = self.theta_x * (1 - self.servo_speed) + theta_cmd_x * self.servo_speed
+            self.theta_y = self.theta_y * (1 - self.servo_speed) + theta_cmd_y * self.servo_speed
+        else:
+            # First-order lag model: θ_new = θ_old + (θ_cmd - θ_old) * (1 - exp(-dt/τ))
+            # For small dt: θ_new ≈ θ_old + (θ_cmd - θ_old) * (dt/τ)
+            alpha = dt / max(self.motor_time_constant, 1e-6)
+            alpha = min(alpha, 1.0)  # Clamp to prevent overshoot
+            
+            # Desired change
+            dtheta_x = (theta_cmd_x - self.theta_x) * alpha
+            dtheta_y = (theta_cmd_y - self.theta_y) * alpha
+            
+            # Rate limiting
+            max_dtheta = self.motor_max_rate * dt
+            dtheta_x = np.clip(dtheta_x, -max_dtheta, max_dtheta)
+            dtheta_y = np.clip(dtheta_y, -max_dtheta, max_dtheta)
+            
+            # Update angles
+            self.theta_x += dtheta_x
+            self.theta_y += dtheta_y
         
         # Saturate angles
         self.theta_x = np.clip(self.theta_x, -self.tilt_max, self.tilt_max)
@@ -138,11 +140,13 @@ class StewartPlatformPhysics:
             dt: Time step (seconds)
         """
         # Ball acceleration on tilted plane
-        # For a hollow sphere on a plane: a = 0.6 * g * sin(θ) (accounts for moment of inertia)
-        # With friction/damping: a = 0.6*g*sin(θ) - (c/m)*v
-        # The 0.6 factor comes from the moment of inertia of a hollow sphere
-        K_plant = 0.6 * self.g  # Physics constant for hollow sphere
+        # Physics constant for hollow sphere on plane: K_plant = 0.6 * g
+        # This matches overshoot_sim.py for consistent behavior
+        K_plant = 0.6 * self.g
         
+        # Acceleration with friction/damping
+        # a = K_plant * sin(θ) - (c/m)*v
+        # The friction term can be disabled by setting friction_coefficient to 0
         ax = K_plant * np.sin(self.theta_x) - (self.friction_coefficient / self.ball_mass) * self.vx
         ay = K_plant * np.sin(self.theta_y) - (self.friction_coefficient / self.ball_mass) * self.vy
         
