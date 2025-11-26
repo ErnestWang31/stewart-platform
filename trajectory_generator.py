@@ -6,19 +6,21 @@ import numpy as np
 class Trajectory:
     """Represents a trajectory from x0 to xf over duration T."""
     
-    def __init__(self, x0, xf, T, method='linear'):
+    def __init__(self, x0, xf, T, method='linear', curvature=3.0):
         """Initialize trajectory.
         
         Args:
             x0: Initial position (meters)
             xf: Final position (meters)
             T: Duration (seconds)
-            method: 'linear' or 'polynomial' (default: 'linear')
+            method: 'linear', 'polynomial', or 'exponential' (default: 'linear')
+            curvature: Curvature parameter for exponential method (default: 3.0, higher = more curved)
         """
         self.x0 = x0
         self.xf = xf
         self.T = T
         self.method = method
+        self.curvature = curvature  # For exponential trajectory
         
         if method == 'linear':
             # Linear trajectory: r(t) = x0 + (xf - x0) * (t/T)
@@ -31,8 +33,14 @@ class Trajectory:
             # a(0) = 0, a(T) = 0 (zero acceleration at endpoints)
             # This will be computed when needed
             pass
+        elif method == 'exponential':
+            # Exponential decay trajectory: starts fast, slows down
+            # r(t) = x0 + (xf - x0) * (1 - e^(-k*t/T)) / (1 - e^(-k))
+            # where k is the curvature parameter
+            # This ensures r(0) = x0 and r(T) = xf exactly
+            pass
         else:
-            raise ValueError(f"Unknown trajectory method: {method}")
+            raise ValueError(f"Unknown trajectory method: {method}. Use 'linear', 'polynomial', or 'exponential'")
     
     def get_position(self, t):
         """Get position at time t.
@@ -62,6 +70,20 @@ class Trajectory:
             poly = 10 * tau**3 - 15 * tau**4 + 6 * tau**5
             return self.x0 + (self.xf - self.x0) * poly
         
+        elif self.method == 'exponential':
+            # Exponential decay trajectory: starts fast, slows down
+            # r(t) = x0 + (xf - x0) * (1 - e^(-k*t/T)) / (1 - e^(-k))
+            # where k is the curvature parameter
+            if self.T == 0:
+                return self.xf
+            tau = t / self.T  # Normalized time [0, 1]
+            k = self.curvature
+            # Normalized exponential decay
+            # At tau=0: exp_term = 0, so result = x0
+            # At tau=1: exp_term = 1 - e^(-k), normalized by (1 - e^(-k)), so result = xf
+            exp_term = (1 - np.exp(-k * tau)) / (1 - np.exp(-k)) if k > 0 else tau
+            return self.x0 + (self.xf - self.x0) * exp_term
+        
         return self.x0
     
     def get_velocity(self, t):
@@ -87,6 +109,18 @@ class Trajectory:
             dtau = 30 * tau**2 - 60 * tau**3 + 30 * tau**4
             return (self.xf - self.x0) / self.T * dtau
         
+        elif self.method == 'exponential':
+            if self.T == 0:
+                return 0.0
+            tau = t / self.T
+            k = self.curvature
+            # Derivative of exponential: v(t) = (xf - x0) / T * k * e^(-k*tau) / (1 - e^(-k))
+            if k > 0:
+                dtau = k * np.exp(-k * tau) / (1 - np.exp(-k))
+            else:
+                dtau = 1.0
+            return (self.xf - self.x0) / self.T * dtau
+        
         return 0.0
     
     def is_complete(self, t):
@@ -101,19 +135,20 @@ class Trajectory:
         return t >= self.T
 
 
-def generate_trajectory(x0, xf, T, method='linear'):
+def generate_trajectory(x0, xf, T, method='linear', curvature=3.0):
     """Generate a trajectory from x0 to xf over duration T.
     
     Args:
         x0: Initial position (meters)
         xf: Final position (meters)
         T: Duration (seconds)
-        method: 'linear' or 'polynomial' (default: 'linear')
+        method: 'linear', 'polynomial', or 'exponential' (default: 'linear')
+        curvature: Curvature parameter for exponential method (default: 3.0, higher = more curved)
         
     Returns:
         Trajectory: Trajectory object
     """
-    return Trajectory(x0, xf, T, method)
+    return Trajectory(x0, xf, T, method, curvature)
 
 
 def sample_trajectory(trajectory, t):

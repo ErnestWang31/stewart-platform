@@ -1,0 +1,4 @@
+,completion_time,rmse,max_deviation,max_control_signal,saturation_percentage,max_jerk,rms_jerk,velocity_reversals
+Step PID,3.233,0.03,0.137,7.985,0.0,101.576,17.681,93.0
+One-Shot Trajectory,8.736,0.022,0.069,6.033,0.0,116.337,19.103,79.0
+Trajectory Update,4.544,0.024,0.091,8.977,0.0,95.778,13.535,94.0

@@ -1,0 +1,4 @@
+,completion_time,final_setpoint,rmse,max_overshoot,max_deviation,max_control_signal,saturation_percentage,max_jerk,mean_abs_jerk,velocity_reversals,steady_state_error_mean,steady_state_error_std
+oneshot_trajectory,4.080072,0.0,0.017185,0.050187,0.052541,4.758453,0.0,160.526841,9.925411,227.0,0.001806,0.00211
+trajectory_update,3.039939,0.0,0.018186,0.06218,0.080267,8.282301,0.0,181.635759,10.408378,292.0,0.000731,0.000254
+step_pid,1.376832,0.0,0.023793,0.134871,0.134871,7.612232,0.0,81.429744,7.234099,233.0,0.001438,0.000839

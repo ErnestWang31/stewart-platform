@@ -1,0 +1,4 @@
+Method,Completion Time (s),RMSE (m),Max Deviation (m),Max Control (°),Saturation %,Max Jerk (m/s³),RMS Jerk (m/s³),Vel. Reversals
+Step PID,N/A,0.036444,0.137019,8.183,0.0%,179.786,19.602,64
+One-Shot Trajectory,5.279,0.026532,0.050016,4.290,0.0%,143.865,28.044,66
+Trajectory Update,4.142,0.034026,0.098025,10.710,0.0%,207.333,28.790,72

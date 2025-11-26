@@ -1,0 +1,53 @@
+# Debug why disturbance might not be visible
+print("="*80)
+print("WHY DISTURBANCE MIGHT NOT BE VISIBLE")
+print("="*80)
+
+print("\n1. TIMING ISSUE:")
+print("   Your disturbance starts at t=0.5s")
+print("   At t=0.5s, the ball is likely still moving from 10cm -> 0cm")
+print("   The disturbance adds 10cm to the measurement")
+print("   But the PID is already aggressively correcting the initial step")
+print("   So the disturbance effect is MASKED by the normal control action")
+
+print("\n2. PID CORRECTION SPEED:")
+print("   Disturbance adds 10cm to position measurement")
+print("   PID sees error = 0 - (position + 10cm)")
+print("   PID generates large control signal (clipped to 15°)")
+print("   This happens in ONE control cycle (~30ms)")
+print("   So the disturbance is corrected almost instantly")
+
+print("\n3. WHAT'S ACTUALLY HAPPENING:")
+print("   t=0.5s: Disturbance adds 10cm to measurement")
+print("          Real ball might be at 5cm")
+print("          Measurement says 15cm")
+print("          PID tilts platform to correct")
+print("   t=0.53s: PID has already corrected (one cycle later)")
+print("          Ball might now be at 4cm")
+print("          But measurement still says 14cm (disturbance persists)")
+print("          PID keeps correcting...")
+print("   Result: The disturbance creates a persistent error that PID fights")
+print("          But it's hard to see because PID is always correcting")
+
+print("\n" + "="*80)
+print("SOLUTIONS:")
+print("="*80)
+print("1. APPLY DISTURBANCE AT STEADY STATE:")
+print("   Wait until ball is near 0cm (e.g., t=5.0s)")
+print("   Then apply disturbance - effect will be much more visible")
+
+print("\n2. USE ACTUATOR DISTURBANCE:")
+print("   Apply to platform tilt directly (more realistic)")
+print("   Harder for PID to correct immediately")
+
+print("\n3. CHECK THE DATA:")
+print("   Look at the CSV file")
+print("   Check if 'position_x' column shows the disturbance")
+print("   The disturbance should add 10cm to whatever position is logged")
+print("   If position jumps by 10cm at t=0.5s, disturbance IS working")
+print("   But PID might be correcting it so fast you don't see it in the plot")
+
+print("\n4. ADD DEBUG PRINTING:")
+print("   Add print statement when disturbance is applied")
+print("   This will confirm it's actually happening")
+

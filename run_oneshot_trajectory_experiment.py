@@ -16,6 +16,7 @@ from pid_controller_2d import PIDController2D
 from inverse_kinematics import StewartPlatformIK
 from trajectory_generator import generate_trajectory
 from metrics import compute_all_metrics, print_metrics
+from disturbance import Disturbance, create_step_disturbance, create_impulse_disturbance, create_sinusoidal_disturbance
 
 class OneShotTrajectoryExperiment:
     """Runs a one-shot trajectory experiment with metrics tracking."""
@@ -65,11 +66,23 @@ class OneShotTrajectoryExperiment:
         
         # Experiment parameters
         self.target_setpoint = 0.0     # Center
-        self.trajectory_duration = 3.0  # seconds for trajectory
-        self.experiment_duration = 10.0  # total experiment duration (extended to evaluate steady-state)
+        self.trajectory_duration = 1.5  # seconds for trajectory
+        self.experiment_duration = 15.0  # total experiment duration (extended to evaluate steady-state)
         self.tolerance = 0.005  # 5mm completion tolerance
         self.settle_duration = 0.5  # seconds
-        self.trajectory_method = 'linear'  # 'linear' or 'polynomial'
+        self.trajectory_method = 'linear'  # 'linear', 'polynomial', or 'exponential'
+        self.trajectory_curvature = 2.0  # Curvature parameter for exponential method (higher = more curved)
+        
+        # Disturbance configuration
+        self.disturbance = None  # Will be initialized if needed
+        self.disturbance_type = 'actuator'  # 'position' or 'actuator' - actuator is more realistic and visible
+        # Example disturbances (uncomment one to use):
+        # Position disturbance (applied to measurement - PID corrects quickly):
+        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=0.1, duration=1.0, apply_to='position')
+        # Actuator impulse disturbance (applied to platform tilt - more realistic, harder to correct):
+        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=3.0, duration=1.0, apply_to='actuator')  # 3° tilt for 1s
+        # Continuous (sinusoidal) actuator disturbance (oscillating platform tilt):
+        self.disturbance = create_sinusoidal_disturbance(start_time=5.0, amplitude=2.0, frequency=1.0, duration=3.0, apply_to='actuator')  # 2° oscillation at 1Hz for 3s
         
         # Trajectory (will be generated after ball detection)
         self.trajectory = None
@@ -255,18 +268,40 @@ class OneShotTrajectoryExperiment:
             self.running = False
             return
         
-        # Generate trajectory from initial position to center
-        print(f"\n[EXPERIMENT] Generating trajectory from {initial_position*100:.1f} cm to {self.target_setpoint*100:.1f} cm")
+        # Get fresh ball position right before starting experiment (for accurate trajectory)
+        print("\n[EXPERIMENT] Getting current ball position for trajectory generation...")
+        current_position = None
+        for _ in range(10):  # Try up to 10 times
+            try:
+                position_x, position_y = self.position_queue.get(timeout=0.1)
+                current_position = position_x
+                break
+            except queue.Empty:
+                continue
+        
+        if current_position is None:
+            current_position = initial_position  # Fallback to initial detection
+            print(f"[WARNING] Could not get fresh position, using initial: {current_position*100:.1f} cm")
+        else:
+            print(f"[EXPERIMENT] Current ball position: {current_position*100:.1f} cm")
+        
+        # Set experiment start time BEFORE generating trajectory (t=0 synchronization)
+        experiment_start_time = time.time()
+        
+        # Generate trajectory from current position to center
+        print(f"\n[EXPERIMENT] Generating trajectory from {current_position*100:.1f} cm to {self.target_setpoint*100:.1f} cm")
         print(f"[EXPERIMENT] Trajectory duration: {self.trajectory_duration} s")
+        print(f"[EXPERIMENT] Trajectory method: {self.trajectory_method}")
+        if self.trajectory_method == 'exponential':
+            print(f"[EXPERIMENT] Curvature parameter: {self.trajectory_curvature}")
         self.trajectory = generate_trajectory(
-            initial_position,
+            current_position,
             self.target_setpoint,
             self.trajectory_duration,
-            method=self.trajectory_method
+            method=self.trajectory_method,
+            curvature=self.trajectory_curvature
         )
         
-        # Start experiment (t=0 is now)
-        experiment_start_time = time.time()
         print(f"[EXPERIMENT] Starting trajectory following (t=0)")
         
         # Control loop
@@ -278,6 +313,13 @@ class OneShotTrajectoryExperiment:
                 
                 # Get current time relative to experiment start
                 current_time = time.time() - experiment_start_time
+                
+                # Apply disturbance if enabled
+                if self.disturbance:
+                    if self.disturbance_type == 'position':
+                        # Apply to position measurement
+                        position_x = self.disturbance.apply(position_x, current_time)
+                    # Note: actuator disturbance applied after PID computation
                 
                 # Update setpoint based on trajectory (position update loop)
                 if self.trajectory and not self.trajectory.is_complete(current_time):
@@ -292,6 +334,10 @@ class OneShotTrajectoryExperiment:
                 
                 # Compute control output (PID loop)
                 control_output_x, control_output_y, saturated_x, saturated_y = self.pid.update(position_x, position_y)
+                
+                # Apply actuator disturbance if enabled
+                if self.disturbance and self.disturbance_type == 'actuator':
+                    control_output_x = self.disturbance.apply_to_actuator(control_output_x, current_time)
                 
                 # Send control command
                 self.send_platform_tilt(control_output_x, control_output_y)

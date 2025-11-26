@@ -17,6 +17,7 @@ from pid_controller_2d import PIDController2D
 from inverse_kinematics import StewartPlatformIK
 from trajectory_updater import TrajectoryUpdater
 from metrics import compute_all_metrics, print_metrics
+from disturbance import Disturbance, create_step_disturbance, create_impulse_disturbance, create_sinusoidal_disturbance
 
 class TrajectoryUpdateExperiment:
     """Runs a trajectory update experiment with metrics tracking."""
@@ -70,12 +71,23 @@ class TrajectoryUpdateExperiment:
         # Trajectory duration mode
         self.use_remaining_time = True  # If True, each trajectory uses remaining time to target
                                         # If False, each trajectory uses fixed duration
-        self.total_trajectory_duration = 3.0  # Total time to reach target (used if use_remaining_time=True)
+        self.total_trajectory_duration = 1.5  # Total time to reach target (used if use_remaining_time=True)
         self.trajectory_duration = 0.5  # Fixed duration for each segment (used if use_remaining_time=False)
-        self.experiment_duration = 10.0  # total experiment duration (extended to evaluate steady-state)
+        self.experiment_duration = 15.0  # total experiment duration (extended to evaluate steady-state)
         self.tolerance = 0.005  # 5mm completion tolerance
         self.settle_duration = 0.5  # seconds
         self.trajectory_method = 'linear'  # 'linear' or 'polynomial'
+        
+        # Disturbance configuration
+        self.disturbance = None  # Will be initialized if needed
+        self.disturbance_type = 'actuator'  # 'position' or 'actuator' - actuator is more realistic and visible
+        # Example disturbances (uncomment one to use):
+        # Position disturbance (applied to measurement - PID corrects quickly):
+        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=0.1, duration=1.0, apply_to='position')
+        # Actuator impulse disturbance (applied to platform tilt - more realistic, harder to correct):
+        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=3.0, duration=1.0, apply_to='actuator')  # 3° tilt for 1s
+        # Continuous (sinusoidal) actuator disturbance (oscillating platform tilt):
+        # self.disturbance = create_sinusoidal_disturbance(start_time=5.0, amplitude=2.0, frequency=1.0, duration=3.0, apply_to='actuator')  # 2° oscillation at 1Hz for 3s
         
         # Trajectory updater (will be initialized after ball detection)
         self.trajectory_updater = None
@@ -305,6 +317,13 @@ class TrajectoryUpdateExperiment:
                 # Get current time relative to experiment start
                 current_time = time.time() - experiment_start_time
                 
+                # Apply disturbance if enabled
+                if self.disturbance:
+                    if self.disturbance_type == 'position':
+                        # Apply to position measurement
+                        position_x = self.disturbance.apply(position_x, current_time)
+                    # Note: actuator disturbance applied after PID computation
+                
                 # OUTER LOOP: Trajectory recalculation (every Δt)
                 trajectory_updated, trajectory_info = self.trajectory_updater.update(position_x, current_time)
                 if trajectory_updated and trajectory_info:
@@ -321,6 +340,10 @@ class TrajectoryUpdateExperiment:
                 
                 # INNER LOOP: PID control (compute control output)
                 control_output_x, control_output_y, saturated_x, saturated_y = self.pid.update(position_x, position_y)
+                
+                # Apply actuator disturbance if enabled
+                if self.disturbance and self.disturbance_type == 'actuator':
+                    control_output_x = self.disturbance.apply_to_actuator(control_output_x, current_time)
                 
                 # Send control command
                 self.send_platform_tilt(control_output_x, control_output_y)

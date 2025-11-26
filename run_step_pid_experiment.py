@@ -15,6 +15,7 @@ from ball_detection_2d import BallDetector2D
 from pid_controller_2d import PIDController2D
 from inverse_kinematics import StewartPlatformIK
 from metrics import compute_all_metrics, print_metrics
+from disturbance import Disturbance, create_step_disturbance, create_impulse_disturbance, create_sinusoidal_disturbance
 
 class StepPIDExperiment:
     """Runs a Step PID experiment with metrics tracking."""
@@ -65,9 +66,20 @@ class StepPIDExperiment:
         # Experiment parameters
         self.initial_setpoint = 0.10  # 10cm from center
         self.target_setpoint = 0.0     # Center
-        self.experiment_duration = 10.0  # seconds (extended to evaluate steady-state performance)
+        self.experiment_duration = 15.0  # seconds (extended to evaluate steady-state performance)
         self.tolerance = 0.005  # 5mm completion tolerance
         self.settle_duration = 0.5  # seconds
+        
+        # Disturbance configuration
+        self.disturbance = None  # Will be initialized if needed
+        self.disturbance_type = 'actuator'  # 'position' or 'actuator' - actuator is more realistic and visible
+        # Example disturbances (uncomment one to use):
+        # Position disturbance (applied to measurement - PID corrects quickly):
+        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=0.1, duration=1.0, apply_to='position')
+        # Actuator impulse disturbance (applied to platform tilt - more realistic, harder to correct):
+        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=3.0, duration=1.0, apply_to='actuator')  # 3° tilt for 1s
+        # Continuous (sinusoidal) actuator disturbance (oscillating platform tilt):
+        # self.disturbance = create_sinusoidal_disturbance(start_time=5.0, amplitude=2.0, frequency=1.0, duration=3.0)  # 2° oscillation at 1Hz for 3s
         
         # Data logging
         self.time_log = []
@@ -270,8 +282,28 @@ class StepPIDExperiment:
                 # Get ball position
                 position_x, position_y = self.position_queue.get(timeout=0.1)
                 
+                # Get current time relative to experiment start
+                current_time = time.time() - experiment_start_time
+                
+                # Apply disturbance if enabled
+                if self.disturbance:
+                    if self.disturbance_type == 'position':
+                        # Apply to position measurement
+                        original_position = position_x
+                        position_x = self.disturbance.apply(position_x, current_time)
+                        # Debug: print when disturbance is active
+                        if abs(position_x - original_position) > 0.001:  # If disturbance changed position
+                            if not hasattr(self, '_disturbance_printed'):
+                                print(f"[DISTURBANCE] Applied at t={current_time:.3f}s: {original_position*100:.2f}cm -> {position_x*100:.2f}cm")
+                                self._disturbance_printed = True
+                    # Note: actuator disturbance applied after PID computation
+                
                 # Compute control output
                 control_output_x, control_output_y, saturated_x, saturated_y = self.pid.update(position_x, position_y)
+                
+                # Apply actuator disturbance if enabled
+                if self.disturbance and self.disturbance_type == 'actuator':
+                    control_output_x = self.disturbance.apply_to_actuator(control_output_x, current_time)
                 
                 # Send control command
                 self.send_platform_tilt(control_output_x, control_output_y)
@@ -280,7 +312,6 @@ class StepPIDExperiment:
                 error = current_setpoint - position_x
                 
                 # Log data
-                current_time = time.time() - experiment_start_time
                 self.time_log.append(current_time)
                 self.position_x_log.append(position_x)
                 self.setpoint_log.append(current_setpoint)
