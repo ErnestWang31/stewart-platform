@@ -67,11 +67,11 @@ class TrajectoryUpdateExperiment:
         # Experiment parameters
         self.target_setpoint = 0.0     # Center
         self.update_interval = 0.2     # seconds between trajectory updates (Δt)
-        # Trajectory duration: how long each trajectory segment should take
-        # Should be >= update_interval to allow progress
-        # Longer = smoother but slower response to disturbances
-        # Shorter = more aggressive but may be jerky
-        self.trajectory_duration = 0.5  # seconds for each trajectory (2.5x update interval)
+        # Trajectory duration mode
+        self.use_remaining_time = True  # If True, each trajectory uses remaining time to target
+                                        # If False, each trajectory uses fixed duration
+        self.total_trajectory_duration = 3.0  # Total time to reach target (used if use_remaining_time=True)
+        self.trajectory_duration = 0.5  # Fixed duration for each segment (used if use_remaining_time=False)
         self.experiment_duration = 10.0  # total experiment duration (extended to evaluate steady-state)
         self.tolerance = 0.005  # 5mm completion tolerance
         self.settle_duration = 0.5  # seconds
@@ -89,6 +89,7 @@ class TrajectoryUpdateExperiment:
         self.tilt_log = []
         self.saturation_log = []
         self.trajectory_update_log = []  # Track when trajectory was updated
+        self.trajectory_segments = []  # Store trajectory segments for plotting: (x0, xf, start_time, duration)
         
         # Thread-safe queue for ball position
         self.position_queue = queue.Queue(maxsize=1)
@@ -223,7 +224,12 @@ class TrajectoryUpdateExperiment:
         print("TRAJECTORY UPDATE EXPERIMENT")
         print("="*60)
         print(f"Trajectory Method: {self.trajectory_method}")
-        print(f"Trajectory Duration: {self.trajectory_duration} s")
+        if self.use_remaining_time:
+            print(f"Mode: Remaining Time (Total Duration: {self.total_trajectory_duration} s)")
+            print(f"  Each trajectory uses: remaining_time = {self.total_trajectory_duration} - current_time")
+        else:
+            print(f"Mode: Fixed Duration (Segment Duration: {self.trajectory_duration} s)")
+            print(f"  Each trajectory uses: fixed duration = {self.trajectory_duration} s")
         print(f"Update Interval (Δt): {self.update_interval} s")
         print(f"Target Setpoint: {self.target_setpoint*100:.1f} cm (center)")
         print(f"Experiment Duration: {self.experiment_duration} s")
@@ -272,11 +278,17 @@ class TrajectoryUpdateExperiment:
         print(f"\n[EXPERIMENT] Initializing trajectory updater")
         print(f"[EXPERIMENT] Target: {self.target_setpoint*100:.1f} cm")
         print(f"[EXPERIMENT] Will regenerate trajectory every {self.update_interval} s")
+        if self.use_remaining_time:
+            print(f"[EXPERIMENT] Mode: Remaining time (total duration: {self.total_trajectory_duration} s)")
+        else:
+            print(f"[EXPERIMENT] Mode: Fixed duration (segment duration: {self.trajectory_duration} s)")
         self.trajectory_updater = TrajectoryUpdater(
             self.target_setpoint,
             self.trajectory_duration,
             self.update_interval,
-            method=self.trajectory_method
+            method=self.trajectory_method,
+            use_remaining_time=self.use_remaining_time,
+            total_trajectory_duration=self.total_trajectory_duration if self.use_remaining_time else None
         )
         
         # Start experiment (t=0 is now)
@@ -294,9 +306,11 @@ class TrajectoryUpdateExperiment:
                 current_time = time.time() - experiment_start_time
                 
                 # OUTER LOOP: Trajectory recalculation (every Δt)
-                trajectory_updated = self.trajectory_updater.update(position_x, current_time)
-                if trajectory_updated:
+                trajectory_updated, trajectory_info = self.trajectory_updater.update(position_x, current_time)
+                if trajectory_updated and trajectory_info:
                     self.trajectory_update_log.append(current_time)
+                    # Store trajectory segment for plotting
+                    self.trajectory_segments.append(trajectory_info)
                     print(f"[TRAJECTORY] Regenerated at t={current_time:.2f}s from x={position_x*100:.2f}cm")
                 
                 # MIDDLE LOOP: Position update (get setpoint from current trajectory)
@@ -394,7 +408,13 @@ class TrajectoryUpdateExperiment:
                     self.saturation_log[i]
                 ])
         
+        # Save trajectory segments to JSON for plotting
+        segments_filename = f"results/experiment_trajectory_update_{timestamp}_segments.json"
+        with open(segments_filename, 'w') as f:
+            json.dump(self.trajectory_segments, f, indent=2)
+        
         print(f"\n[EXPERIMENT] Data saved to {filename}")
+        print(f"[EXPERIMENT] Trajectory segments saved to {segments_filename}")
 
 if __name__ == "__main__":
     experiment = TrajectoryUpdateExperiment()

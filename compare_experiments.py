@@ -2,6 +2,7 @@
 # Loads CSV data from three experiments, computes metrics, and generates visualizations
 
 import csv
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -63,6 +64,21 @@ class ExperimentComparator:
             'method': method_name,
             'filename': Path(filepath).name
         }
+        
+        # Try to load trajectory segments for trajectory update experiments
+        filepath_str = str(filepath)
+        if 'trajectory_update' in filepath_str.lower():
+            segments_path = filepath_str.replace('.csv', '_segments.json')
+            if Path(segments_path).exists():
+                try:
+                    with open(segments_path, 'r') as f:
+                        data['trajectory_segments'] = json.load(f)
+                    print(f"[LOAD] Loaded {len(data['trajectory_segments'])} trajectory segments")
+                except Exception as e:
+                    print(f"[WARNING] Could not load trajectory segments: {e}")
+                    data['trajectory_segments'] = []
+            else:
+                data['trajectory_segments'] = []
         
         return data
     
@@ -162,9 +178,39 @@ class ExperimentComparator:
             ax1.plot(data['time'], data['position'] * 100, 
                     label=f"{method_name} - Position", 
                     color=color, linewidth=2, alpha=0.8)
-            ax1.plot(data['time'], data['setpoint'] * 100,
-                    label=f"{method_name} - Setpoint",
-                    color=color, linestyle='--', linewidth=1.5, alpha=0.6)
+            
+            # For trajectory update, plot individual trajectory segments
+            if 'trajectory_segments' in data and len(data['trajectory_segments']) > 0:
+                # Plot each trajectory segment as a separate line
+                for i, seg in enumerate(data['trajectory_segments']):
+                    x0 = seg['x0'] * 100  # Convert to cm
+                    xf = seg['xf'] * 100
+                    t_start = seg['start_time']
+                    duration = seg['duration']
+                    t_end = t_start + duration
+                    
+                    # Generate points for this trajectory segment
+                    if seg['method'] == 'linear':
+                        # Linear trajectory: r(t) = x0 + (xf - x0) * (t/T)
+                        t_seg = np.linspace(t_start, t_end, 50)
+                        r_seg = x0 + (xf - x0) * ((t_seg - t_start) / duration) if duration > 0 else np.full_like(t_seg, xf)
+                    else:
+                        # Polynomial trajectory
+                        t_seg = np.linspace(t_start, t_end, 50)
+                        tau = (t_seg - t_start) / duration if duration > 0 else np.ones_like(t_seg)
+                        poly = 10 * tau**3 - 15 * tau**4 + 6 * tau**5
+                        r_seg = x0 + (xf - x0) * poly
+                    
+                    # Plot trajectory segment (lighter, thinner line)
+                    ax1.plot(t_seg, r_seg, 
+                            color=color, linestyle='--', linewidth=1, alpha=0.4,
+                            label='Trajectory segments' if i == 0 else '')
+            else:
+                # For other methods, plot setpoint as normal
+                ax1.plot(data['time'], data['setpoint'] * 100,
+                        label=f"{method_name} - Setpoint",
+                        color=color, linestyle='--', linewidth=1.5, alpha=0.6)
+        
         ax1.axhline(0, color='black', linestyle=':', alpha=0.3, linewidth=1)
         ax1.set_xlabel('Time (s)', fontsize=11)
         ax1.set_ylabel('Position (cm)', fontsize=11)

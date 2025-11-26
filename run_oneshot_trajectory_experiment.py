@@ -65,7 +65,7 @@ class OneShotTrajectoryExperiment:
         
         # Experiment parameters
         self.target_setpoint = 0.0     # Center
-        self.trajectory_duration = 5.0  # seconds for trajectory
+        self.trajectory_duration = 3.0  # seconds for trajectory
         self.experiment_duration = 10.0  # total experiment duration (extended to evaluate steady-state)
         self.tolerance = 0.005  # 5mm completion tolerance
         self.settle_duration = 0.5  # seconds
