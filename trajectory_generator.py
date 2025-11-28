@@ -175,13 +175,18 @@ class Trajectory:
         t = np.clip(t, 0.0, self.T)
         
         if self.method == 'linear':
+<<<<<<< HEAD
             # Linear trajectory has constant velocity, so zero acceleration
+=======
+            # Linear trajectory has zero acceleration (constant velocity)
+>>>>>>> 2e8488edd5565c770bb363c9e8dea709c794f0d1
             return 0.0
         
         elif self.method == 'polynomial':
             if self.T == 0:
                 return 0.0
             tau = t / self.T
+<<<<<<< HEAD
             
             # If initial/final velocities are zero, use standard polynomial
             if abs(self.v0) < 1e-6 and abs(self.vf) < 1e-6:
@@ -203,12 +208,19 @@ class Trajectory:
                 
                 # Second derivative: a = (1/T²) * (2*c2 + 6*c3*tau + 12*c4*tau^2 + 20*c5*tau^3)
                 return (2*c2 + 6*c3*tau + 12*c4*tau**2 + 20*c5*tau**3) / (self.T ** 2)
+=======
+            # Second derivative of 5th order polynomial
+            # a(t) = (xf - x0) / T² * (60*tau - 180*tau^2 + 120*tau^3)
+            ddtau = 60 * tau - 180 * tau**2 + 120 * tau**3
+            return (self.xf - self.x0) / (self.T**2) * ddtau
+>>>>>>> 2e8488edd5565c770bb363c9e8dea709c794f0d1
         
         elif self.method == 'exponential':
             if self.T == 0:
                 return 0.0
             tau = t / self.T
             k = self.curvature
+<<<<<<< HEAD
             # Second derivative of exponential
             # a(t) = (xf - x0) / T² * k² * e^(-k*tau) / (1 - e^(-k))
             if k > 0:
@@ -216,6 +228,14 @@ class Trajectory:
             else:
                 ddtau = 0.0
             return (self.xf - self.x0) / (self.T ** 2) * ddtau
+=======
+            # Second derivative of exponential: a(t) = (xf - x0) / T² * k² * e^(-k*tau) / (1 - e^(-k))
+            if k > 0:
+                ddtau = -k**2 * np.exp(-k * tau) / (1 - np.exp(-k))
+            else:
+                ddtau = 0.0
+            return (self.xf - self.x0) / (self.T**2) * ddtau
+>>>>>>> 2e8488edd5565c770bb363c9e8dea709c794f0d1
         
         return 0.0
     
