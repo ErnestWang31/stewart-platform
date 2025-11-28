@@ -33,16 +33,35 @@ class TrajectoryUpdateExperiment:
             return
         
         # Initialize PID controller (X-axis only for 1D)
-        Kp_x = self.config.get('pid', {}).get('Kp_x', 10.0)
-        Ki_x = self.config.get('pid', {}).get('Ki_x', 0.0)
-        Kd_x = self.config.get('pid', {}).get('Kd_x', 0.0)
+        # Custom PID gains optimized for trajectory tracking with feedforward
+        # Lower gains since feedforward handles expected motion, PID mainly corrects errors
+        self.trajectory_pid_Kp = 0.5  # Lower than step PID - feedforward does most work
+        self.trajectory_pid_Ki = 0.06  # Still need integral for steady-state accuracy
+        self.trajectory_pid_Kd = 0.2  # Damping for smooth response
+        
+        # Allow override from config if specified
+        if 'trajectory_pid' in self.config:
+            self.trajectory_pid_Kp = self.config['trajectory_pid'].get('Kp_x', self.trajectory_pid_Kp)
+            self.trajectory_pid_Ki = self.config['trajectory_pid'].get('Ki_x', self.trajectory_pid_Ki)
+            self.trajectory_pid_Kd = self.config['trajectory_pid'].get('Kd_x', self.trajectory_pid_Kd)
         
         self.pid = PIDController2D(
-            Kp_x=Kp_x, Ki_x=Ki_x, Kd_x=Kd_x,
+            Kp_x=self.trajectory_pid_Kp, 
+            Ki_x=self.trajectory_pid_Ki, 
+            Kd_x=self.trajectory_pid_Kd,
             Kp_y=0.0, Ki_y=0.0, Kd_y=0.0,  # Y-axis disabled for 1D
             output_limit_x=self.config.get('platform', {}).get('max_roll_angle', 15.0),
             output_limit_y=15.0
         )
+        
+        # Set steady-state PID gains (reduced to prevent oscillations)
+        self.steady_state_Kp = self.trajectory_pid_Kp * 0.7  # Reduce Kp at steady state
+        self.steady_state_Ki = self.trajectory_pid_Ki * 1.0  # Keep Ki for accuracy
+        self.steady_state_Kd = self.trajectory_pid_Kd * 1.3  # Significantly reduce Kd (derivative causes oscillations)
+        
+        print(f"[PID] Using trajectory-specific PID gains (optimized for feedforward):")
+        print(f"      Trajectory: Kp={self.trajectory_pid_Kp:.2f}, Ki={self.trajectory_pid_Ki:.2f}, Kd={self.trajectory_pid_Kd:.2f}")
+        print(f"      Steady-state: Kp={self.steady_state_Kp:.2f}, Ki={self.steady_state_Ki:.2f}, Kd={self.steady_state_Kd:.2f}")
         
         # Initialize ball detector
         self.detector = BallDetector2D(config_file)
@@ -78,16 +97,26 @@ class TrajectoryUpdateExperiment:
         self.settle_duration = 0.5  # seconds
         self.trajectory_method = 'linear'  # 'linear' or 'polynomial'
         
+        # Acceleration feedforward configuration
+        self.use_acceleration_feedforward = True  # Enable acceleration-based feedforward for better tracking
+        self.K_plant = 0.6 * 9.81  # Physics constant: a = K_plant * sin(theta) for hollow sphere
+        self.velocity_feedforward_gain = 0.5  # Gain for velocity feedforward (tune based on system response)
+        
+        # Steady-state PID gains (reduced to prevent oscillations)
+        # Will be set after trajectory_pid gains are defined
+        self.steady_state_error_threshold = 0.01  # Consider steady state when error < 1cm
+        self.steady_state_velocity_threshold = 0.02  # Consider steady state when velocity < 2cm/s
+        
         # Disturbance configuration
-        self.disturbance = None  # Will be initialized if needed
         self.disturbance_type = 'actuator'  # 'position' or 'actuator' - actuator is more realistic and visible
-        # Example disturbances (uncomment one to use):
-        # Position disturbance (applied to measurement - PID corrects quickly):
-        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=0.1, duration=1.0, apply_to='position')
+        # Impulse disturbance at 1.0s (during trajectory following)
         # Actuator impulse disturbance (applied to platform tilt - more realistic, harder to correct):
-        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=3.0, duration=1.0, apply_to='actuator')  # 3° tilt for 1s
+        self.disturbance = create_impulse_disturbance(time=1.0, magnitude=3.0, duration=1.0, apply_to='position')  # 3° tilt for 1s
+        # Alternative disturbances (uncomment to use):
+        # Position disturbance (applied to measurement - PID corrects quickly):
+        # self.disturbance = create_impulse_disturbance(time=1.0, magnitude=0.1, duration=1.0, apply_to='position')
         # Continuous (sinusoidal) actuator disturbance (oscillating platform tilt):
-        # self.disturbance = create_sinusoidal_disturbance(start_time=5.0, amplitude=2.0, frequency=1.0, duration=3.0, apply_to='actuator')  # 2° oscillation at 1Hz for 3s
+        # self.disturbance = create_sinusoidal_disturbance(start_time=1.0, amplitude=2.0, frequency=1.0, duration=3.0, apply_to='actuator')  # 2° oscillation at 1Hz for 3s
         
         # Trajectory updater (will be initialized after ball detection)
         self.trajectory_updater = None
@@ -102,6 +131,12 @@ class TrajectoryUpdateExperiment:
         self.saturation_log = []
         self.trajectory_update_log = []  # Track when trajectory was updated
         self.trajectory_segments = []  # Store trajectory segments for plotting: (x0, xf, start_time, duration)
+        
+        # Velocity estimation (for feedforward)
+        self.prev_position_x = None
+        self.prev_time = None
+        self.estimated_velocity_x = 0.0
+        self.velocity_filter_alpha = 0.3  # Low-pass filter for velocity estimation
         
         # Thread-safe queue for ball position
         self.position_queue = queue.Queue(maxsize=1)
@@ -317,6 +352,18 @@ class TrajectoryUpdateExperiment:
                 # Get current time relative to experiment start
                 current_time = time.time() - experiment_start_time
                 
+                # Estimate ball velocity (for feedforward)
+                if self.prev_position_x is not None and self.prev_time is not None:
+                    dt_vel = current_time - self.prev_time
+                    if dt_vel > 0.001:  # Avoid division by very small numbers
+                        # Calculate instantaneous velocity
+                        instant_velocity = (position_x - self.prev_position_x) / dt_vel
+                        # Low-pass filter to smooth velocity estimate
+                        self.estimated_velocity_x = (self.velocity_filter_alpha * instant_velocity + 
+                                                     (1 - self.velocity_filter_alpha) * self.estimated_velocity_x)
+                self.prev_position_x = position_x
+                self.prev_time = current_time
+                
                 # Apply disturbance if enabled
                 if self.disturbance:
                     if self.disturbance_type == 'position':
@@ -338,8 +385,61 @@ class TrajectoryUpdateExperiment:
                 # Update PID setpoint
                 self.pid.set_setpoint(trajectory_setpoint, 0.0)
                 
+                # Detect steady state: near target, low velocity, trajectory complete or very small
+                position_error = abs(trajectory_setpoint - position_x)
+                is_steady_state = (position_error < self.steady_state_error_threshold and
+                                  abs(self.estimated_velocity_x) < self.steady_state_velocity_threshold)
+                
+                # Check if trajectory is essentially complete (very close to target)
+                trajectory_essentially_complete = False
+                if self.trajectory_updater and self.trajectory_updater.current_trajectory:
+                    current_traj = self.trajectory_updater.current_trajectory
+                    trajectory_time = current_time - self.trajectory_updater.trajectory_start_time
+                    if current_traj.is_complete(trajectory_time) or position_error < 0.005:  # Within 5mm
+                        trajectory_essentially_complete = True
+                
+                # Switch to steady-state PID gains if in steady state
+                if is_steady_state or trajectory_essentially_complete:
+                    self.pid.set_gains_x(self.steady_state_Kp, self.steady_state_Ki, self.steady_state_Kd)
+                else:
+                    # Use normal trajectory tracking gains
+                    self.pid.set_gains_x(self.trajectory_pid_Kp, self.trajectory_pid_Ki, self.trajectory_pid_Kd)
+                
                 # INNER LOOP: PID control (compute control output)
                 control_output_x, control_output_y, saturated_x, saturated_y = self.pid.update(position_x, position_y)
+                
+                # Add acceleration and velocity feedforward if enabled
+                # IMPORTANT: Only use feedforward during trajectory following, NOT at steady state
+                if (self.use_acceleration_feedforward and self.trajectory_updater and 
+                    self.trajectory_updater.current_trajectory and not is_steady_state and not trajectory_essentially_complete):
+                    # Get current trajectory
+                    current_traj = self.trajectory_updater.current_trajectory
+                    trajectory_time = current_time - self.trajectory_updater.trajectory_start_time
+                    
+                    if not current_traj.is_complete(trajectory_time):
+                        # Get desired acceleration and velocity from trajectory
+                        desired_acceleration = current_traj.get_acceleration(trajectory_time)
+                        desired_velocity = current_traj.get_velocity(trajectory_time)
+                        
+                        # Velocity error: how much faster/slower we need to go
+                        velocity_error = desired_velocity - self.estimated_velocity_x
+                        
+                        # Convert acceleration to tilt angle: a = K_plant * sin(theta)
+                        # Therefore: theta = arcsin(a / K_plant)
+                        accel_ratio = desired_acceleration / self.K_plant
+                        accel_ratio = np.clip(accel_ratio, -1.0, 1.0)  # Clamp for arcsin
+                        accel_feedforward_rad = np.arcsin(accel_ratio)
+                        accel_feedforward_deg = np.degrees(accel_feedforward_rad)
+                        
+                        # Velocity feedforward: additional tilt to correct velocity error
+                        velocity_feedforward_deg = self.velocity_feedforward_gain * velocity_error * 100  # Scale from m/s to reasonable tilt
+                        velocity_feedforward_deg = np.clip(velocity_feedforward_deg, -5.0, 5.0)  # Limit velocity feedforward
+                        
+                        # Combine feedforward terms
+                        feedforward_tilt_deg = accel_feedforward_deg + velocity_feedforward_deg
+                        
+                        # Combine feedforward with PID output
+                        control_output_x = control_output_x + feedforward_tilt_deg
                 
                 # Apply actuator disturbance if enabled
                 if self.disturbance and self.disturbance_type == 'actuator':

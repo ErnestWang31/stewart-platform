@@ -6,7 +6,7 @@ import numpy as np
 class Trajectory:
     """Represents a trajectory from x0 to xf over duration T."""
     
-    def __init__(self, x0, xf, T, method='linear', curvature=3.0):
+    def __init__(self, x0, xf, T, method='linear', curvature=3.0, v0=0.0, vf=0.0):
         """Initialize trajectory.
         
         Args:
@@ -15,12 +15,16 @@ class Trajectory:
             T: Duration (seconds)
             method: 'linear', 'polynomial', or 'exponential' (default: 'linear')
             curvature: Curvature parameter for exponential method (default: 3.0, higher = more curved)
+            v0: Initial velocity (m/s, default: 0.0)
+            vf: Final velocity (m/s, default: 0.0)
         """
         self.x0 = x0
         self.xf = xf
         self.T = T
         self.method = method
         self.curvature = curvature  # For exponential trajectory
+        self.v0 = v0  # Initial velocity
+        self.vf = vf  # Final velocity
         
         if method == 'linear':
             # Linear trajectory: r(t) = x0 + (xf - x0) * (t/T)
@@ -60,15 +64,34 @@ class Trajectory:
             return self.x0 + (self.xf - self.x0) * (t / self.T)
         
         elif self.method == 'polynomial':
-            # 5th order polynomial trajectory
-            # r(t) = x0 + (xf - x0) * (10*(t/T)^3 - 15*(t/T)^4 + 6*(t/T)^5)
+            # 5th order polynomial trajectory with velocity constraints
+            # r(0) = x0, r(T) = xf
+            # v(0) = v0, v(T) = vf
+            # a(0) = 0, a(T) = 0 (zero acceleration at endpoints)
             if self.T == 0:
                 return self.xf
             tau = t / self.T  # Normalized time [0, 1]
-            # 5th order polynomial with zero velocity and acceleration at endpoints
-            # This is a smooth S-curve
-            poly = 10 * tau**3 - 15 * tau**4 + 6 * tau**5
-            return self.x0 + (self.xf - self.x0) * poly
+            
+            # If initial/final velocities are zero, use standard polynomial
+            if abs(self.v0) < 1e-6 and abs(self.vf) < 1e-6:
+                poly = 10 * tau**3 - 15 * tau**4 + 6 * tau**5
+                return self.x0 + (self.xf - self.x0) * poly
+            else:
+                # 5th order polynomial with velocity constraints
+                # Coefficients solved to satisfy: r(0)=x0, r(T)=xf, v(0)=v0, v(T)=vf, a(0)=0, a(T)=0
+                # r(tau) = x0 + c1*tau + c2*tau^2 + c3*tau^3 + c4*tau^4 + c5*tau^5
+                # Solving the constraints gives:
+                dx = self.xf - self.x0
+                v0_norm = self.v0 * self.T  # Normalized initial velocity
+                vf_norm = self.vf * self.T  # Normalized final velocity
+                
+                c1 = v0_norm
+                c2 = 0.0  # a(0) = 0
+                c3 = 10*dx - 4*v0_norm - 6*vf_norm
+                c4 = -15*dx + 7*v0_norm + 8*vf_norm
+                c5 = 6*dx - 3*v0_norm - 3*vf_norm
+                
+                return self.x0 + c1*tau + c2*tau**2 + c3*tau**3 + c4*tau**4 + c5*tau**5
         
         elif self.method == 'exponential':
             # Exponential decay trajectory: starts fast, slows down
@@ -104,10 +127,27 @@ class Trajectory:
             if self.T == 0:
                 return 0.0
             tau = t / self.T
-            # Derivative of 5th order polynomial
-            # v(t) = (xf - x0) / T * (30*tau^2 - 60*tau^3 + 30*tau^4)
-            dtau = 30 * tau**2 - 60 * tau**3 + 30 * tau**4
-            return (self.xf - self.x0) / self.T * dtau
+            
+            # If initial/final velocities are zero, use standard polynomial
+            if abs(self.v0) < 1e-6 and abs(self.vf) < 1e-6:
+                # Derivative of 5th order polynomial
+                # v(t) = (xf - x0) / T * (30*tau^2 - 60*tau^3 + 30*tau^4)
+                dtau = 30 * tau**2 - 60 * tau**3 + 30 * tau**4
+                return (self.xf - self.x0) / self.T * dtau
+            else:
+                # Velocity with velocity constraints
+                dx = self.xf - self.x0
+                v0_norm = self.v0 * self.T
+                vf_norm = self.vf * self.T
+                
+                c1 = v0_norm
+                c2 = 0.0
+                c3 = 10*dx - 4*v0_norm - 6*vf_norm
+                c4 = -15*dx + 7*v0_norm + 8*vf_norm
+                c5 = 6*dx - 3*v0_norm - 3*vf_norm
+                
+                # Derivative: v = (1/T) * (c1 + 2*c2*tau + 3*c3*tau^2 + 4*c4*tau^3 + 5*c5*tau^4)
+                return (c1 + 2*c2*tau + 3*c3*tau**2 + 4*c4*tau**3 + 5*c5*tau**4) / self.T
         
         elif self.method == 'exponential':
             if self.T == 0:
@@ -123,6 +163,62 @@ class Trajectory:
         
         return 0.0
     
+    def get_acceleration(self, t):
+        """Get acceleration at time t.
+        
+        Args:
+            t: Time in seconds (0 <= t <= T)
+            
+        Returns:
+            acceleration: Acceleration at time t (m/s²)
+        """
+        t = np.clip(t, 0.0, self.T)
+        
+        if self.method == 'linear':
+            # Linear trajectory has constant velocity, so zero acceleration
+            return 0.0
+        
+        elif self.method == 'polynomial':
+            if self.T == 0:
+                return 0.0
+            tau = t / self.T
+            
+            # If initial/final velocities are zero, use standard polynomial
+            if abs(self.v0) < 1e-6 and abs(self.vf) < 1e-6:
+                # Second derivative of 5th order polynomial
+                # a(t) = (xf - x0) / T² * (60*tau - 180*tau^2 + 120*tau^3)
+                ddtau = 60 * tau - 180 * tau**2 + 120 * tau**3
+                return (self.xf - self.x0) / (self.T ** 2) * ddtau
+            else:
+                # Acceleration with velocity constraints
+                dx = self.xf - self.x0
+                v0_norm = self.v0 * self.T
+                vf_norm = self.vf * self.T
+                
+                c1 = v0_norm
+                c2 = 0.0
+                c3 = 10*dx - 4*v0_norm - 6*vf_norm
+                c4 = -15*dx + 7*v0_norm + 8*vf_norm
+                c5 = 6*dx - 3*v0_norm - 3*vf_norm
+                
+                # Second derivative: a = (1/T²) * (2*c2 + 6*c3*tau + 12*c4*tau^2 + 20*c5*tau^3)
+                return (2*c2 + 6*c3*tau + 12*c4*tau**2 + 20*c5*tau**3) / (self.T ** 2)
+        
+        elif self.method == 'exponential':
+            if self.T == 0:
+                return 0.0
+            tau = t / self.T
+            k = self.curvature
+            # Second derivative of exponential
+            # a(t) = (xf - x0) / T² * k² * e^(-k*tau) / (1 - e^(-k))
+            if k > 0:
+                ddtau = -(k ** 2) * np.exp(-k * tau) / (1 - np.exp(-k))
+            else:
+                ddtau = 0.0
+            return (self.xf - self.x0) / (self.T ** 2) * ddtau
+        
+        return 0.0
+    
     def is_complete(self, t):
         """Check if trajectory is complete at time t.
         
@@ -135,7 +231,7 @@ class Trajectory:
         return t >= self.T
 
 
-def generate_trajectory(x0, xf, T, method='linear', curvature=3.0):
+def generate_trajectory(x0, xf, T, method='linear', curvature=3.0, v0=0.0, vf=0.0):
     """Generate a trajectory from x0 to xf over duration T.
     
     Args:
@@ -144,11 +240,13 @@ def generate_trajectory(x0, xf, T, method='linear', curvature=3.0):
         T: Duration (seconds)
         method: 'linear', 'polynomial', or 'exponential' (default: 'linear')
         curvature: Curvature parameter for exponential method (default: 3.0, higher = more curved)
+        v0: Initial velocity (m/s, default: 0.0)
+        vf: Final velocity (m/s, default: 0.0)
         
     Returns:
         Trajectory: Trajectory object
     """
-    return Trajectory(x0, xf, T, method, curvature)
+    return Trajectory(x0, xf, T, method, curvature, v0, vf)
 
 
 def sample_trajectory(trajectory, t):

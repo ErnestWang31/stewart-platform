@@ -5,18 +5,27 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+import sys
 
-# Find latest One-Shot Trajectory CSV file
-results_dir = Path("results")
-csv_files = list(results_dir.glob("experiment_oneshot_trajectory_*.csv"))
-
-if not csv_files:
-    print("No One-Shot Trajectory experiment files found in results/")
-    exit(1)
-
-# Get latest file (by modification time)
-latest_file = max(csv_files, key=lambda p: p.stat().st_mtime)
-print(f"Loading: {latest_file}")
+# Check if file path provided as argument
+if len(sys.argv) > 1:
+    latest_file = Path(sys.argv[1])
+    if not latest_file.exists():
+        print(f"Error: File not found: {latest_file}")
+        exit(1)
+    print(f"Loading: {latest_file}")
+else:
+    # Find latest One-Shot Trajectory CSV file
+    results_dir = Path("results")
+    csv_files = list(results_dir.glob("experiment_oneshot_trajectory_*.csv"))
+    
+    if not csv_files:
+        print("No One-Shot Trajectory experiment files found in results/")
+        exit(1)
+    
+    # Get latest file (by modification time)
+    latest_file = max(csv_files, key=lambda p: p.stat().st_mtime)
+    print(f"Loading: {latest_file}")
 
 # Load data
 time_data = []

@@ -71,15 +71,15 @@ class StepPIDExperiment:
         self.settle_duration = 0.5  # seconds
         
         # Disturbance configuration
-        self.disturbance = None  # Will be initialized if needed
         self.disturbance_type = 'actuator'  # 'position' or 'actuator' - actuator is more realistic and visible
-        # Example disturbances (uncomment one to use):
-        # Position disturbance (applied to measurement - PID corrects quickly):
-        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=0.1, duration=1.0, apply_to='position')
+        # Impulse disturbance at 1.0s (during step response)
         # Actuator impulse disturbance (applied to platform tilt - more realistic, harder to correct):
-        # self.disturbance = create_impulse_disturbance(time=5.0, magnitude=3.0, duration=1.0, apply_to='actuator')  # 3° tilt for 1s
+        self.disturbance = create_impulse_disturbance(time=1.0, magnitude=3.0, duration=1.0, apply_to='position')  # 3° tilt for 1s
+        # Alternative disturbances (uncomment to use):
+        # Position disturbance (applied to measurement - PID corrects quickly):
+        # self.disturbance = create_impulse_disturbance(time=1.0, magnitude=0.1, duration=1.0, apply_to='position')
         # Continuous (sinusoidal) actuator disturbance (oscillating platform tilt):
-        # self.disturbance = create_sinusoidal_disturbance(start_time=5.0, amplitude=2.0, frequency=1.0, duration=3.0)  # 2° oscillation at 1Hz for 3s
+        # self.disturbance = create_sinusoidal_disturbance(start_time=1.0, amplitude=2.0, frequency=1.0, duration=3.0, apply_to='actuator')  # 2° oscillation at 1Hz for 3s
         
         # Data logging
         self.time_log = []
