@@ -89,7 +89,7 @@ class OneShotTrajectoryExperiment:
         self.experiment_duration = 15.0  # total experiment duration (extended to evaluate steady-state)
         self.tolerance = 0.005  # 5mm completion tolerance
         self.settle_duration = 0.5  # seconds
-        self.trajectory_method = 'linear'  # 'linear', 'polynomial', or 'exponential'
+        self.trajectory_method = 'min_jerk'  # 'linear', 'polynomial', 'exponential', or 'min_jerk'
         self.trajectory_curvature = 2.0  # Curvature parameter for exponential method (higher = more curved)
         
         # Acceleration feedforward configuration
@@ -389,22 +389,36 @@ class OneShotTrajectoryExperiment:
                     # Note: actuator disturbance applied after PID computation
                 
                 # Update setpoint based on trajectory (position update loop)
-                if self.trajectory and not self.trajectory.is_complete(current_time):
+                trajectory_complete = self.trajectory and self.trajectory.is_complete(current_time)
+                trajectory_just_completed = False
+                
+                if self.trajectory and not trajectory_complete:
                     # Follow trajectory
                     trajectory_setpoint = self.trajectory.get_position(current_time)
                 else:
                     # Trajectory complete, hold at target
                     trajectory_setpoint = self.target_setpoint
+                    # Check if trajectory just completed (first time we detect completion)
+                    if self.trajectory and not hasattr(self, '_trajectory_completed_flag'):
+                        trajectory_just_completed = True
+                        self._trajectory_completed_flag = True
                 
                 # Update PID setpoint
                 self.pid.set_setpoint(trajectory_setpoint, 0.0)
                 
                 # Detect steady state: trajectory complete, small error, low velocity
-                trajectory_complete = self.trajectory and self.trajectory.is_complete(current_time)
                 position_error = abs(trajectory_setpoint - position_x)
                 is_steady_state = (trajectory_complete and 
                                   position_error < self.steady_state_error_threshold and
                                   abs(self.estimated_velocity_x) < self.steady_state_velocity_threshold)
+                
+                # CRITICAL FIX: Reset integral when trajectory completes to prevent overshoot
+                # The integral accumulates error during trajectory following, and when feedforward
+                # stops, this accumulated error causes overshoot. By resetting the integral,
+                # we prevent the controller from "remembering" tracking errors that are no longer relevant.
+                if trajectory_just_completed:
+                    self.pid.reset_integral_x()
+                    print(f"[EXPERIMENT] Trajectory completed at t={current_time:.2f}s - Reset PID integral to prevent overshoot")
                 
                 # Switch to steady-state PID gains if in steady state
                 if is_steady_state:

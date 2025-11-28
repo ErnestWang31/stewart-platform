@@ -143,6 +143,10 @@ class TrajectoryUpdateExperiment:
         self.running = False
         self.start_time = None
         
+        # Track trajectory completion state for integral reset
+        self.prev_trajectory_complete = False
+        self.prev_steady_state = False
+        
     def connect_servos(self):
         """Try to open serial connection to Arduino."""
         try:
@@ -392,11 +396,35 @@ class TrajectoryUpdateExperiment:
                 
                 # Check if trajectory is essentially complete (very close to target)
                 trajectory_essentially_complete = False
+                trajectory_just_completed = False
                 if self.trajectory_updater and self.trajectory_updater.current_trajectory:
                     current_traj = self.trajectory_updater.current_trajectory
                     trajectory_time = current_time - self.trajectory_updater.trajectory_start_time
-                    if current_traj.is_complete(trajectory_time) or position_error < 0.005:  # Within 5mm
-                        trajectory_essentially_complete = True
+                    current_traj_complete = current_traj.is_complete(trajectory_time) or position_error < 0.005  # Within 5mm
+                    
+                    # Detect when trajectory just completed (transition from not complete to complete)
+                    # Only reset integral if we're close to target (within 1cm) to avoid resetting too frequently
+                    if current_traj_complete and not self.prev_trajectory_complete and position_error < 0.01:
+                        trajectory_just_completed = True
+                    
+                    trajectory_essentially_complete = current_traj_complete
+                    self.prev_trajectory_complete = current_traj_complete
+                else:
+                    self.prev_trajectory_complete = False
+                
+                # Detect transition to steady state
+                steady_state_just_entered = is_steady_state and not self.prev_steady_state
+                self.prev_steady_state = is_steady_state
+                
+                # CRITICAL FIX: Reset integral when trajectory completes (and close to target) or when entering steady state
+                # This prevents overshoot from accumulated integral error during trajectory following
+                # We only reset when close to target to avoid resetting too frequently during active trajectory following
+                if trajectory_just_completed:
+                    self.pid.reset_integral_x()
+                    print(f"[EXPERIMENT] Trajectory segment completed near target at t={current_time:.2f}s - Reset PID integral to prevent overshoot")
+                elif steady_state_just_entered:
+                    self.pid.reset_integral_x()
+                    print(f"[EXPERIMENT] Entered steady state at t={current_time:.2f}s - Reset PID integral")
                 
                 # Switch to steady-state PID gains if in steady state
                 if is_steady_state or trajectory_essentially_complete:
