@@ -123,6 +123,44 @@ class Trajectory:
         
         return 0.0
     
+    def get_acceleration(self, t):
+        """Get acceleration at time t.
+        
+        Args:
+            t: Time in seconds (0 <= t <= T)
+            
+        Returns:
+            acceleration: Acceleration at time t (m/s²)
+        """
+        t = np.clip(t, 0.0, self.T)
+        
+        if self.method == 'linear':
+            # Linear trajectory has zero acceleration (constant velocity)
+            return 0.0
+        
+        elif self.method == 'polynomial':
+            if self.T == 0:
+                return 0.0
+            tau = t / self.T
+            # Second derivative of 5th order polynomial
+            # a(t) = (xf - x0) / T² * (60*tau - 180*tau^2 + 120*tau^3)
+            ddtau = 60 * tau - 180 * tau**2 + 120 * tau**3
+            return (self.xf - self.x0) / (self.T**2) * ddtau
+        
+        elif self.method == 'exponential':
+            if self.T == 0:
+                return 0.0
+            tau = t / self.T
+            k = self.curvature
+            # Second derivative of exponential: a(t) = (xf - x0) / T² * k² * e^(-k*tau) / (1 - e^(-k))
+            if k > 0:
+                ddtau = -k**2 * np.exp(-k * tau) / (1 - np.exp(-k))
+            else:
+                ddtau = 0.0
+            return (self.xf - self.x0) / (self.T**2) * ddtau
+        
+        return 0.0
+    
     def is_complete(self, t):
         """Check if trajectory is complete at time t.
         
